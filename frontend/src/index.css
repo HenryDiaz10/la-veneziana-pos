@@ -1,35 +1,39 @@
-/* Incluimos el relleno y los bordes en el tamaño de los elementos.
-   Esto facilita controlar sus dimensiones. */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* Cargamos Tailwind y luego los colores propios del sistema. */
+@import "tailwindcss";
+@import "./theme.css";
 
-/* Configuramos la fuente y los colores básicos de la página.
-   Los estilos de marca se trabajarán en la fase 4. */
-:root {
-  font-family: Arial, sans-serif;
-  line-height: 1.5;
-  color: #1f2937;
-  background-color: #ffffff;
-}
+/* Colocamos los estilos generales en la capa base.
+   Las clases de Tailwind podrán sobrescribirlos cuando corresponda. */
+@layer base {
+  /* Usamos la fuente principal definida en el tema. */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    color: var(--color-texto);
+    background-color: var(--color-fondo);
+  }
 
-/* Quitamos el margen predeterminado del navegador.
-   Permitimos que la página ocupe al menos toda la altura visible. */
-body {
-  margin: 0;
-  min-height: 100vh;
-}
+  /* Permitimos que los títulos largos se ajusten al espacio disponible. */
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: anywhere;
+  }
 
-/* Agregamos espacio alrededor del contenido principal. */
-main {
-  padding: 24px;
-}
+    /* Los controles utilizan la misma tipografía que la interfaz. */
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-/* Quitamos el margen superior del título.
-   Permitimos partir palabras largas si no caben en la pantalla. */
-h1 {
-  margin-top: 0;
-  overflow-wrap: anywhere;
+  /* Mostramos un contorno al navegar con el teclado.
+     La separación permite distinguirlo del borde del control. */
+  :focus-visible {
+    outline: 3px solid var(--color-foco);
+    outline-offset: 3px;
+  }
 }

@@ -5,6 +5,13 @@ import { StrictMode } from 'react'
 // Importamos la función que conecta React con el contenido HTML.
 import { createRoot } from 'react-dom/client'
 
+// Cargamos los archivos locales y las reglas CSS de Inter.
+// La fuente variable permite utilizar diferentes grosores.
+import '@fontsource-variable/inter'
+
+// Cargamos Montserrat para los títulos de la aplicación.
+import '@fontsource-variable/montserrat'
+
 // Cargamos los estilos generales de la aplicación.
 import './index.css'
 

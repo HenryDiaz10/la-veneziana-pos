@@ -1,24 +1,26 @@
-// Importamos la función que ayuda a definir la configuración de Vite.
+// Importamos la función para definir la configuración de Vite.
 import { defineConfig } from 'vite'
 
 // Importamos el plugin que integra React con Vite.
 import react from '@vitejs/plugin-react'
 
-// Exportamos la configuración que Vite utilizará al ejecutarse.
-export default defineConfig({
-  // Activamos el soporte para React y su actualización en desarrollo.
-  plugins: [react()],
+// Importamos el plugin que genera los estilos de Tailwind.
+import tailwindcss from '@tailwindcss/vite'
 
-  // Configuramos el servidor de desarrollo del frontend.
+// Exportamos la configuración del proyecto.
+export default defineConfig({
+  // Activamos React y la integración de Tailwind.
+  plugins: [react(), tailwindcss()],
+
+  // Conservamos la configuración del servidor de desarrollo.
   server: {
-    // Escuchamos en la dirección local de esta computadora.
+    // Escuchamos únicamente en la dirección local.
     host: 'localhost',
 
-    // Usamos el puerto permitido por CORS en el backend.
+    // Mantenemos el puerto permitido por CORS en el backend.
     port: 5173,
 
-    // Si el puerto está ocupado, mostramos un error.
-    // Evitamos que Vite cambie automáticamente a otro puerto.
+    // Mostramos un error si el puerto está ocupado.
     strictPort: true,
   },
 })

@@ -5,6 +5,8 @@
   registros con Pino, CORS local, manejo de errores y cierre ordenado.
 - Fase 3: frontend inicial con React y Vite, pantalla de comprobación,
   estilos básicos, revisión con ESLint y compilación de producción.
+- Fase 4: Tailwind CSS, colores compartidos, fuentes locales con licencias,
+  foco visible y comprobaciones iniciales de adaptación y teclado.
 
 El frontend muestra una pantalla inicial. La conexión entre frontend
 y backend, las pantallas de negocio y MySQL todavía no están implementados.

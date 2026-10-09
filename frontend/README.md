@@ -4,9 +4,12 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
-La fase 3 prepara la estructura inicial y una pantalla de comprobación.
-Las pantallas de negocio y la conexión con el backend todavía no están
-implementadas.
+Las fases 3 y 4 preparan la interfaz inicial con React, Vite y Tailwind CSS.
+
+La pantalla utiliza colores compartidos, Inter para texto, Montserrat
+para títulos y un enlace de teclado para saltar al contenido principal.
+
+Las pantallas de negocio y la conexión con el backend siguen pendientes.
 
 ## Instalación
 
@@ -55,3 +58,21 @@ Este comando no publica la aplicación en internet.
 - eslint.config.js: reglas de revisión del código.
 
 node_modules y dist están excluidos de Git.
+
+## Estilos y fuentes
+
+- src/theme.css: colores y familias tipográficas compartidos.
+- src/index.css: Tailwind, estilos generales y foco visible.
+- Inter y Montserrat: fuentes locales mediante Fontsource, con
+  font-display: swap y fuentes de respaldo.
+- public/licenses/: licencias originales de ambas fuentes, incluidas
+  también en la compilación.
+
+La pantalla inicial se revisó a 390 × 844, 320 × 800 y 768 × 1024,
+además de la ampliación del navegador al 200 %.
+
+Se comprobó el acceso al contenido mediante teclado y el foco visible.
+Estas pruebas deberán repetirse en las futuras pantallas de negocio.
+
+La pantalla actual no utiliza animaciones ni desplazamiento animado.
+Las futuras interacciones deberán respetar prefers-reduced-motion.

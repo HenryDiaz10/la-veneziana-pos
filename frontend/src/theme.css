@@ -1,0 +1,36 @@
+/* Definimos colores del sistema.
+   @theme permite que Tailwind genere clases con estos nombres. */
+@theme {
+
+  /* Fuente principal para texto, controles e importes.
+     Arial y sans-serif sirven de respaldo mientras carga Inter. */
+  --font-sans: "Inter Variable", Arial, sans-serif;
+
+  /* Fuente para títulos.
+     Conservamos alternativas por si Montserrat no puede cargar. */
+  --font-titulo: "Montserrat Variable", Arial, sans-serif;
+
+  /* Colores de marca.
+     Dorado y lima deben acompañarse de texto oscuro. */
+  --color-marca-dorado: #f59e0b;
+  --color-marca-rojo: #ef4444;
+  --color-marca-lima: #84cc16;
+
+  /* Fondos de la interfaz clara. */
+  --color-fondo: #f1f5f9;
+  --color-superficie: #ffffff;
+
+  /* Texto principal y secundario sobre fondos claros. */
+  --color-texto: #0f172a;
+  --color-texto-secundario: #475569;
+
+  /* Borde suave para separar tarjetas y secciones. */
+  --color-borde: #e2e8f0;
+
+  /* Rojo más oscuro para mensajes de error sobre fondo claro. */
+  --color-error-texto: #b91c1c;
+
+    /* Usamos un dorado oscuro para distinguir el foco sobre fondos claros.
+     El dorado de marca se conserva para los fondos y acentos. */
+  --color-foco: #92400e;
+}
