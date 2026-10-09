@@ -3,8 +3,11 @@
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.
+- Fase 3: frontend inicial con React y Vite, pantalla de comprobación,
+  estilos básicos, revisión con ESLint y compilación de producción.
 
-El frontend y la conexión con MySQL todavía no están implementados.
+El frontend muestra una pantalla inicial. La conexión entre frontend
+y backend, las pantallas de negocio y MySQL todavía no están implementados.
 
 ## Preparación del backend
 
@@ -48,6 +51,33 @@ Durante el desarrollo, CORS permite el origen http://localhost:5173.
 
 Para detener el servidor, presionar Ctrl + C. Si Windows pregunta
 si se desea terminar el trabajo por lotes, responder S.
+
+## Ejecución del frontend
+
+Ejecutar desde la carpeta CODIGO/frontend:
+
+```powershell
+# Instalamos las dependencias al preparar una nueva copia del proyecto.
+npm.cmd ci
+
+# Iniciamos el servidor de desarrollo.
+npm.cmd run dev
+```
+
+Abrir http://localhost:5173. El puerto está fijado; si está ocupado,
+Vite muestra un error.
+
+Para revisar y compilar, utilizar otra terminal en CODIGO/frontend:
+
+```powershell
+# Revisamos el código mediante ESLint.
+npm.cmd run lint
+
+# Generamos los archivos de producción en dist.
+npm.cmd run build
+```
+
+Las instrucciones completas están en frontend/README.md.
 
 ## Archivos y configuración
 

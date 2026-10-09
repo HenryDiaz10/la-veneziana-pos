@@ -1,0 +1,35 @@
+/* Incluimos el relleno y los bordes en el tamaño de los elementos.
+   Esto facilita controlar sus dimensiones. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Configuramos la fuente y los colores básicos de la página.
+   Los estilos de marca se trabajarán en la fase 4. */
+:root {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: #ffffff;
+}
+
+/* Quitamos el margen predeterminado del navegador.
+   Permitimos que la página ocupe al menos toda la altura visible. */
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Agregamos espacio alrededor del contenido principal. */
+main {
+  padding: 24px;
+}
+
+/* Quitamos el margen superior del título.
+   Permitimos partir palabras largas si no caben en la pantalla. */
+h1 {
+  margin-top: 0;
+  overflow-wrap: anywhere;
+}
