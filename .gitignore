@@ -1,0 +1,27 @@
+# Dependencias descargadas
+node_modules/
+
+# Configuración privada y secretos
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Archivos generados al compilar
+dist/
+build/
+
+# Resultados de pruebas
+coverage/
+playwright-report/
+test-results/
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.temp
+
+# Archivos del sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
