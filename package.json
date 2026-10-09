@@ -1,0 +1,7 @@
+{
+  "name": "la-veneziana-pos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema web de gestión para la pizzería La Veneziana.",
+  "scripts": {}
+}
