@@ -76,3 +76,21 @@ Estas pruebas deberán repetirse en las futuras pantallas de negocio.
 
 La pantalla actual no utiliza animaciones ni desplazamiento animado.
 Las futuras interacciones deberán respetar prefers-reduced-motion.
+
+## Configuración de la API
+
+Crear `.env` tomando como referencia `.env.example`.
+
+En desarrollo, `VITE_API_URL` apunta a `http://127.0.0.1:3000`.
+Reiniciar Vite después de modificar la configuración.
+
+`src/config/env.js` valida la dirección antes de mostrar la
+aplicación. Si es inválida, aparece “Sistema no disponible”.
+Esta validación no comprueba que el backend esté encendido.
+
+`.env.production.example` documenta `/api` para una publicación
+conjunta. Los archivos terminados en `.example` no se cargan
+automáticamente.
+
+Las variables `VITE_` quedan disponibles en el frontend:
+no colocar contraseñas ni secretos en ellas.

@@ -11,6 +11,9 @@ import logger from './logger.js';
 // Importamos el middleware que configura los encabezados CORS.
 import cors from 'cors';
 
+// Importar la configuración validada para configurar CORS.
+import { env } from './config/env.js';
+
 // Creamos una aplicación Express.
 // La constante "app" nos permite configurarla y agregar rutas.
 const app = express();
@@ -48,11 +51,10 @@ app.use(pinoHttp({
   }
 }));
 
-// Configuramos CORS antes de interpretar el cuerpo de la solicitud.
-// Así también se aplica a las respuestas por JSON incorrecto.
+// Configurar CORS antes de interpretar el cuerpo JSON.
 app.use(cors({
-  // Origen permitido para el frontend durante el desarrollo.
-  origin: 'http://localhost:5173'
+  // Leer el origen desde la configuración validada.
+  origin: env.origenFrontend
 }));
 
 // Interpretamos los cuerpos enviados en formato JSON.

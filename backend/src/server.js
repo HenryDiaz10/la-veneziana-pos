@@ -1,7 +1,5 @@
-// Cargamos las variables del archivo .env.
-// Debemos ejecutar el comando de arranque desde la carpeta backend.
-// dotenv coloca los valores disponibles en process.env.
-import 'dotenv/config';
+// Importar la configuración validada antes de iniciar el servidor.
+import { env } from './config/env.js';
 
 // Importamos la aplicación Express configurada en app.js.
 import app from './app.js';
@@ -10,15 +8,11 @@ import app from './app.js';
 // los mensajes del servidor mediante Pino.
 import logger from './logger.js';
 
-// Leemos el puerto de la configuración.
-// Las variables de entorno son texto, por eso usamos Number()
-// para convertir el valor a un número.
-// Si PORT no está definido, utilizamos 3000.
-const PORT = Number(process.env.PORT ?? '3000');
+// Utilizar el puerto que config/env.js ya convirtió y validó.
+const PORT = env.puerto;
 
-// Leemos la dirección donde escuchará el servidor.
-// Si HOST no está definido, utilizamos la dirección local.
-const HOST = process.env.HOST ?? '127.0.0.1';
+// Utilizar la dirección de escucha validada.
+const HOST = env.host;
 
 // Comprobamos que el puerto sea un número entero válido.
 // Los puertos que utilizaremos deben estar entre 1 y 65535.

@@ -24,11 +24,34 @@ const elementoRaiz = document.getElementById('root')
 // Creamos la raíz de React dentro de ese elemento.
 const raiz = createRoot(elementoRaiz)
 
-// Mostramos el componente App.
-// StrictMode agrega comprobaciones de desarrollo sin crear
-// un elemento visible adicional en la página.
-raiz.render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+// Cargar y validar la configuración antes de mostrar la aplicación.
+// import() devuelve una promesa: puede completarse o fallar.
+import('./config/env.js')
+  .then(() => {
+    // La configuración es válida: mostrar la pantalla habitual.
+    raiz.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    )
+  })
+  .catch(() => {
+    // La configuración falló: mostrar un mensaje comprensible.
+    // No mostramos valores ni detalles internos del error.
+    raiz.render(
+      <main className="mx-auto max-w-5xl p-4 md:p-8">
+        <section
+          role="alert"
+          className="rounded-xl border border-borde bg-superficie p-6"
+        >
+          <h1 className="font-titulo text-2xl font-bold">
+            Sistema no disponible
+          </h1>
+          <p className="mt-4 text-texto-secundario">
+            La configuración de conexión no es válida.
+            Contacta al responsable del sistema.
+          </p>
+        </section>
+      </main>
+    )
+  })
