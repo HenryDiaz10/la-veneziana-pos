@@ -14,6 +14,9 @@ import cors from 'cors';
 // Importar la configuración validada para configurar CORS.
 import { env } from './config/env.js';
 
+// Importar la instancia compartida de Sequelize.
+import { sequelize } from './config/database.js';
+
 // Creamos una aplicación Express.
 // La constante "app" nos permite configurarla y agregar rutas.
 const app = express();
@@ -87,6 +90,40 @@ app.get('/health', (req, res) => {
     // Identificamos el servicio que estamos comprobando.
     servicio: 'la-veneziana-backend'
   });
+});
+
+// Comprobar si el backend puede consultar la base de datos.
+app.get('/ready', async (req, res) => {
+  // Evitar que se conserve una respuesta antigua de disponibilidad.
+  res.set('Cache-Control', 'no-store');
+
+  try {
+    // authenticate ejecuta una consulta de comprobación.
+    // Sequelize obtiene y libera la conexión mediante su pool.
+    await sequelize.authenticate();
+
+    // La base respondió: el servicio está disponible.
+    res.status(200).json({
+      estado: 'disponible',
+      baseDeDatos: 'conectada'
+    });
+  } catch (error) {
+    // Registrar solo identificadores del fallo, sin credenciales ni SQL.
+    logger.warn(
+      {
+        errorName: error.name,
+        code: error.original?.code,
+        requestId: req.id
+      },
+      'La comprobación de disponibilidad de MySQL falló.'
+    );
+
+    // La base no respondió, pero el proceso HTTP continúa funcionando.
+    res.status(503).json({
+      estado: 'no_disponible',
+      baseDeDatos: 'no_disponible'
+    });
+  }
 });
 
 // Este middleware se ejecuta cuando ninguna ruta anterior respondió.

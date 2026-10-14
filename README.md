@@ -7,12 +7,16 @@
   estilos básicos, revisión con ESLint y compilación de producción.
 - Fase 4: Tailwind CSS, colores compartidos, fuentes locales con licencias,
   foco visible y comprobaciones iniciales de adaptación y teclado.
-  - Fase 5: configuración de entorno centralizada y validada,
+- Fase 5: configuración de entorno centralizada y validada,
   plantillas de desarrollo y producción, rechazo de configuración
   inválida y comprobaciones de privacidad en compilación y registros.
+- Fase 6: conexión con MySQL mediante Sequelize y mysql2,
+  verificación de CA, sesiones UTC, pool limitado, disponibilidad
+  de la base y cierre ordenado de conexiones.
 
-El frontend muestra una pantalla inicial. La conexión entre frontend
-y backend, las pantallas de negocio y MySQL todavía no están implementados.
+El frontend muestra una pantalla inicial. El backend ya se conecta
+con MySQL. La conexión del frontend con la API, las pantallas de
+negocio y los modelos y migraciones de tablas siguen pendientes.
 
 ## Preparación del backend
 
@@ -26,12 +30,29 @@ cd backend
 npm.cmd ci
 
 # Creamos la configuración local al preparar el proyecto por primera vez.
-# Si .env ya existe, conservarlo y omitir este comando.
-Copy-Item .env.example .env
+# Conservamos cualquier .env existente.
+if (-not (Test-Path -LiteralPath .env)) {
+  Copy-Item -LiteralPath .env.example -Destination .env
+}
 ```
 
 La configuración de ejemplo utiliza el puerto 3000 y la dirección
-127.0.0.1. El archivo .env es privado y no se sube a Git.
+127.0.0.1 para HTTP, y el puerto 3307 para MySQL local. El archivo
+.env es privado y no se sube a Git.
+
+Antes de iniciar el backend, completar su `.env` con:
+
+- `JWT_SECRET`: secreto generado con al menos 32 bytes aleatorios,
+  representado en hexadecimal. No utilizar un texto de ejemplo.
+- `DATABASE_HOST`, `DATABASE_PORT` y `DATABASE_NAME`: destino real
+  de la conexión; en este equipo, 127.0.0.1, 3307 y la_veneziana.
+- `DATABASE_USER` y `DATABASE_PASSWORD`: cuenta de aplicación y
+  contraseña correspondientes; no utilizar la cuenta root en el backend.
+- `DATABASE_CA`: ruta al certificado público de la CA, accesible
+  para la cuenta de Windows que ejecutará Node. No utilizar una clave privada.
+
+Copiar la plantilla no basta para arrancar: sus secretos y la ruta CA
+están vacíos. Crear la base y la cuenta en MySQL antes de probar `/ready`.
 
 ## Ejecución del backend
 
@@ -49,13 +70,30 @@ Para ejecutar sin reinicio automático:
 npm.cmd start
 ```
 
-Consultar http://127.0.0.1:3000/health para comprobar que el servidor
-responde. Esta ruta todavía no comprueba una base de datos.
+Consultar http://127.0.0.1:3000/health para comprobar que el proceso
+HTTP responde. Esta ruta no consulta MySQL.
 
-Durante el desarrollo, CORS permite el origen http://localhost:5173.
+Consultar http://127.0.0.1:3000/ready para comprobar la conexión
+con MySQL: responde 200 si está disponible y 503 si falla.
 
-Para detener el servidor, presionar Ctrl + C. Si Windows pregunta
-si se desea terminar el trabajo por lotes, responder S.
+Una configuración inválida impide el arranque. Una caída de MySQL
+con configuración válida no detiene el proceso HTTP: `/health` continúa
+respondiendo y `/ready` indica indisponibilidad.
+
+CORS utiliza el origen configurado en `CORS_ORIGIN`; durante el
+desarrollo local es http://localhost:5173.
+
+Para comprobar el cierre ordenado directamente desde PowerShell:
+
+```powershell
+# Ejecutar sin el envoltorio de npm ni el modo de reinicio automático.
+node src/server.js
+```
+
+Presionar Ctrl + C una vez y esperar los mensajes de cierre del pool
+y del servidor. Esta fue la forma utilizada para verificar el cierre;
+interrumpir el trabajo por lotes de npm puede cortar la salida antes
+de completar esa comprobación.
 
 ## Ejecución del frontend
 
@@ -64,6 +102,11 @@ Ejecutar desde la carpeta CODIGO/frontend:
 ```powershell
 # Instalamos las dependencias al preparar una nueva copia del proyecto.
 npm.cmd ci
+
+# Creamos la configuración pública local solo si no existe.
+if (-not (Test-Path -LiteralPath .env)) {
+  Copy-Item -LiteralPath .env.example -Destination .env
+}
 
 # Iniciamos el servidor de desarrollo.
 npm.cmd run dev
@@ -95,16 +138,16 @@ las versiones de las dependencias.
 
 ## Configuración de entorno y seguridad base
 
-El backend utiliza `src/config/env.js` para cargar y validar la
-configuración antes de abrir el puerto HTTP.
+El backend utiliza `src/config/env.js` para cargar y validar el entorno,
+puerto HTTP, host no vacío, origen CORS, formato del secreto JWT y
+parámetros básicos de MySQL: host no vacío, puerto y nombre de la base.
 
-Se validan el entorno, puerto, host no vacío, origen CORS y formato
-del secreto JWT. La configuración de MySQL queda agrupada y se
-comprueban host no vacío, puerto y formato del nombre de la base.
+El backend utiliza DATABASE_USER, DATABASE_PASSWORD y DATABASE_CA
+desde su .env privado. src/config/database.js exige credenciales
+no vacías y un certificado CA legible antes de preparar la conexión.
 
-El usuario, contraseña y certificado de MySQL se completarán al
-preparar la conexión en la fase 6. JWT todavía no se utiliza para
-autenticar: su secreto queda preparado para la fase correspondiente.
+JWT todavía no se utiliza para autenticar: su secreto queda
+preparado para la fase correspondiente.
 
 El frontend valida `VITE_API_URL` mediante `src/config/env.js`.
 Si la configuración es inválida, muestra “Sistema no disponible”
@@ -126,7 +169,73 @@ producción deberá dirigir esa ruta al backend.
 - Frontend: aviso ante una dirección API inválida y recuperación
   al restaurar la configuración correcta.
 - ESLint y compilación del frontend completados sin errores.
-- Secreto JWT ausente de los 18 archivos compilados revisados.
-- Contraseña MySQL pendiente de configurar y comprobar.
+- Secreto JWT y contraseña MySQL ausentes de los 18 archivos
+  del frontend compilado revisados, mediante búsqueda de valores exactos.
 - Pino elimina las rutas de campos sensibles configuradas,
   comprobado mediante valores ficticios.
+
+## Conexión con MySQL — fase 6
+
+### Entorno local
+
+- MySQL Community Server 8.4.11, servicio Windows MySQL84.
+- Host 127.0.0.1 y puerto 3307.
+- Base la_veneziana, con utf8mb4 y utf8mb4_unicode_ci.
+- Usuario la_veneziana_app, limitado al origen localhost.
+- Permisos SELECT, INSERT, UPDATE y DELETE sobre la_veneziana.
+- La cuenta exige conexiones cifradas mediante REQUIRE SSL.
+- Workbench 26.7.0 se utiliza para administración; la aplicación
+  no necesita que Workbench permanezca abierto.
+
+La contraseña y la ruta local del certificado se configuran solo
+en backend/.env. No publicar contraseñas ni claves privadas.
+
+La base permanece sin tablas de negocio. Se creó una tabla técnica
+para comprobar rollback y se eliminó al finalizar. Las tablas del
+sistema se crearán mediante migraciones en la fase correspondiente.
+
+### Configuración compartida
+
+src/config/database.js exporta una instancia de Sequelize.
+
+- Sesiones en UTC mediante timezone: '+00:00'.
+- Consultas automáticas sin impresión SQL.
+- Pool: máximo 5 conexiones, mínimo 0.
+- Espera para adquirir conexión: 5000 ms.
+- Tiempo de conexión inicial: 5000 ms.
+- Retiro de conexiones inactivas: 10000 ms; revisión cada 1000 ms.
+- Verificación de certificados con la CA configurada.
+- En desarrollo local no se verifica el nombre del certificado
+  autogenerado. En producción y conexiones no locales sí se exige
+  verificar la identidad del servidor.
+
+El cierre espera a que terminen las solicitudes HTTP y después
+cierra el pool de Sequelize, manteniendo el límite de diez segundos.
+
+### Dependencias
+
+Sequelize 6.37.8 y mysql2 3.24.6 están fijados como versiones exactas.
+
+Se aplica un override de uuid 11.1.1 para Sequelize, para corregir
+el aviso de seguridad detectado. Se comprobó la generación de
+UUID v1 y v4 y el funcionamiento de transacciones reales.
+
+El último npm audit reportó cero vulnerabilidades. El aviso de
+obsolescencia de dottie se distingue de los avisos de seguridad.
+
+### Comprobaciones realizadas
+
+- Conexión con el usuario de aplicación, base y puerto esperados.
+- Sesión UTC y conexión cifrada.
+- Rechazo de una CA incorrecta.
+- Pool ocupado con cinco conexiones: espera agotada y recuperación
+  después de finalizar las transacciones.
+- Escritura revertida por rollback y consulta posterior correcta.
+- MySQL detenido: /health conserva 200 y /ready devuelve 503.
+- MySQL recuperado: /ready vuelve a 200.
+- Cierre del pool y del servidor mediante SIGINT.
+- Sintaxis de database.js, app.js y server.js revisada con node --check.
+- Secreto JWT y contraseña MySQL ausentes de la compilación revisada.
+
+Las comprobaciones son pruebas manuales; no constituyen una
+auditoría completa ni una suite automatizada.

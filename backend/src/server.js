@@ -8,6 +8,9 @@ import app from './app.js';
 // los mensajes del servidor mediante Pino.
 import logger from './logger.js';
 
+// Importar el pool compartido para cerrarlo al detener el backend.
+import { sequelize } from './config/database.js';
+
 // Utilizar el puerto que config/env.js ya convirtió y validó.
 const PORT = env.puerto;
 
@@ -107,22 +110,39 @@ function cerrarServidor(signal) {
   // El temporizador no mantiene vivo el proceso por sí solo.
   limite.unref();
 
-  // Dejamos de aceptar conexiones nuevas.
-  // La función interna se ejecutará cuando termine el cierre.
-  server.close((err) => {
-    // Cancelamos el temporizador al terminar.
-    clearTimeout(limite);
-
-    // Registramos cualquier fallo durante el cierre.
+  // Dejar de aceptar conexiones HTTP y esperar a que terminen las solicitudes.
+server.close(async (err) => {
+  try {
+    // Registrar un posible fallo HTTP, pero intentar cerrar también MySQL.
     if (err) {
-      logger.error({ code: err.code }, 'Error al cerrar el servidor.');
+      logger.error({ code: err.code }, 'Error al cerrar el servidor HTTP.');
       process.exitCode = 1;
-      return;
     }
 
-    // Confirmamos que el servidor terminó de cerrar.
-    logger.info('Servidor cerrado correctamente.');
-  });
+    // Cerrar el pool después de terminar las solicitudes HTTP.
+    await sequelize.close();
+    logger.info('Pool de MySQL cerrado correctamente.');
+
+    // Confirmar el cierre completo si HTTP terminó sin errores.
+    if (!err) {
+      logger.info('Servidor cerrado correctamente.');
+    }
+  } catch (error) {
+    // Registrar solo identificadores, sin credenciales ni consultas.
+    logger.error(
+      {
+        errorName: error.name,
+        code: error.original?.code ?? error.code
+      },
+      'Error al cerrar el pool de MySQL.'
+    );
+
+    process.exitCode = 1;
+  } finally {
+    // Cancelar el límite cuando finalizaron los intentos de cierre.
+    clearTimeout(limite);
+  }
+});
 
   // Este bloque está FUERA de la función interna de server.close().
   // Se ejecuta inmediatamente después de solicitar el cierre.
