@@ -13,10 +13,13 @@
 - Fase 6: conexión con MySQL mediante Sequelize y mysql2,
   verificación de CA, sesiones UTC, pool limitado, disponibilidad
   de la base y cierre ordenado de conexiones.
+- Fase 7: modelos de seguridad, roles, permisos y auditoría,
+  mapeados al SQL con comprobaciones de carga y configuración.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
-con MySQL. La conexión del frontend con la API, las pantallas de
-negocio y los modelos y migraciones de tablas siguen pendientes.
+con MySQL y tiene definidos los modelos de seguridad, roles, permisos
+y auditoría. La conexión del frontend con la API, las pantallas de
+negocio, los demás modelos y las migraciones siguen pendientes.
 
 ## Preparación del backend
 
@@ -239,3 +242,57 @@ obsolescencia de dottie se distingue de los avisos de seguridad.
 
 Las comprobaciones son pruebas manuales; no constituyen una
 auditoría completa ni una suite automatizada.
+
+## Modelos de seguridad y auditoría — fase 7
+
+### Archivos creados
+
+Los modelos utilizan la instancia compartida de src/config/database.js.
+
+| Archivo | Modelo | Tabla SQL |
+|---|---|---|
+| backend/src/models/Rol.js | Rol | roles |
+| backend/src/models/Permiso.js | Permiso | permisos |
+| backend/src/models/RolPermiso.js | RolPermiso | rol_permisos |
+| backend/src/models/Usuario.js | Usuario | usuarios |
+| backend/src/models/AuditLog.js | AuditLog | audit_logs |
+
+### Configuración
+
+- Nombres de tablas y columnas explícitos, basados en el SQL.
+- RolPermiso utiliza una clave primaria compuesta:
+  rol_id y permiso_id, sin un id adicional.
+- Permiso declara un índice único sobre modulo y accion.
+- Usuario referencia su rol mediante rol_id.
+- Contraseña y PIN se representan mediante campos de hashes.
+  El modelo no genera esos hashes ni implementa autenticación.
+- AuditLog conserva BIGINT, JSON y los tipos de eventos del SQL.
+- AuditLog tiene fecha de creación, sin fecha de modificación.
+- Las referencias conservan las reglas CASCADE, RESTRICT y SET NULL
+  correspondientes al SQL.
+
+Las fechas TIMESTAMP del SQL se representan mediante DataTypes.DATE.
+Las migraciones conservarán sus tipos y reglas en MySQL.
+
+### Comprobaciones realizadas
+
+- Sintaxis de los cinco archivos revisada con node --check.
+- Carga conjunta de los cinco modelos.
+- Instancia de Sequelize compartida.
+- Nombres de tablas y listas completas de columnas.
+- Claves primarias, incluida la clave compuesta de RolPermiso.
+- Tipos y longitudes principales, referencias y reglas de eliminación.
+- Valores de ENUM, valores predeterminados seleccionados e índices.
+
+Las comprobaciones se realizaron sobre la configuración en memoria,
+sin ejecutar consultas ni crear tablas.
+
+### Alcance pendiente
+
+La definición de los modelos no crea tablas ni registra auditoría
+automáticamente. No se utilizó sequelize.sync().
+
+Las asociaciones y las migraciones corresponden a la fase 10.
+Las restricciones reales se probarán en MySQL después de crear
+las tablas. La autenticación, autorización y protección del
+historial de auditoría se implementarán en las fases correspondientes.
