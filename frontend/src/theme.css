@@ -10,6 +10,9 @@
      Conservamos alternativas por si Montserrat no puede cargar. */
   --font-titulo: "Montserrat Variable", Arial, sans-serif;
 
+  /* Fuente de bienvenida para el nombre La Veneziana. */
+  --font-marca: "Playfair Display Variable", Georgia, serif;
+
   /* Colores de marca.
      Dorado y lima deben acompañarse de texto oscuro. */
   --color-marca-dorado: #f59e0b;

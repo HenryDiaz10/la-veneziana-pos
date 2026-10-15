@@ -18,6 +18,9 @@ import './index.css'
 // Importamos el componente principal que creamos.
 import App from './App.jsx'
 
+// Fuente local para el nombre de marca en la pantalla de login.
+import '@fontsource-variable/playfair-display'
+
 // Buscamos el elemento con id="root" definido en index.html.
 const elementoRaiz = document.getElementById('root')
 

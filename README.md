@@ -29,8 +29,11 @@
 - Fase 12: sesiones persistentes, autenticación y permisos por solicitud,
   gestión de empleados y roles, recuperación administrativa de acceso
   y base transaccional de autorizaciones sensibles de un solo uso.
+- Fase 13: pantalla de login adaptable con logo original, formulario
+  de vidrio, fuente Playfair Display local y efectos de interacción.
 
-El frontend muestra una pantalla inicial. El backend ya se conecta
+El frontend muestra la pantalla de login, todavía sin envío de credenciales.
+El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
 
@@ -995,8 +998,75 @@ mantener la misma coordinación en futuras operaciones de seguridad.
 Las pruebas manuales no constituyen una auditoría completa ni una suite
 automatizada; no se desactivaron administradores reales para probar ese límite.
 
-Continúan pendientes el frontend de login, las cookies HttpOnly/Secure y
+Al cerrar la fase 12 quedaban pendientes el frontend de login, las cookies HttpOnly/Secure y
 la protección CSRF cuando corresponda. El transporte actual usa Bearer;
 no guardar credenciales de sesión en localStorage. No se implementaron
 tokens de renovación. La integración de auditoría de operaciones de
 seguridad y los servicios del negocio se desarrollarán por separado.
+
+## Fase 13: interfaz de login
+
+Se sustituyó la pantalla inicial por el acceso del personal. El diseño
+final utiliza el logo original a la izquierda y el formulario a la derecha
+en escritorio. En pantallas pequeñas se organizan en una columna.
+Se mantuvo el fondo oscuro y, por preferencia del usuario, la tarjeta
+blanca prevista inicialmente se reemplazó por vidrio translúcido.
+
+### Archivos creados y modificados
+
+| Archivo relativo a frontend | Responsabilidad |
+| --- | --- |
+| src/pages/Login.jsx (nuevo) | Pantalla, campos de correo y contraseña y control de visibilidad. |
+| src/assets/logo-veneziana.png (nuevo) | Copia del PNG original de DOCUMENTACION; conserva proporción y transparencia. |
+| public/licenses/playfair-display-LICENSE.txt (nuevo) | Copia de la licencia OFL-1.1 de la fuente incorporada. |
+| src/App.jsx | Muestra Login y conserva el enlace para saltar al contenido. |
+| src/main.jsx | Importa Playfair Display desde el paquete local. |
+| src/theme.css | Añade font-marca con Playfair Display y fuentes de respaldo. |
+| src/index.css | Define el vidrio, fondo, foco y efectos exclusivos del login. |
+| package.json y package-lock.json | Registran @fontsource-variable/playfair-display 5.3.0 exacto. |
+
+El README general también se actualizó. El componente se importa con el
+nombre exacto `Login.jsx`, respetando mayúsculas y minúsculas.
+
+### Formulario y accesibilidad
+
+`Login` utiliza `useId` para asociar etiquetas y campos y `useState` para
+mostrar u ocultar la contraseña sin alterar su contenido. Los campos
+incluyen autocompletado, tipos y atributos requeridos; el correo admite
+hasta 100 caracteres. No se impone en el login la longitud mínima de alta,
+para permitir la comparación con credenciales existentes en el backend.
+
+El botón Mostrar/Ocultar conserva su estado accesible. Los iconos
+decorativos no se anuncian a lectores de pantalla. Se mantiene el foco
+visible en dorado y el enlace Saltar al contenido. El texto de recuperación
+remite al administrador y no simula un procedimiento de recuperación.
+
+### Diseño y efectos
+
+El logo mantiene su proporción. La marca utiliza Playfair Display y el
+resto de la interfaz conserva Inter. Se añadieron fondo con luces suaves,
+trama discreta, separación visual entre columnas y vidrio con respaldo
+oscuro cuando el navegador no dispone de desenfoque.
+
+La entrada del logo y formulario es breve y escalonada. El halo del logo
+se reproduce una vez; los bordes y los iconos responden al foco. El botón
+incorpora destello, elevación y desplazamiento leve de su flecha.
+`moverLuz` actualiza variables CSS para seguir el ratón sin renderizados
+de React por movimiento. La luz interactiva se omite en dispositivos
+táctiles y con preferencia de movimiento reducido; esa preferencia también
+desactiva las animaciones y transiciones decorativas. No hay animaciones
+continuas automáticas ni librerías de efectos adicionales.
+
+### Comprobaciones y alcance
+
+ESLint y la compilación de producción finalizaron correctamente.
+La instalación de la fuente reportó cero vulnerabilidades en npm audit.
+Se revisaron visualmente escritorio y móvil, incluido un ancho de 320 px
+sin desbordamiento horizontal, y se comprobó el cambio de tipo password/text
+del control de visibilidad y la actualización de la luz con el ratón.
+
+Esta fase entrega la interfaz. `manejarEnvio` evita la navegación y el envío
+de credenciales por la URL; todavía no realiza solicitudes al backend ni
+simula un acceso correcto. La fase 14 conectará el formulario con la sesión
+y la identidad visual, con cookies HttpOnly/Secure y protección CSRF cuando
+corresponda. No guardar credenciales de sesión en localStorage.
