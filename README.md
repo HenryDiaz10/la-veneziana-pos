@@ -24,13 +24,16 @@
 - Fase 10: 51 migraciones aplicadas en MySQL, asociaciones de los
   modelos, datos iniciales sin duplicados y pruebas reales de
   restricciones, columnas calculadas y consultas relacionadas.
+- Fase 11: login HTTP con bcrypt, JWT firmado, bloqueo temporal
+  por usuario, límite por IP y alta interactiva del administrador inicial.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
 
-Los servicios de negocio, las API del negocio y su integración
-con el frontend siguen pendientes.
+El backend dispone de POST /api/auth/login. Siguen pendientes la
+protección de rutas, la autorización por permisos, los demás servicios
+de negocio y su integración con el frontend.
 
 Las secciones por fase describen lo realizado en cada etapa.
 Los pendientes de migraciones y asociaciones mencionados en las
@@ -164,8 +167,9 @@ El backend utiliza DATABASE_USER, DATABASE_PASSWORD y DATABASE_CA
 desde su .env privado. src/config/database.js exige credenciales
 no vacías y un certificado CA legible antes de preparar la conexión.
 
-JWT todavía no se utiliza para autenticar: su secreto queda
-preparado para la fase correspondiente.
+En la fase 5 se preparó y validó el secreto JWT. La firma de tokens
+se incorporó en la fase 11; su verificación en rutas protegidas
+corresponde a la fase 12.
 
 El frontend valida `VITE_API_URL` mediante `src/config/env.js`.
 Si la configuración es inválida, muestra “Sistema no disponible”
@@ -722,8 +726,162 @@ las funciones up/down se revisaron además mediante ejecución simulada.
 
 ### Trabajo pendiente
 
-La fase 11 implementará el inicio de sesión y la firma de JWT.
+El inicio de sesión y la firma de JWT se incorporaron en la fase 11,
+documentada a continuación.
 Siguen pendientes los servicios y validaciones de autorización,
 concurrencia, inventario, cobro, devoluciones, emisión fiscal,
 publicación de eventos e impresión. Los modelos y asociaciones
 no ejecutan estas operaciones automáticamente.
+
+## Login y firma de JWT — fase 11
+
+### Archivos y dependencias
+
+Se instalaron versiones exactas de bcrypt 6.0.0, jsonwebtoken 9.0.3
+y express-rate-limit 8.7.1, registradas en package.json y package-lock.json.
+La auditoría posterior a la instalación reportó cero vulnerabilidades.
+
+| Archivo dentro de backend | Responsabilidad |
+|---|---|
+| src/security/password.js | Crear hashes bcrypt y verificar contraseñas sin recortar sus espacios. |
+| src/security/token.js | Configurar y firmar tokens de acceso. |
+| src/validators/login.js | Validar el cuerpo, correo y longitud de contraseña antes de consultar MySQL. |
+| src/services/auth.service.js | Verificar credenciales, estado y bloqueo; actualizar intentos y resolver rol y permisos. |
+| src/middlewares/loginLimiter.js | Limitar solicitudes de login por IP y responder HTTP 429. |
+| src/controllers/auth.controller.js | Convertir los resultados del servicio en respuestas HTTP. |
+| src/routes/auth.routes.js | Registrar POST /login con el limitador antes del controlador. |
+| src/app.js | Montar el router en /api/auth, antes del manejador 404. |
+| scripts/helpers/terminal.js | Solicitar datos visibles y contraseñas ocultas en una terminal interactiva. |
+| scripts/crear-admin.js | Crear el primer administrador con confirmación de contraseña y sin sobrescribir cuentas. |
+
+### Endpoint y respuestas
+
+Iniciar el backend desde su carpeta con npm.cmd run dev o npm.cmd start.
+El destino local es POST http://127.0.0.1:3000/api/auth/login.
+Enviar Content-Type: application/json y un objeto con email y password.
+
+| HTTP | Significado |
+|---|---|
+| 200 | Acceso correcto: mensaje, token, expiraEn y usuario. |
+| 400 | Formato de datos inválido; también puede proceder del parser JSON. |
+| 401 | Cuenta inexistente, contraseña incorrecta, estado inactivo o bloqueo vigente, con el mismo mensaje general. |
+| 429 | Se superó el límite de solicitudes por IP. |
+| 500 | Error interno con mensaje general y sin detalles del fallo en la respuesta. |
+
+La respuesta de usuario contiene únicamente id, nombre, email, rol y
+permisos. No incluye password_hash, hashes de PIN ni el modelo completo.
+El controlador y la respuesta del limitador usan Cache-Control: no-store.
+El manejador central conserva las respuestas generales de errores;
+Pino registra los metadatos HTTP sin cuerpos ni encabezados de sesión.
+En respuestas 500, pino-http puede añadir su error genérico y stack interno.
+
+### Contraseñas y tokens
+
+Las contraseñas nuevas requieren al menos 12 caracteres y un máximo
+de 72 bytes UTF-8. bcrypt utiliza costo 12 y sal aleatoria.
+La verificación de login acepta una cadena no vacía de hasta 72 bytes;
+no recorta ni transforma la contraseña. El correo se recorta en sus
+extremos y se comprueba con un formato básico y longitud máxima de 100.
+
+El token se firma con HS256, emisor la-veneziana-backend,
+audiencia la-veneziana-pos y duración de 900 segundos (15 minutos).
+JWT_SECRET sigue siendo el secreto privado validado de .env;
+token.js lo interpreta como bytes hexadecimales. Los claims son
+sub (ID del usuario como cadena), iss, aud, iat, exp y jti aleatorio.
+El JWT no incluye roles, permisos, contraseñas ni hashes. Su firma
+no cifra el contenido ni sustituye la verificación posterior del token.
+
+### Intentos, bloqueos y límite HTTP
+
+El servicio solo acepta usuarios con estado activo. Usa una transacción
+y SELECT FOR UPDATE sobre la fila del usuario para serializar los
+cambios del contador. Tras cinco contraseñas incorrectas se establece
+un bloqueo de 15 minutos. Durante ese bloqueo tampoco se acepta una
+contraseña correcta. Al vencer, el siguiente fallo inicia otro contador;
+un acceso correcto limpia intentos y bloqueo y registra ultimo_acceso.
+
+Los rechazos se devuelven normalmente desde la transacción para que
+se confirmen los intentos fallidos. Los errores internos sí provocan
+rollback. Las cuentas inexistentes también realizan una comparación
+bcrypt con un hash simulado, para reducir diferencias de trabajo;
+esto no garantiza tiempos de respuesta idénticos.
+
+El limitador admite 20 solicitudes de login por IP en 15 minutos,
+contando éxitos y fallos que llegan a la ruta. Incluye encabezados
+RateLimit y Retry-After cuando corresponde. El contador es local al
+proceso y se pierde al reiniciarlo; varias instancias requerirán un
+almacenamiento compartido. La configuración actual corresponde a
+conexión directa; cualquier proxy debe configurarse explícitamente.
+El límite del login no bloquea /health.
+
+### Alta inicial del administrador
+
+Después de aplicar migraciones, seeds y completar el .env de la
+aplicación, ejecutar desde backend en una terminal interactiva:
+
+```powershell
+node scripts/crear-admin.js
+```
+
+El comando solicita nombre, correo, contraseña y confirmación.
+La entrada de contraseña no muestra letras ni asteriscos y el historial
+de readline está desactivado. No se reciben contraseñas mediante
+argumentos del comando ni se utiliza una contraseña universal.
+Ctrl+C permite cancelar durante las preguntas.
+
+El rol administrador debe existir. Se comprueba que no haya un
+usuario con ese rol, incluso si está inactivo. La comprobación se
+repite dentro de una transacción, bloqueando el rol para serializar
+ejecuciones simultáneas de este comando. Un correo ya registrado
+se rechaza; las cuentas existentes no se actualizan ni se borran.
+Se creó la cuenta inicial y se verificaron su rol administrador,
+estado activo, cero intentos fallidos y bloqueo NULL.
+
+El comando es un mecanismo de arranque local, no una ruta pública
+de registro ni una herramienta de recuperación de contraseña.
+La contraseña real no debe incluirse en ejemplos, capturas o archivos
+versionados. Las cuentas de la aplicación y de migraciones de MySQL
+son distintas de los usuarios que se registran en la tabla usuarios.
+
+### Comprobaciones realizadas
+
+Las pruebas se ejecutaron manualmente desde PowerShell y Node.js:
+
+- Hashes distintos para la misma contraseña, costo 12, comparación
+  correcta y rechazo de valores cortos o superiores a 72 bytes.
+- Prueba Unicode con escape \u00e9 para evitar cambios de codificación
+  al enviar scripts desde PowerShell a Node.js.
+- Firma y claims del JWT, tokens distintos para el mismo usuario,
+  rechazo con otra clave y vencimiento simulado sin esperar 15 minutos.
+- Validación de objetos, correo, tipos y conservación de espacios de clave.
+- Persistencia de cinco intentos, bloqueo, recuperación tras vencer,
+  reinicio del contador y actualización del último acceso.
+- Rechazo de usuarios suspendidos y cesados; rol y cuatro permisos
+  del cajero comprobados con una cuenta temporal.
+- Tres intentos concurrentes conservaron el contador correcto.
+- Limitador aislado: veinte solicitudes aceptadas y la 21 rechazada.
+- Endpoint completo: HTTP 400, 401, 200 y 429; JWT verificado,
+  datos sensibles excluidos y /health disponible tras alcanzar el límite.
+- Fallo interno inyectado temporalmente: HTTP 500 general, sin el
+  detalle privado en la respuesta, y servidor todavía disponible.
+- Terminal con entrada oculta y creación real del administrador inicial.
+
+Los usuarios temporales se eliminaron al terminar y los servidores
+temporales se cerraron. La prueba del servicio confirma sus propias
+transacciones; no se revierte mediante una transacción externa.
+El fallo inyectado se restauró al finalizar. La cuenta real del
+administrador permanece guardada. Estas comprobaciones manuales no
+constituyen una suite automatizada ni una auditoría completa de seguridad.
+
+### Alcance pendiente
+
+El login devuelve el token en JSON. Todavía no verifica tokens en
+rutas protegidas, no aplica autorización por permisos y no registra
+sesiones en auth_sesiones ni implementa revocación o renovación.
+La fase 12 incorporará la protección del backend. La integración
+de sesión del frontend se realizará con el mecanismo previsto en
+el plan: cookies HttpOnly/Secure y protección CSRF cuando corresponda,
+sin guardar credenciales de sesión en localStorage.
+
+Quedan pendientes el frontend de login, la gestión de usuarios,
+la recuperación de acceso y los servicios operativos del negocio.

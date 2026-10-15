@@ -17,6 +17,8 @@ import { env } from './config/env.js';
 // Importar la instancia compartida de Sequelize.
 import { sequelize } from './config/database.js';
 
+import authRouter from './routes/auth.routes.js';
+
 // Creamos una aplicación Express.
 // La constante "app" nos permite configurarla y agregar rutas.
 const app = express();
@@ -125,6 +127,9 @@ app.get('/ready', async (req, res) => {
     });
   }
 });
+
+// Registrar las rutas de autenticación.
+app.use('/api/auth', authRouter);
 
 // Este middleware se ejecuta cuando ninguna ruta anterior respondió.
 // Debe colocarse después de todas las rutas de la aplicación.
