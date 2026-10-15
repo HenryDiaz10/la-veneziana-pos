@@ -15,11 +15,16 @@
   de la base y cierre ordenado de conexiones.
 - Fase 7: modelos de seguridad, roles, permisos y auditoría,
   mapeados al SQL con comprobaciones de carga y configuración.
+- Fase 8: modelos de catálogo, modificadores, unidades, insumos
+  y recetas, con revisión de precisión decimal, referencias,
+  índices y protección de asignaciones a columnas calculadas.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
-con MySQL y tiene definidos los modelos de seguridad, roles, permisos
-y auditoría. La conexión del frontend con la API, las pantallas de
-negocio, los demás modelos y las migraciones siguen pendientes.
+con MySQL y tiene definidos los modelos de seguridad, auditoría,
+catálogo, modificadores, unidades, insumos y recetas.
+
+La conexión del frontend con la API, las pantallas de negocio,
+los modelos de los demás dominios y las migraciones siguen pendientes.
 
 ## Preparación del backend
 
@@ -296,3 +301,98 @@ Las asociaciones y las migraciones corresponden a la fase 10.
 Las restricciones reales se probarán en MySQL después de crear
 las tablas. La autenticación, autorización y protección del
 historial de auditoría se implementarán en las fases correspondientes.
+
+## Modelos de catálogo, modificadores y recetas — fase 8
+
+### Archivos creados
+
+Los nueve modelos utilizan la instancia compartida de
+backend/src/config/database.js.
+
+| Archivo en backend/src/models | Modelo | Tabla SQL |
+|---|---|---|
+| CategoriaVenta.js | CategoriaVenta | categorias_venta |
+| ProductoVenta.js | ProductoVenta | productos_venta |
+| VarianteProducto.js | VarianteProducto | variantes_producto |
+| ModificadorCatalogo.js | ModificadorCatalogo | modificadores_catalogo |
+| ModificadorItem.js | ModificadorItem | modificadores_items |
+| ProductoModificador.js | ProductoModificador | producto_modificadores |
+| UnidadMedida.js | UnidadMedida | unidades_medida |
+| InsumoAlmacen.js | InsumoAlmacen | insumos_almacen |
+| RecetaBom.js | RecetaBom | recetas_bom_master |
+
+### Configuración
+
+- Se conservan nombres, tipos y nulabilidad del SQL, incluidos
+  los cambios posteriores declarados mediante ALTER TABLE.
+- ProductoModificador utiliza una clave primaria compuesta:
+  producto_id y grupo_id.
+- VarianteProducto declara el índice único uq_variante_producto
+  sobre id y producto_id.
+- RecetaBom declara el índice único
+  uq_bom_producto_variante_insumo sobre producto_venta_id,
+  variante_clave e insumo_id.
+- ProductoVenta utiliza precio_venta_base como precio base e incluye
+  la referencia opcional insumo_directo_id.
+- Los importes de productos, variantes y modificadores conservan
+  DECIMAL(12,2).
+- Los costos y cantidades de almacén conservan DECIMAL(12,4).
+- La cantidad bruta de receta utiliza DECIMAL(12,4) y su porcentaje
+  de merma utiliza DECIMAL(5,2).
+- Solo ProductoVenta tiene created_at y updated_at en este grupo.
+
+### Columnas calculadas
+
+margen_ganancia_teorico de ProductoVenta y variante_clave de
+RecetaBom son columnas calculadas por MySQL.
+
+Sus setters rechazan asignaciones normales mediante Sequelize.
+Las futuras operaciones de escritura deberán excluir expresamente
+estas columnas, incluidas las operaciones masivas.
+
+Las migraciones conservarán sus expresiones GENERATED ALWAYS.
+No se utilizó sequelize.sync().
+
+### Inventario y recetas
+
+El saldo físico se representa mediante insumos_almacen.stock_fisico.
+stock_reservado representa cantidades comprometidas; el disponible
+se calculará como stock_fisico menos stock_reservado.
+
+productos_venta.stock_actual se conserva por correspondencia con
+el SQL; no será una fuente independiente del saldo de inventario.
+
+Las cantidades de receta se expresan en la unidad base del insumo.
+Una receta completa de variante sustituirá a la receta base.
+
+Los modelos no convierten unidades, reservan inventario, consumen
+insumos ni calculan costos automáticamente.
+
+### Comprobaciones realizadas
+
+- Sintaxis de los nueve archivos revisada con node --check.
+- Carga conjunta de los nueve modelos.
+- Instancia de Sequelize compartida.
+- Nombres de tablas y listas completas de columnas.
+- Claves primarias, incluida la compuesta de ProductoModificador.
+- Precisión y escala de los campos DECIMAL revisados.
+- Nulabilidad y valores predeterminados de los saldos y costos
+  de almacén revisados.
+- Destinos y reglas de las referencias declaradas.
+- Índices únicos compuestos de variantes y recetas.
+- Rechazo de asignaciones normales a las dos columnas calculadas,
+  utilizando instancias construidas en memoria.
+
+Las pruebas no ejecutaron consultas ni guardaron registros.
+No comprobaron todavía las restricciones reales de MySQL.
+
+### Alcance pendiente
+
+Las asociaciones y migraciones se implementarán en la fase 10.
+Las migraciones conservarán las columnas generadas, los CHECK
+y la clave foránea compuesta que verifica que una variante
+pertenezca al producto indicado en la receta.
+
+Las reglas de selección de modificadores, precios, unidades,
+recetas, reservas y consumo se implementarán en sus servicios
+correspondientes.
