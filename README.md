@@ -21,14 +21,20 @@
 - Fase 9: modelos de operaciones, clientes, compras, inventario,
   pedidos, caja, ventas, devoluciones y soporte operativo.
   Revisión conjunta de los 51 modelos contra el SQL.
+- Fase 10: 51 migraciones aplicadas en MySQL, asociaciones de los
+  modelos, datos iniciales sin duplicados y pruebas reales de
+  restricciones, columnas calculadas y consultas relacionadas.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
-con MySQL y tiene definidos los 51 modelos correspondientes a las
-tablas del SQL de referencia.
+con MySQL y tiene creadas las 51 tablas del SQL de referencia,
+con sus modelos y asociaciones disponibles desde src/models/index.js.
 
-La creación de tablas mediante migraciones, las asociaciones,
-los datos iniciales, los servicios de negocio, las API del negocio y su
-integración con el frontend siguen pendientes.
+Los servicios de negocio, las API del negocio y su integración
+con el frontend siguen pendientes.
+
+Las secciones por fase describen lo realizado en cada etapa.
+Los pendientes de migraciones y asociaciones mencionados en las
+fases 7 a 9 se resolvieron en la fase 10, documentada al final.
 
 ## Preparación del backend
 
@@ -528,3 +534,196 @@ servicios y validaciones en sus fases correspondientes.
 
 Las revisiones manuales no constituyen una suite automatizada
 ni una auditoría completa del sistema.
+
+## Migraciones, asociaciones y datos iniciales — fase 10
+
+### Conexión independiente para migraciones
+
+El entorno local utiliza MySQL 8.4.11 en 127.0.0.1:3307 y la base
+la_veneziana. Se comprobó que estaba vacía antes de inicializarla.
+
+- La aplicación utiliza la cuenta la_veneziana_app@localhost,
+  con permisos SELECT, INSERT, UPDATE y DELETE sobre la base.
+- Las migraciones y seeds utilizan la cuenta
+  la_veneziana_migraciones@localhost, con esos permisos y además
+  CREATE, ALTER, DROP, INDEX y REFERENCES sobre la misma base.
+- La cuenta de migraciones requiere SSL. Las conexiones verifican la CA;
+  también verifica la identidad del servidor en producción y
+  en conexiones no locales, según la configuración existente.
+- Las sesiones trabajan en UTC. El proceso de migraciones limita
+  su pool a una conexión y lo cierra al terminar.
+
+Desde backend, crear la configuración privada una sola vez:
+
+```powershell
+if (-not (Test-Path -LiteralPath '.env.migrations')) {
+  Copy-Item -LiteralPath '.env.migrations.example' -Destination '.env.migrations'
+}
+
+git check-ignore -v -- .env.migrations
+```
+
+Completar DATABASE_PASSWORD con la contraseña de la cuenta de
+migraciones y DATABASE_CA con la ruta real del certificado.
+La plantilla contiene el resto del destino local y NODE_ENV.
+El archivo privado queda excluido de Git mediante .env.*;
+la plantilla .env.migrations.example sí se versiona.
+
+src/config/database.migrations.js lee este archivo mediante
+dotenv.parse, sin modificar process.env ni las credenciales de
+la aplicación. Las rutas relativas de certificados parten de backend.
+Las credenciales se administran en MySQL; el código no crea las cuentas.
+
+### Archivos incorporados
+
+| Ubicación dentro de backend | Propósito |
+|---|---|
+| .env.migrations.example | Plantilla pública de configuración de migraciones. |
+| src/config/database.migrations.js | Validación, CA y conexión exclusiva de migraciones. |
+| src/config/migrator.js | Configuración de Umzug y su almacenamiento en SequelizeMeta. |
+| scripts/migrate.js | Ejecutor de pending, executed, up y down mediante la API de Umzug. |
+| migrations/0001-crear-roles.js a 0051-crear-auth-sesiones.js | Una migración por tabla, con funciones up y down. |
+| seeders/0001-roles.js | Cuatro roles iniciales. |
+| seeders/0002-permisos.js | Doce permisos iniciales. |
+| seeders/0003-rol-permisos.js | Asignaciones entre roles y permisos mediante sus IDs reales. |
+| seeders/0004-configuracion-global.js | Parámetros EMP_INFO, FINANZAS y HARDWARE. |
+| scripts/seed.js | Ejecución ordenada de los cuatro seeds en una transacción. |
+| src/models/index.js | Carga, asociaciones y exportación central de los 51 modelos. |
+
+Las migraciones contienen SQL explícito y autónomo, basado en
+DOCUMENTACION/BASE DE DATOS/la_veneziana_db_final.sql. Integran los
+ALTER posteriores en la estructura inicial de cada tabla y se ordenan
+según sus dependencias. No leen el documento SQL al ejecutarse ni
+insertan sus seeds automáticamente.
+
+### Comandos de uso
+
+Ejecutar desde backend, después de instalar las dependencias y
+completar la configuración privada:
+
+```powershell
+# Consultar las migraciones pendientes.
+npm.cmd run db:migrate -- pending
+
+# Aplicar todas las pendientes en orden.
+npm.cmd run db:migrate -- up
+
+# Consultar el historial de migraciones aplicadas.
+npm.cmd run db:migrate -- executed
+
+# Cargar o volver a ejecutar los datos iniciales.
+npm.cmd run db:seed
+```
+
+npm.cmd run selecciona el script de package.json; el separador --
+entrega el argumento siguiente al ejecutor de migraciones.
+SequelizeMeta guarda el nombre de cada migración aplicada.
+Incluso consultar pending puede crear esta tabla técnica si falta.
+El servidor HTTP no ejecuta migraciones ni seeds al arrancar.
+
+El comando de reversión es:
+
+```powershell
+npm.cmd run db:migrate -- down
+```
+
+Revierte solamente la última migración aplicada. Su función down
+elimina la tabla y sus registros; las dependientes deben revertirse
+primero. MySQL realiza commits implícitos con DDL: no existe un
+rollback transaccional general para la creación o eliminación de tablas.
+Ante un fallo de migración, revisar la estructura y el historial antes
+de reintentar; una tabla creada podría quedar sin registrar si falla
+la escritura posterior en SequelizeMeta.
+
+### Umzug y dependencias
+
+Se utiliza Umzug 3.8.3 mediante su API. Se agregó un override limitado
+a umzug -> @rushstack/ts-command-line -> argparse 2.0.1 para retirar
+la dependencia indirecta sprintf-js señalada por npm audit.
+La auditoría realizada después del ajuste reportó cero vulnerabilidades.
+Se conserva el override anterior de uuid bajo Sequelize.
+
+La interfaz de comandos incorporada de Umzug presentó una
+incompatibilidad con argparse 2.0.1 (argumento metavar).
+Por eso scripts/migrate.js llama directamente a pending(), executed(),
+up() y down(); no utiliza runAsCLI(). La API se probó primero en
+memoria y después contra MySQL. El resultado de audit no sustituye
+las comprobaciones de compatibilidad ni garantiza auditorías futuras.
+
+### Seeds y conservación de datos
+
+Se ejecutaron los seeds repetidamente sin duplicar los registros:
+
+- Cuatro roles de sistema: administrador, cajero, mesero y cocinero.
+- Doce permisos y veinte asignaciones: administrador 12, cajero 4,
+  cocinero 1 y mesero 3.
+- Tres parámetros de configuración: EMP_INFO, FINANZAS y HARDWARE.
+
+Las cláusulas ON DUPLICATE KEY UPDATE conservan los registros que
+ya existen. Las asignaciones se agregan sin eliminar permisos previos;
+los seeds no sincronizan ni revocan una política de acceso existente.
+No dependen de que los IDs empiecen en uno o sean consecutivos.
+Los intentos de inserción y las pruebas con rollback pueden dejar
+saltos en los identificadores autoincrementales.
+
+Los datos empresariales y la tasa de impuesto quedan pendientes de
+completar y validar. Reejecutar el seed conserva los valores que
+se hayan configurado. No se crea ningún usuario ni contraseña universal.
+
+### Asociaciones y comprobaciones
+
+Se revisó el registro central: 51 modelos exportados, 436 campos y
+160 asociaciones (78 belongsTo, 75 hasMany, 3 hasOne y 4 belongsToMany).
+La comparación de los atributos antes y después de registrar las
+asociaciones no detectó campos agregados ni cambios en sus tipos,
+nulabilidad, claves, valores predeterminados, referencias o setters.
+
+Las relaciones muchos a muchos utilizan RolPermiso y ProductoModificador.
+Las relaciones uno a uno corresponden a pedido/venta,
+movimiento de caja/gasto y movimiento de Kardex/reserva.
+Las asociaciones de navegación por variante en ítems, combos y tareas
+usan constraints: false para no agregar una FK simple distinta de la
+estructura SQL. Las cuatro claves foráneas compuestas están creadas
+y siguen siendo aplicadas por MySQL.
+
+Sequelize no ejecuta sync() ni alter automático. Las consultas relacionadas
+deben importar los modelos desde src/models/index.js para cargar las
+asociaciones. Los modelos sin claves foráneas, como ConfiguracionGlobal,
+EventoOutbox y SerieComprobante, también se exportan desde ese archivo.
+
+Las verificaciones en MySQL devolvieron:
+
+| Elemento | Cantidad |
+|---|---:|
+| Tablas del sistema, excluyendo SequelizeMeta | 51 |
+| Columnas del sistema | 436 |
+| Claves foráneas, incluidas cuatro compuestas | 83 |
+| Restricciones CHECK | 29 |
+| Columnas calculadas | 5 |
+| Migraciones registradas | 51 |
+
+Se comprobaron en operaciones reales dentro de transacciones revertidas:
+
+- Rechazo de roles duplicados y asignaciones duplicadas.
+- Eliminación en cascada de asignaciones y rechazo de referencias huérfanas.
+- Rechazo de stock, reservas y costos negativos, y de reservas superiores al stock.
+- Cálculo y recálculo del margen, y rechazo de su asignación manual.
+- Rechazo de una variante de otro producto en recetas y de recetas base duplicadas.
+- Exclusividad de sesiones abiertas por caja y cajero, liberada al cerrar.
+- Exclusividad de cuenta abierta o bloqueada en pago por mesa, liberada al pagar.
+
+También se probaron consultas SELECT con include por bloques y una
+consulta de roles con permisos que devolvió las veinte asignaciones
+esperadas mediante la cuenta de la aplicación. Las consultas sobre
+tablas todavía vacías comprueban la construcción y aceptación del SQL;
+no sustituyen pruebas de negocio con registros representativos.
+La reversión real completa de las 51 migraciones no se ejecutó;
+las funciones up/down se revisaron además mediante ejecución simulada.
+
+### Trabajo pendiente
+
+La fase 11 implementará el inicio de sesión y la firma de JWT.
+Siguen pendientes los servicios y validaciones de autorización,
+concurrencia, inventario, cobro, devoluciones, emisión fiscal,
+publicación de eventos e impresión. Los modelos y asociaciones
+no ejecutan estas operaciones automáticamente.
