@@ -97,6 +97,20 @@ export const Usuario = sequelize.define(
       defaultValue: 'activo',
     },
 
+    // Número de intentos fallidos registrados por autenticación.
+    intentos_fallidos: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+
+    // Vencimiento de un bloqueo temporal de acceso.
+    bloqueado_hasta: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+
     // Fecha de creación del registro.
     created_at: {
       type: DataTypes.DATE,

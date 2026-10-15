@@ -18,13 +18,17 @@
 - Fase 8: modelos de catálogo, modificadores, unidades, insumos
   y recetas, con revisión de precisión decimal, referencias,
   índices y protección de asignaciones a columnas calculadas.
+- Fase 9: modelos de operaciones, clientes, compras, inventario,
+  pedidos, caja, ventas, devoluciones y soporte operativo.
+  Revisión conjunta de los 51 modelos contra el SQL.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
-con MySQL y tiene definidos los modelos de seguridad, auditoría,
-catálogo, modificadores, unidades, insumos y recetas.
+con MySQL y tiene definidos los 51 modelos correspondientes a las
+tablas del SQL de referencia.
 
-La conexión del frontend con la API, las pantallas de negocio,
-los modelos de los demás dominios y las migraciones siguen pendientes.
+La creación de tablas mediante migraciones, las asociaciones,
+los datos iniciales, los servicios de negocio, las API del negocio y su
+integración con el frontend siguen pendientes.
 
 ## Preparación del backend
 
@@ -396,3 +400,131 @@ pertenezca al producto indicado en la receta.
 Las reglas de selección de modificadores, precios, unidades,
 recetas, reservas y consumo se implementarán en sus servicios
 correspondientes.
+
+## Modelos de operaciones y soporte — fase 9
+
+### Archivos creados
+
+Se añadieron 37 modelos en backend/src/models.
+Todos utilizan la instancia compartida de src/config/database.js.
+
+| Modelo y archivo .js | Tabla SQL |
+|---|---|
+| Cliente | clientes |
+| DireccionCliente | direcciones_clientes |
+| CrmMovimientoPuntos | crm_movimientos_puntos |
+| ProveedorMaestro | proveedores_maestro |
+| CompraFactura | compras_facturas |
+| CompraDetalle | compras_detalle |
+| InventarioKardex | inventario_kardex |
+| ZonaRestaurante | zonas_restaurante |
+| MesaSalon | mesas_salon |
+| PedidoMaster | pedidos_master |
+| PedidoItemKds | pedido_items_kds |
+| PedidoItemModificador | pedido_item_modificadores |
+| CajaFisica | cajas_fisicas |
+| SesionCajaZ | sesiones_caja_z |
+| MovimientoCajaChica | movimientos_caja_chica |
+| VentaComprobante | ventas_comprobantes |
+| VentaPagoSplit | ventas_pagos_split |
+| CategoriaGastoFijo | categorias_gastos_fijos |
+| GastoFinancieroOperativo | gastos_financieros_operativos |
+| ConfiguracionGlobal | configuracion_global |
+| ModificadorBom | modificadores_bom |
+| ComboComponente | combo_componentes |
+| KdsTarea | kds_tareas |
+| ReservaInsumo | reservas_insumos |
+| KdsHistorial | kds_historial |
+| IdempotenciaOperacion | idempotencia_operaciones |
+| EventoOutbox | eventos_outbox |
+| TrabajoImpresion | trabajos_impresion |
+| VentaDetalleSnapshot | ventas_detalle_snapshot |
+| SerieComprobante | series_comprobantes |
+| ComprobanteFiscal | comprobantes_fiscales |
+| VentaDevolucion | ventas_devoluciones |
+| DevolucionDetalle | devoluciones_detalle |
+| DevolucionPago | devoluciones_pagos |
+| AutorizacionSensible | autorizaciones_sensibles |
+| IncidenciaOperativa | incidencias_operativas |
+| AuthSesion | auth_sesiones |
+
+### Ajuste de un modelo anterior
+
+Se completó Usuario.js con intentos_fallidos y bloqueado_hasta,
+añadidos mediante ALTER TABLE en el SQL de referencia.
+El modelo no implementa todavía el bloqueo de cuentas.
+
+El conjunto contiene 51 modelos: 5 de la fase 7,
+9 de la fase 8 y 37 de la fase 9.
+
+### Configuración relevante
+
+- Se conservan INT, BIGINT, SMALLINT, CHAR, VARCHAR, DECIMAL,
+  ENUM, JSON y sus representaciones correspondientes en Sequelize.
+- ConfiguracionGlobal utiliza parametro_key como clave primaria,
+  sin id numérico.
+- ModificadorBom utiliza una clave primaria compuesta.
+- Se conservan los nombres particulares de fechas de cada tabla.
+- Los campos version preparan contadores; no activan por sí solos
+  control de concurrencia.
+- Los identificadores de operación y sus índices preparan el
+  control de duplicados; no implementan por sí solos idempotencia.
+- Los modelos de outbox e impresión describen almacenamiento;
+  todavía no publican eventos ni procesan impresoras.
+
+### Comprobaciones realizadas
+
+Las revisiones se ejecutaron mediante scripts manuales en memoria,
+leyendo el SQL como texto sin ejecutarlo.
+
+- Sintaxis de los archivos creados y del ajuste de Usuario revisada.
+- Carga y correspondencia de columnas y claves primarias.
+- 51 modelos y 436 campos revisados en tipos y nulabilidad.
+- Longitudes de texto, precisión decimal y valores de ENUM.
+- 163 valores predeterminados declarados en el SQL.
+- 47 campos autoincrementales y ausencia de autoincrementos adicionales.
+- 79 referencias individuales y sus reglas de eliminación y actualización.
+- 30 índices con nombre: unicidad, columnas y orden.
+- 19 campos con unicidad individual.
+
+Se identificaron cuatro claves foráneas compuestas pendientes
+de crear mediante migraciones, desde recetas_bom_master,
+pedido_items_kds, combo_componentes y kds_tareas hacia
+variantes_producto.
+
+Los analizadores utilizados están adaptados al formato del SQL
+del proyecto; no son analizadores SQL generales.
+
+### Columnas calculadas
+
+Se comprobaron en memoria las cinco columnas:
+
+- ProductoVenta.margen_ganancia_teorico.
+- RecetaBom.variante_clave.
+- PedidoMaster.mesa_activa_id.
+- SesionCajaZ.caja_abierta_id.
+- SesionCajaZ.cajero_abierto_id.
+
+Sus setters rechazaron asignaciones normales.
+La carga simulada mediante raw: true conservó los valores.
+
+Esta protección no cubre todas las vías de escritura.
+Los servicios deberán excluir expresamente estas columnas,
+incluidas las operaciones masivas.
+
+No se probó todavía su cálculo real en MySQL.
+
+### Alcance pendiente
+
+No se utilizó sequelize.sync() ni se crearon tablas en esta fase.
+Las comprobaciones no ejecutaron consultas ni guardaron registros.
+
+La fase 10 incorporará migraciones, asociaciones y datos iniciales,
+con pruebas reales de restricciones, índices y columnas generadas.
+
+La autenticación, autorizaciones, cálculos, reservas, consumo,
+cobros, devoluciones, cierres, eventos e impresión requieren
+servicios y validaciones en sus fases correspondientes.
+
+Las revisiones manuales no constituyen una suite automatizada
+ni una auditoría completa del sistema.
