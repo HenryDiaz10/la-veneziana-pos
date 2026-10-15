@@ -1,4 +1,7 @@
-import { iniciarSesion } from '../services/auth.service.js';
+import {
+  iniciarSesion,
+  cerrarSesion
+} from '../services/auth.service.js';
 
 export async function login(req, res, next) {
   // Evitar que se almacenen respuestas con datos de autenticación.
@@ -34,5 +37,29 @@ export async function login(req, res, next) {
   } catch (error) {
     // El manejador central enviará la respuesta general HTTP 500.
     next(error);
+  }
+}
+
+// Consultar la identidad validada por el middleware.
+export function sesionActual(req, res) {
+  return res.status(200).json({
+    usuario: req.auth.usuario
+  });
+}
+
+// Cerrar la sesión del token presentado.
+// Los identificadores proceden del middleware, no del cuerpo recibido.
+export async function logout(req, res, next) {
+  res.set('Cache-Control', 'no-store');
+
+  try {
+    await cerrarSesion({
+      usuarioId: req.auth.usuario.id,
+      sesionUid: req.auth.sesion.uid
+    });
+
+    return res.status(204).end();
+  } catch (error) {
+    return next(error);
   }
 }

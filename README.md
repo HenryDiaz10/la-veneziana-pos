@@ -26,14 +26,19 @@
   restricciones, columnas calculadas y consultas relacionadas.
 - Fase 11: login HTTP con bcrypt, JWT firmado, bloqueo temporal
   por usuario, límite por IP y alta interactiva del administrador inicial.
+- Fase 12: sesiones persistentes, autenticación y permisos por solicitud,
+  gestión de empleados y roles, recuperación administrativa de acceso
+  y base transaccional de autorizaciones sensibles de un solo uso.
 
 El frontend muestra una pantalla inicial. El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
 
-El backend dispone de POST /api/auth/login. Siguen pendientes la
-protección de rutas, la autorización por permisos, los demás servicios
-de negocio y su integración con el frontend.
+El backend dispone de login, consulta y cierre de sesión, rutas protegidas
+por permisos y gestión administrativa de empleados y roles. Siguen
+pendientes los servicios operativos de negocio y su integración con el
+frontend. Las autorizaciones sensibles se integrarán en las transacciones
+de ajustes y devoluciones cuando se implementen esos módulos.
 
 Las secciones por fase describen lo realizado en cada etapa.
 Los pendientes de migraciones y asociaciones mencionados en las
@@ -875,7 +880,7 @@ constituyen una suite automatizada ni una auditoría completa de seguridad.
 
 ### Alcance pendiente
 
-El login devuelve el token en JSON. Todavía no verifica tokens en
+Al terminar la fase 11, el login devuelve el token en JSON. Todavía no verifica tokens en
 rutas protegidas, no aplica autorización por permisos y no registra
 sesiones en auth_sesiones ni implementa revocación o renovación.
 La fase 12 incorporará la protección del backend. La integración
@@ -885,3 +890,113 @@ sin guardar credenciales de sesión en localStorage.
 
 Quedan pendientes el frontend de login, la gestión de usuarios,
 la recuperación de acceso y los servicios operativos del negocio.
+
+## Fase 12: autenticación, autorización y gestión de seguridad
+
+Los pendientes de protección de rutas, gestión de usuarios y recuperación
+administrativa descritos al cerrar la fase 11 se implementaron en esta fase.
+
+### Sesiones y permisos
+
+El login registra la sesión en `auth_sesiones` dentro de su transacción.
+El JWT y la sesión comparten usuario, identificador y vencimiento.
+`verificarTokenAcceso` comprueba firma HS256, emisor, audiencia,
+vencimiento y formato de los claims, con una duración máxima de 15 minutos.
+
+`autenticar` exige un encabezado `Authorization: Bearer <token>`, una
+sesión vigente sin revocar y un usuario activo. Consulta el rol y los
+permisos actuales en MySQL. Los rechazos de autenticación devuelven
+HTTP 401; un fallo interno de la base se deriva al manejador HTTP 500.
+`exigirPermiso` comprueba módulo y acción y devuelve HTTP 403 si faltan.
+No existe un acceso automático por llamarse administrador.
+
+### Rutas disponibles
+
+| Método y ruta | Función |
+| --- | --- |
+| POST /api/auth/login | Iniciar sesión y registrar su identificador. |
+| GET /api/auth/session | Consultar identidad y permisos vigentes. |
+| POST /api/auth/logout | Revocar exclusivamente la sesión presentada; HTTP 204. |
+| GET /api/usuarios | Listar empleados con paginación y campos públicos. |
+| POST /api/usuarios | Crear un empleado activo con contraseña hasheada y rol existente. |
+| PATCH /api/usuarios/:id/estado | Activar, suspender o cesar un empleado. |
+| PATCH /api/usuarios/:id/rol | Cambiar el rol asignado. |
+| POST /api/usuarios/:id/restablecer-password | Establecer una contraseña nueva; HTTP 204. |
+| POST /api/usuarios/:id/revocar-sesiones | Revocar todas sus sesiones existentes; HTTP 204. |
+| GET /api/roles | Consultar roles y sus permisos. |
+| GET /api/roles/permisos | Consultar el catálogo de permisos. |
+| PUT /api/roles/:id/permisos | Reemplazar la lista completa de permisos de un rol. |
+| POST /api/autorizaciones | Emitir una autorización para una acción y un recurso concretos. |
+
+Las rutas de usuarios, roles y autorizaciones requieren autenticación y
+`seguridad/gestionar`. La emisión de autorizaciones comprueba además los
+permisos de la acción concreta. Las respuestas de `/api` llevan
+`Cache-Control: no-store`, incluidos los errores al interpretar JSON.
+
+### Gestión de empleados y roles
+
+Los validadores aceptan únicamente los campos previstos. El alta exige
+una contraseña de al menos 12 caracteres y un máximo de 72 bytes UTF-8;
+conserva sus espacios. El correo duplicado devuelve HTTP 409.
+El listado admite páginas de 1 a 10000 y límites de 1 a 50, con 20 por defecto.
+Las respuestas públicas excluyen contraseñas, hashes y PIN.
+
+Suspender o cesar revoca las sesiones en la misma transacción.
+Reactivar no restaura sesiones anteriores. Cambiar el rol o su lista de
+permisos también revoca las sesiones afectadas; enviar el mismo valor
+conserva las sesiones. Una lista vacía retira los permisos del rol.
+
+El operador no puede cambiar su propio estado o rol ni restablecer su
+propia contraseña mediante estas operaciones administrativas. Se protege
+al último administrador activo y se coordinan los cambios mediante
+bloqueos. La asignación de permisos protege al rol administrador y al rol
+del operador. El restablecimiento reinicia intentos y bloqueo temporal,
+conserva estado y rol y revoca todas las sesiones anteriores.
+
+### Autorizaciones sensibles
+
+`politicasAutorizacion.js` habilita `inventario/ajustar` sobre
+`insumos_almacen` y `ventas/devolver` sobre `ventas_comprobantes`.
+La aprobación registra actor, aprobador, acción, entidad, identificador,
+motivo y vencimiento a cinco minutos. El aprobador procede de la sesión;
+debe tener gestión de seguridad y permiso para la acción. El actor debe
+estar activo y disponer también del permiso correspondiente.
+
+`consumirAutorizacion` exige una transacción activa del servicio que
+ejecutará la operación. Comprueba alcance, vencimiento, consumo previo,
+existencia del recurso y estado y permisos actuales de actor y aprobador.
+El bloqueo y la actualización condicional impiden consumos duplicados.
+Un fallo de la operación debe propagarse para revertir también el consumo.
+No hay una ruta HTTP independiente para consumir aprobaciones.
+
+### Archivos y comprobaciones
+
+Se añadieron los middlewares `autenticar.js` y `exigirPermiso.js`, los
+controladores, rutas y servicios de usuarios, roles y autorizaciones,
+sus validadores y `security/politicasAutorizacion.js`. Se actualizaron
+`app.js`, el servicio y controlador de autenticación, sus rutas y `token.js`.
+
+Las pruebas manuales con servidores y registros temporales comprobaron
+HTTP 400, 401, 403, 404, 409 y respuestas correctas; sesiones ausentes,
+vencidas o revocadas; estados de empleados; paginación; alta y correo
+duplicado; cambios de rol y permisos; restablecimiento y revocación.
+Se verificaron los permisos del nuevo login y la conservación de sesiones
+no afectadas. Las pruebas de autorizaciones comprobaron alcance, vigencia,
+uso único, permisos retirados, aprobador suspendido, reversión conjunta y
+dos consumos simultáneos con un único resultado aceptado.
+Los registros temporales se eliminaron al finalizar.
+
+### Integraciones pendientes
+
+Las aprobaciones todavía no ejecutan ajustes ni devoluciones: esos
+servicios deberán consumirlas junto con su operación en una transacción.
+Los bloqueos implementados para proteger al último administrador requieren
+mantener la misma coordinación en futuras operaciones de seguridad.
+Las pruebas manuales no constituyen una auditoría completa ni una suite
+automatizada; no se desactivaron administradores reales para probar ese límite.
+
+Continúan pendientes el frontend de login, las cookies HttpOnly/Secure y
+la protección CSRF cuando corresponda. El transporte actual usa Bearer;
+no guardar credenciales de sesión en localStorage. No se implementaron
+tokens de renovación. La integración de auditoría de operaciones de
+seguridad y los servicios del negocio se desarrollarán por separado.

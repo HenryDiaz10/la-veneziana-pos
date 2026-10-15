@@ -19,6 +19,12 @@ import { sequelize } from './config/database.js';
 
 import authRouter from './routes/auth.routes.js';
 
+import usuariosRouter from './routes/usuarios.routes.js';
+
+import rolesRouter from './routes/roles.routes.js';
+
+import autorizacionesRouter from './routes/autorizaciones.routes.js';
+
 // Creamos una aplicación Express.
 // La constante "app" nos permite configurarla y agregar rutas.
 const app = express();
@@ -61,6 +67,14 @@ app.use(cors({
   // Leer el origen desde la configuración validada.
   origin: env.origenFrontend
 }));
+
+// Evitar que se almacenen respuestas de la API.
+// Colocarlo antes del lector JSON para cubrir también
+// los errores de formato y de tamaño del cuerpo.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 // Interpretamos los cuerpos enviados en formato JSON.
 // Los datos interpretados estarán disponibles en req.body.
@@ -130,6 +144,12 @@ app.get('/ready', async (req, res) => {
 
 // Registrar las rutas de autenticación.
 app.use('/api/auth', authRouter);
+
+app.use('/api/usuarios', usuariosRouter);
+
+app.use('/api/roles', rolesRouter);
+
+app.use('/api/autorizaciones', autorizacionesRouter);
 
 // Este middleware se ejecuta cuando ninguna ruta anterior respondió.
 // Debe colocarse después de todas las rutas de la aplicación.

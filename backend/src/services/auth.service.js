@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { sequelize } from '../config/database.js';
-import { Usuario, Rol, Permiso } from '../models/index.js';
+import { Usuario, Rol, Permiso, AuthSesion } from '../models/index.js';
 
 import {
   crearHashPassword,
@@ -9,7 +9,8 @@ import {
 
 import {
   CONFIG_TOKEN,
-  crearTokenAcceso
+  crearTokenAcceso,
+  verificarTokenAcceso
 } from '../security/token.js';
 
 import { validarCredencialesLogin } from '../validators/login.js';
@@ -150,10 +151,26 @@ export async function iniciarSesion(datos) {
       }
     );
 
+    // Emitir el token y registrar su identificador como sesión.
+    // Si falla el registro, la transacción completa se revierte.
+    const token = crearTokenAcceso(usuario.id);
+    const datosToken = verificarTokenAcceso(token);
+
+    await AuthSesion.create(
+      {
+        usuario_id: usuario.id,
+        session_uid: datosToken.sesionUid,
+        expira_en: datosToken.expiraEn,
+        refresh_hash: null,
+        revocada_en: null
+      },
+      { transaction }
+    );
+
     // Construir una respuesta explícita, sin devolver el modelo completo.
     return {
       estado: 'autenticado',
-      token: crearTokenAcceso(usuario.id),
+      token,
       expiraEn: CONFIG_TOKEN.duracionSegundos,
 
       usuario: {
@@ -179,4 +196,22 @@ export async function iniciarSesion(datos) {
       }
     };
   });
+}
+
+// Revocar únicamente la sesión identificada por la autenticación.
+export async function cerrarSesion({ usuarioId, sesionUid }) {
+  await AuthSesion.update(
+    {
+      revocada_en: new Date()
+    },
+    {
+      where: {
+        usuario_id: usuarioId,
+        session_uid: sesionUid,
+        revocada_en: null
+      },
+
+      fields: ['revocada_en']
+    }
+  );
 }
