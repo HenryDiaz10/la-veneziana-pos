@@ -18,6 +18,9 @@ import './index.css'
 // Fuente local para el nombre de marca en la pantalla de login.
 import '@fontsource-variable/playfair-display'
 
+// Gestionar la navegación mediante la URL del navegador.
+import { BrowserRouter } from 'react-router-dom'
+
 // Buscamos el elemento con id="root" definido en index.html.
 const elementoRaiz = document.getElementById('root')
 
@@ -30,9 +33,13 @@ const raiz = createRoot(elementoRaiz)
 import('./App.jsx')
   .then(({ default: App }) => {
     // La aplicación y su configuración se cargaron correctamente.
+
     raiz.render(
       <StrictMode>
-        <App />
+        {/* Habilitar la navegación para toda la aplicación. */}
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </StrictMode>
     )
   })

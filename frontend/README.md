@@ -10,8 +10,16 @@ no se guardan tokens ni contraseñas en localStorage.
 
 Utiliza el logo original, vidrio, colores compartidos, Inter, Montserrat
 y Playfair Display locales, foco visible y efectos con movimiento reducido.
-Se puede ingresar, consultar la identidad y cerrar la sesión. Las pantallas
-de negocio y los guards de React Router corresponden a fases posteriores.
+Se puede ingresar, consultar la identidad y cerrar la sesión. React Router
+protege /inicio por sesión y /seguridad por seguridad/gestionar. La consulta
+inicial debe terminar antes de mostrar las páginas. Sin sesión se redirige
+a /login; sin permiso se muestra acceso restringido. El backend mantiene
+la autorización real en cada solicitud. Las pantallas del negocio siguen
+pendientes.
+
+Seguridad consulta los roles existentes sin modificarlos. Las rutas
+desconocidas muestran Página no encontrada. Después del login se recupera
+el destino interno solicitado; con sesión activa no se vuelve al formulario.
 
 ## Instalación
 
@@ -40,6 +48,8 @@ Reiniciar Vite después de cambiar la configuración.
 
 En producción, publicar /api bajo el mismo origen con HTTPS para utilizar
 la cookie Secure. El proxy de desarrollo no se aplica a los archivos compilados.
+El alojamiento debe servir index.html para las rutas del frontend, sin
+interceptar /api, para admitir aperturas directas con BrowserRouter.
 
 El puerto está fijado en 5173. Si está ocupado, Vite muestra un error
 en lugar de utilizar otro puerto.

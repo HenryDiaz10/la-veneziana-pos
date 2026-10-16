@@ -33,8 +33,12 @@
   de vidrio, fuente Playfair Display local y efectos de interacción.
 - Fase 14: login conectado, sesión con cookie HttpOnly, protección CSRF
   y estado de identidad en memoria con Zustand.
+- Fase 15: navegación con React Router, rutas protegidas por sesión
+  y permisos, retorno tras login y consulta de roles desde Seguridad.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla.
+Las rutas /inicio y /seguridad exigen sesión; Seguridad requiere además
+el permiso seguridad/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
@@ -1158,3 +1162,73 @@ corresponden a la fase 15 y las pantallas del negocio a fases posteriores.
 No se implementaron tokens de renovación ni persistencia de credenciales
 en el navegador. Las pruebas locales no validan un despliegue HTTPS de
 producción.
+
+## Fase 15: navegación y rutas protegidas
+
+Se instaló react-router-dom 7.18.4 con versión exacta. BrowserRouter
+envuelve App dentro de StrictMode, conservando la carga diferida y el
+manejo de errores del arranque. No se cambió la autenticación del backend.
+
+### Rutas y comportamiento
+
+| Ruta | Acceso y resultado |
+| --- | --- |
+| / | Redirige a /inicio. |
+| /login | Muestra el formulario sin sesión; con identidad válida vuelve al destino interno solicitado o a /inicio. |
+| /inicio | Exige sesión y muestra identidad, rol y cierre de sesión. |
+| /seguridad | Exige sesión y seguridad/gestionar; consulta los roles del backend. |
+| Cualquier ruta desconocida | Muestra Página no encontrada y un enlace al inicio. |
+
+App espera GET /api/auth/session antes de resolver la navegación inicial.
+ProtectedRoute también trata los estados comprobando y error: no muestra
+contenido protegido mientras se espera y permite reintentar ante fallos
+de conexión. Sin una identidad válida, redirige a /login mediante replace
+y conserva pathname, búsqueda y fragmento como destino de regreso.
+
+El destino del login se limita a rutas internas. Se rechazan destinos
+externos, barras inversas, espacios, caracteres de control y el retorno
+al propio /login para evitar redirecciones inseguras o bucles. El parser
+de URL normaliza el destino antes de utilizarlo.
+
+Un guard con módulo o acción configurados exige ambos valores y una
+coincidencia exacta en los permisos del usuario; una configuración
+incompleta deniega acceso. No hay excepciones por nombre de rol.
+Si faltan permisos se muestra Acceso restringido sin montar la página
+hija. Volver al inicio conserva la sesión del usuario.
+
+### Archivos y funciones
+
+| Archivo relativo a frontend | Responsabilidad |
+| --- | --- |
+| src/routes/ProtectedRoute.jsx (nuevo) | ProtectedRoute comprueba sesión y permisos, conserva el destino del login y renderiza la ruta hija mediante Outlet solo cuando está autorizada. |
+| src/pages/Inicio.jsx (nuevo) | Inicio separa la vista autenticada de App y conserva identidad, rol, mensajes y cierre mediante Zustand. |
+| src/pages/Seguridad.jsx (nuevo) | Seguridad consulta GET /api/roles mediante cargarRoles y muestra nombre, descripción y cantidad de permisos. Es de solo lectura. |
+| src/App.jsx | Define Routes y Route; RutaLogin evita mostrar el formulario con sesión activa; obtenerDestinoLogin valida el retorno interno. Incluye inicio, seguridad y página no encontrada. |
+| src/main.jsx | Habilita BrowserRouter sin retirar StrictMode ni el manejo de errores iniciales. |
+| package.json y package-lock.json | Registran la dependencia de navegación y su resolución exacta. |
+
+Se actualizaron también este README y frontend/README.md. La consulta de
+roles se cancela al desmontar Seguridad o al repetir el efecto en StrictMode.
+Un 401 vuelve a comprobar la sesión global; otros errores se muestran sin
+datos de roles. El guard utiliza la identidad en memoria; el backend vuelve
+a autorizar cada solicitud con los permisos actuales de MySQL.
+
+### Comprobaciones y cierre funcional
+
+La instalación reportó cero vulnerabilidades en npm audit. ESLint y la
+compilación de producción pasaron. Se corrigieron el import de BrowserRouter
+sin uso y la validación de caracteres de control que ESLint rechazaba.
+También se comprobó el bloque de /seguridad tras sincronizar el archivo
+guardado con la pestaña del editor.
+
+El usuario verificó en el navegador el acceso de administrador a /seguridad,
+con los cuatro roles y sus cantidades de permisos. Una cuenta temporal de
+cajero recibió Acceso restringido y pudo volver al inicio con su sesión
+activa. El usuario confirmó la ejecución de la limpieza limitada a esa
+cuenta y sus sesiones; el administrador real se conservó.
+
+La protección visual no reemplaza los controles HTTP del backend. Las
+pantallas del negocio y los layouts generales se desarrollarán después.
+En producción, el alojamiento deberá resolver rutas del frontend mediante
+index.html sin interceptar /api; BrowserRouter necesita esa configuración
+para abrir direcciones internas directamente.
