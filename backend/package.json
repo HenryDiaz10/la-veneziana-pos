@@ -10,7 +10,9 @@
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
     "crm:habilitar": "node scripts/habilitar-clientes.js",
-    "test:recetas": "node --test tests/recetas-calculo.test.js"
+    "test:recetas": "node --test tests/recetas-calculo.test.js",
+    "test:inventario": "node --test tests/inventario-calculo.test.js",
+    "test:inventario:integracion": "node tests/inventario-integracion.js"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

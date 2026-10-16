@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 22 implementada y probada.**
-La siguiente etapa es la **fase 23: inventario transaccional**.
+**Avance actual: fase 23 implementada y probada.**
+La siguiente etapa es la **fase 24: monitor de inventario**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -53,6 +53,8 @@ La siguiente etapa es la **fase 23: inventario transaccional**.
   deltas de extras/exclusiones y snapshot para tareas; pruebas unitarias y MySQL.
 - Fase 22: constructor visual de recetas, selección de insumos, cantidades netas
   o brutas, conversión de unidades, vista previa y guardado completo por variante.
+- Fase 23: servicios transaccionales de reserva, consumo, liberación y Kardex,
+  promedio ponderado, costos históricos y pruebas de concurrencia/rollback en MySQL.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
@@ -67,7 +69,7 @@ con sus modelos y asociaciones disponibles desde src/models/index.js.
 
 El backend dispone de autenticación, gestión de empleados y roles, catálogo,
 clientes, direcciones y recetas, con rutas protegidas por permisos. Siguen
-pendientes la operación de pedidos, inventario, cocina, caja y cobros, entre
+pendientes el monitor de inventario y la operación de pedidos, cocina, caja y cobros, entre
 otros módulos de las fases siguientes. Las autorizaciones sensibles se
 integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 
@@ -1527,3 +1529,29 @@ protección de navegación y acceso denegado al cajero. Diseño claro/oscuro y
 adaptación a 390/320 px. Los datos temporales se retiraron después de las pruebas.
 Esta fase configura recetas; las reservas y consumos de existencias corresponden
 al inventario transaccional de la fase 23.
+
+## Fase 23: inventario transaccional y Kardex
+
+Se implementaron los servicios internos `reservarTareas`, `consumirTarea`,
+`liberarTarea` y `registrarMovimiento`, reutilizando las tablas existentes.
+La reserva valida disponibilidad agregada de todas las tareas y aumenta solo
+reservado; el consumo disminuye físico/reservado y guarda Kardex/costos; liberar
+antes de preparar no incrementa físico. La receta se toma del snapshot de la
+tarea, sin recalcular el maestro ni aplicar otra vez merma.
+
+Los insumos se bloquean por ID ascendente. Saldos y movimientos se confirman
+atómicamente; identidades de operación y estados de reserva evitan duplicados.
+Los ingresos calculan promedio ponderado móvil con decimales exactos y cada
+consumo conserva su costo. Las salidas generales no invaden stock reservado.
+
+Pasaron cuatro pruebas numéricas y pruebas MySQL: última porción concurrente,
+comandos repetidos, liberación, insuficiencia agregada, cinco tipos de Kardex,
+promedio, snapshots, quiebre e inactividad. Se simuló un fallo entre saldo y
+Kardex y otro en el segundo ingrediente: todo se revirtió. Se retiraron los
+registros temporales.
+
+No se añadieron rutas HTTP ni pantalla de inventario en esta fase. Los futuros
+flujos de pedidos/KDS/compras deben invocar los servicios con su misma
+transacción, permisos, autorizaciones e historial; el cobro no descuenta stock.
+El monitor corresponde a la fase 24. Contratos, alcance y comandos:
+[backend/INVENTARIO.md](backend/INVENTARIO.md).
