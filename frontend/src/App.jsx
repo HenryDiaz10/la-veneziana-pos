@@ -22,6 +22,9 @@ import AdminLayout from './layouts/AdminLayout.jsx'
 import PosLayout from './layouts/PosLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
 
+import Catalogo from './pages/Catalogo.jsx'
+import Clientes from './pages/Clientes.jsx'
+
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
 function obtenerDestinoLogin(desde) {
@@ -104,9 +107,9 @@ function App() {
           id="contenido-principal"
           tabIndex={-1}
           aria-busy={comprobando}
-          className="login-screen flex min-h-dvh items-center justify-center px-5 py-10"
+          className="app-shell vz-status-screen"
         >
-          <section className="login-glass relative z-10 w-full max-w-lg rounded-3xl p-6 text-white sm:p-9">
+          <section className="vz-status-card">
             <p className="font-marca text-3xl">
               La Veneziana
             </p>
@@ -118,12 +121,12 @@ function App() {
             </h1>
 
             {comprobando ? (
-              <p role="status" className="mt-3 text-sm text-slate-200">
+              <p role="status" className="mt-3 text-sm text-app-secundario">
                 Espera un momento, por favor.
               </p>
             ) : (
               <>
-                <p role="alert" className="mt-3 text-sm text-slate-200">
+                <p role="alert" className="mt-3 text-sm text-app-secundario">
                   {error || 'Inténtalo nuevamente.'}
                 </p>
 
@@ -132,7 +135,7 @@ function App() {
                   onClick={() => {
                     void comprobarSesion()
                   }}
-                  className="login-submit mt-6 min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
+                  className="mt-6 min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
                 >
                   Reintentar
                 </button>
@@ -189,6 +192,29 @@ function App() {
             </Route>
           </Route>
 
+          {/* Administración del catálogo con permiso específico. */}
+          <Route
+            element={
+              <ProtectedRoute
+                modulo="catalogo"
+                accion="gestionar"
+              />
+            }
+          >
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/catalogo"
+                element={<Catalogo />}
+              />
+            </Route>
+          </Route>
+
+          <Route element={<ProtectedRoute modulo="clientes" accion="buscar" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/clientes" element={<Clientes />} />
+            </Route>
+          </Route>
+
           {/* Acceso al POS con sesión y permiso de cobro. */}
           <Route
             element={
@@ -213,21 +239,21 @@ function App() {
               <main
                 id="contenido-principal"
                 tabIndex={-1}
-                className="login-screen flex min-h-dvh items-center justify-center px-5 py-10"
+                className="app-shell vz-status-screen"
               >
-                <section className="login-glass relative z-10 w-full max-w-lg rounded-3xl p-6 text-white sm:p-9">
+                <section className="vz-status-card">
                   <h1 className="font-titulo text-2xl font-semibold">
                     Página no encontrada
                   </h1>
 
-                  <p className="mt-3 text-sm text-slate-200">
+                  <p className="mt-3 text-sm text-app-secundario">
                     La dirección que abriste no corresponde a una página.
                   </p>
 
                   <Link
                     to="/inicio"
                     replace
-                    className="login-submit mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
+                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
                   >
                     Volver al inicio
                   </Link>

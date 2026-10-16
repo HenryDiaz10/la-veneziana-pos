@@ -28,6 +28,7 @@ coincidir además con el cliente de la ruta.
 | POST | / | Alta de perfil básico. |
 | PATCH | /:clienteId | Cambio parcial de perfil básico. |
 | GET | /:clienteId/direcciones?documento=... o ?telefono=... | direcciones y paginacion. |
+| GET | /:clienteId/puntos?documento=... o ?telefono=... | movimientos y paginacion; requiere clientes/gestionar. |
 | POST | /:clienteId/direcciones | Alta de dirección. |
 | PATCH | /:clienteId/direcciones/:direccionId | Cambio de dirección perteneciente al cliente. |
 
@@ -61,7 +62,14 @@ clientes ni direcciones históricas mediante esta API.
 
 La búsqueda devuelve id, nombres, apellidos, tipo/número de documento y teléfono.
 El perfil añade nivel_vip, puntos_vip_actuales y actividad. No devuelve notas,
-email, nacimiento, historial de ventas ni movimientos de puntos.
+email, nacimiento ni historial de ventas. Los movimientos de puntos se consultan
+separadamente con permiso clientes/gestionar y el mismo filtro exacto.
+
+La consulta de puntos de fase 20 devuelve exclusivamente id (BIGINT como texto),
+tipo_movimiento, puntos, descripcion y created_at. Ordena por fecha e id
+descendentes, pagina 10 registros por defecto (máximo 20), comprueba el cliente
+y no expone identificadores de operaciones ni datos de otras ventas. No crea,
+modifica ni elimina movimientos, saldos o niveles VIP. No necesita migraciones.
 
 El servidor cuenta pedidos pagados con ventas emitidas o rechazadas por SUNAT;
 excluye ventas anuladas. Actividad devuelve compras_registradas, ultima_compra

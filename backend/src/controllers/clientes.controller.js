@@ -1,5 +1,5 @@
 import {
-  buscarClientes, obtenerPerfilCliente, crearCliente, actualizarCliente
+  buscarClientes, obtenerPerfilCliente, crearCliente, actualizarCliente, obtenerPuntosCliente
 } from '../services/clientes.service.js';
 import {
   obtenerDireccionesCliente, crearDireccionCliente, actualizarDireccionCliente
@@ -69,6 +69,14 @@ export function consultarPerfilCliente(req, res, next) {
 
 export function registrarCliente(req, res, next) {
   return responderOperacion(res, next, () => crearCliente(req.body), 'creado', 'cliente', 201);
+}
+
+export function listarPuntosCliente(req, res, next) {
+  const consulta = leerConsulta(req.query);
+  if (!consulta) return responderConsultaInvalida(res);
+  const clienteId = leerEntero(req.params.clienteId, 2147483647);
+  return responderOperacion(res, next,
+    () => obtenerPuntosCliente({ clienteId, ...consulta }), 'consultado', 'movimientos');
 }
 
 export function editarCliente(req, res, next) {

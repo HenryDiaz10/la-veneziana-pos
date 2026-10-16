@@ -190,3 +190,35 @@ automáticamente.
 
 Las variables `VITE_` quedan disponibles en el frontend:
 no colocar contraseñas ni secretos en ellas.
+
+## Clientes: interfaz de fase 20
+
+Ruta `/clientes`, protegida por `clientes/buscar` y disponible en el menú y
+los accesos del Inicio. La búsqueda exige documento o teléfono completo;
+no carga el padrón general ni guarda filtros personales en la URL o localStorage.
+
+- `src/pages/Clientes.jsx`: búsqueda paginada, selección y edición del cliente.
+- `src/services/clientes.service.js`: consultas y guardado mediante el cliente API.
+- `src/hooks/useConsultaClientes.js`: cancela solicitudes y descarta respuestas
+  anteriores al cambiar de consulta; recupera la sesión ante HTTP 401.
+- `src/components/clientes/FormularioDatosCliente.jsx` y `validacion.js`:
+  formularios de cliente/dirección con errores asociados, captura conservada,
+  documento según tipo y bloqueo de envíos duplicados.
+- `src/components/clientes/PerfilCliente.jsx`: contacto, actividad, nivel VIP,
+  saldo oficial, direcciones y movimientos de puntos paginados.
+- `src/components/clientes/PaginacionClientes.jsx`: navegación de cada listado.
+- `src/styles/clientes.css`: presentación adaptable en ambos temas.
+
+Crear/editar clientes y direcciones requiere `clientes/gestionar`. Los roles
+con búsqueda conservan una ficha de consulta y direcciones sin acciones de
+escritura. El historial administrativo de puntos también exige gestionar.
+Nivel VIP y puntos son de consulta: las reglas de ganancia/canje se integrarán
+con las operaciones de venta; esta interfaz no concede bonos ni cambia niveles.
+La dirección principal se coordina en el backend sin borrar direcciones previas.
+
+Validación de esta interfaz: lint/build, alta y edición mediante navegador,
+cambio de documento con actualización del filtro de la ficha, dirección
+principal y edición, conflicto de documento conservando captura y foco,
+consulta de historial, permisos de cajero y diseño a 390/320 px sin que la
+página desborde. Pruebas HTTP/MySQL del historial: filtros exactos, 401/403,
+campos limitados, aislamiento de clientes, paginación y saldo sin cambios.

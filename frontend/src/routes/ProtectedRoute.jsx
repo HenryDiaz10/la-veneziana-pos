@@ -25,9 +25,9 @@ function ProtectedRoute({ modulo, accion }) {
         id="contenido-principal"
         tabIndex={-1}
         aria-busy={comprobando}
-        className="login-screen flex min-h-dvh items-center justify-center px-5 py-10"
+        className="app-shell vz-status-screen"
       >
-        <section className="login-glass relative z-10 w-full max-w-lg rounded-3xl p-6 text-white sm:p-9">
+        <section className="vz-status-card">
           <p className="font-marca text-3xl">
             La Veneziana
           </p>
@@ -39,12 +39,12 @@ function ProtectedRoute({ modulo, accion }) {
           </h1>
 
           {comprobando ? (
-            <p role="status" className="mt-3 text-sm text-slate-200">
+            <p role="status" className="mt-3 text-sm text-app-secundario">
               Espera un momento, por favor.
             </p>
           ) : (
             <>
-              <p role="alert" className="mt-3 text-sm text-slate-200">
+              <p role="alert" className="mt-3 text-sm text-app-secundario">
                 {error || 'Inténtalo nuevamente.'}
               </p>
 
@@ -53,7 +53,7 @@ function ProtectedRoute({ modulo, accion }) {
                 onClick={() => {
                   void comprobarSesion()
                 }}
-                className="login-submit mt-6 min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
+                className="mt-6 min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
               >
                 Reintentar
               </button>
@@ -99,10 +99,10 @@ function ProtectedRoute({ modulo, accion }) {
       <main
         id="contenido-principal"
         tabIndex={-1}
-        className="login-screen flex min-h-dvh items-center justify-center px-5 py-10"
+        className="app-shell vz-status-screen"
       >
-        <section className="login-glass relative z-10 w-full max-w-lg rounded-3xl p-6 text-white sm:p-9">
-          <p className="text-sm font-semibold text-amber-300">
+        <section className="vz-status-card">
+          <p className="text-sm font-semibold text-app-secundario">
             ACCESO RESTRINGIDO
           </p>
 
@@ -110,7 +110,7 @@ function ProtectedRoute({ modulo, accion }) {
             No tienes acceso a esta sección
           </h1>
 
-          <p className="mt-3 text-sm leading-relaxed text-slate-200">
+          <p className="mt-3 text-sm leading-relaxed text-app-secundario">
             Tu cuenta no tiene el permiso necesario.
             Contacta al administrador si necesitas acceso.
           </p>
@@ -118,7 +118,7 @@ function ProtectedRoute({ modulo, accion }) {
           <Link
             to="/"
             replace
-            className="login-submit mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400"
           >
             Volver al inicio
           </Link>

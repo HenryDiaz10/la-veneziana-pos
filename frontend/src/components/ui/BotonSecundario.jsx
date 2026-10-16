@@ -12,6 +12,7 @@ function BotonSecundario({
       className={[
         'bg-marca-dorado text-texto shadow-sm',
         'enabled:hover:bg-amber-400 enabled:hover:shadow-md',
+        'vz-button-primary',
         className
       ].join(' ')}
     >

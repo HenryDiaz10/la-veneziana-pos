@@ -1,6 +1,6 @@
 import { QueryTypes, UniqueConstraintError } from 'sequelize';
 import { sequelize } from '../config/database.js';
-import { Cliente } from '../models/index.js';
+import { Cliente, CrmMovimientoPuntos } from '../models/index.js';
 import {
   validarCliente,
   validarBusquedaCliente,
@@ -32,6 +32,25 @@ export async function buscarClientes({ busqueda, pagina = 1, limite = 10 }) {
   });
   return { estado: 'consultado', clientes: rows.map(serializarCliente),
     paginacion: { pagina, limite, total: count, totalPaginas: Math.ceil(count / limite) } };
+}
+
+// Solo consulta el historial oficial; no recalcula ni modifica saldos.
+export async function obtenerPuntosCliente({ clienteId, busqueda, pagina = 1, limite = 10 }) {
+  const filtro = validarBusquedaCliente(busqueda);
+  if (!esIdClienteValido(clienteId) || !filtro || !esPaginacionClienteValida(pagina, limite)) {
+    return { estado: 'datos_invalidos' };
+  }
+  return sequelize.transaction(async transaction => {
+    const cliente = await Cliente.findOne({ attributes: ['id'], where: { id: clienteId, ...filtro }, transaction });
+    if (!cliente) return { estado: 'cliente_inexistente' };
+    const { count, rows } = await CrmMovimientoPuntos.findAndCountAll({
+      attributes: ['id', 'tipo_movimiento', 'puntos', 'descripcion', 'created_at'],
+      where: { cliente_id: clienteId }, order: [['created_at', 'DESC'], ['id', 'DESC']],
+      limit: limite, offset: (pagina - 1) * limite, transaction
+    });
+    return { estado: 'consultado', movimientos: rows.map(m => ({ ...m.toJSON(), id: String(m.id) })),
+      paginacion: { pagina, limite, total: count, totalPaginas: Math.ceil(count / limite) } };
+  });
 }
 
 // La ficha limitada exige también el documento/teléfono de búsqueda.

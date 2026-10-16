@@ -1,4 +1,4 @@
-# API de catálogo - fase 19
+# API de catálogo - fases 19 y 20
 
 ## Estructura y archivos
 
@@ -64,8 +64,8 @@ limitada del POS.
 
 | Recurso | Operaciones |
 | --- | --- |
-| /categorias | GET, POST y PATCH /:id. |
-| /productos | GET, POST y PATCH /:id. |
+| /categorias | GET, POST, PATCH /:id y DELETE /:id sin relaciones. |
+| /productos | GET, POST, PATCH /:id y DELETE /:id sin relaciones. |
 | /productos/:productoId/variantes | GET, POST y PATCH /:varianteId. |
 | /modificadores | GET, POST y PATCH /:grupoId. |
 | /modificadores/:grupoId/items | GET, POST y PATCH /:itemId. |
@@ -80,8 +80,15 @@ Una categoría o insumo inexistente en el cuerpo del producto devuelve 400.
 Falta de sesión: 401; falta de permiso o CSRF: 403.
 
 Categorías se desactivan con activa:false y productos con estado:inactivo.
-No hay borrado físico de productos, categorías, variantes, grupos u opciones
-mediante estas rutas. Los nombres de grupos pueden repetirse; los nombres de
+Desde la fase 20 se permite DELETE de producto o categoría sin relaciones,
+con cuerpo JSON {"confirmar":true}. Devuelve 204, 404 si ya no existe y 409
+si tiene registros asociados. eliminacion-catalogo.service.js bloquea el registro
+y comprueba relaciones, incluidas las CASCADE; no borra hijos para forzar el
+borrado. Comprueba variantes, vínculos, recetas, pedidos, tareas KDS y ambos
+lados de combos. Una categoría con cualquier producto, incluso inactivo, no
+se puede borrar. El controlador conserva autenticación, permiso y CSRF.
+Las operaciones de eliminación de variantes, grupos y opciones no se exponen.
+Los nombres de grupos pueden repetirse; los nombres de
 variantes y opciones no pueden repetirse dentro de su respectivo propietario
 mediante estos servicios. Esta última regla se coordina con bloqueo, sin un
 nuevo índice de base de datos.
@@ -99,3 +106,10 @@ retirada repetida conserva grupo, opciones y asignaciones de otros productos.
 Los registros temporales se eliminaron. No se alteraron credenciales ni
 usuarios reales. El soporte de clientes se documenta por separado en CRM.md;
 las interfaces administrativas corresponden a la fase 20.
+
+Extensiones de fase 20: GET /productos acepta busqueda (máximo 150 caracteres)
+por nombre, SKU o código de barras antes de paginar. LOCATE trata % y _ como
+texto literal y Sequelize escapa la entrada. Se probó con más de una página.
+DELETE se comprobó con confirmación, permisos/CSRF, registros libres y cada
+clase de dependencia. Las relaciones permanecieron intactas tras respuestas
+409 y la desactivación siguió disponible. No se eliminaron datos reales.

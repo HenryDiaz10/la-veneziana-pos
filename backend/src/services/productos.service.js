@@ -1,4 +1,4 @@
-import { UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError, Op, fn, col, where } from 'sequelize';
 
 import { sequelize } from '../config/database.js';
 import {
@@ -7,7 +7,7 @@ import {
   InsumoAlmacen
 } from '../models/index.js';
 
-import { validarProducto } from '../validators/productos.js';
+import { validarProducto, normalizarBusquedaProducto } from '../validators/productos.js';
 
 // Excluir stock y campos calculados de las operaciones de escritura.
 // Los campos devueltos se seleccionan expresamente.
@@ -103,9 +103,12 @@ async function comprobarRelaciones(producto, transaction) {
 // Consultar una página; no devolver todo el catálogo de una vez.
 export async function obtenerProductosPaginados({
   pagina = 1,
-  limite = 20
+  limite = 20,
+  busqueda = ''
 } = {}) {
+  const termino = normalizarBusquedaProducto(busqueda);
   if (
+    termino === null ||
     !Number.isSafeInteger(pagina) ||
     pagina < 1 ||
     pagina > 10000 ||
@@ -118,6 +121,13 @@ export async function obtenerProductosPaginados({
 
   const { count, rows } = await ProductoVenta.findAndCountAll({
     attributes: CAMPOS_PRODUCTO,
+    // Buscar en todos los productos antes de paginar. LOCATE trata % y _
+    // como texto literal; Sequelize escapa el valor, sin concatenar SQL.
+    where: termino ? {
+      [Op.or]: ['nombre', 'sku', 'codigo_barras'].map(campo =>
+        where(fn('LOCATE', termino, col(campo)), { [Op.gt]: 0 })
+      )
+    } : {},
     order: [['id', 'ASC']],
     limit: limite,
     offset: (pagina - 1) * limite

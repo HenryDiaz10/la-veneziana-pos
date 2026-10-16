@@ -1,3 +1,14 @@
+// Limitar la búsqueda antes de utilizarla en la consulta del catálogo.
+export function normalizarBusquedaProducto(valor = '') {
+  if (typeof valor !== 'string') return null;
+  const texto = valor.trim();
+  if ([...texto].length > 150 || [...texto].some(caracter => {
+    const codigo = caracter.codePointAt(0);
+    return codigo <= 31 || (codigo >= 127 && codigo <= 159);
+  })) return null;
+  return texto;
+}
+
 // Normalizar precios sin hacer cálculos con decimales binarios.
 // DECIMAL(12,2) admite hasta diez cifras enteras y dos decimales.
 export function normalizarPrecio(valor) {

@@ -13,6 +13,7 @@ function BotonPeligro({
       className={[
         'bg-error-texto text-white shadow-sm',
         'enabled:hover:bg-red-800 enabled:hover:shadow-md',
+        'vz-button-danger',
         className
       ].join(' ')}
     >

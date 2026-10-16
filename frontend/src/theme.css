@@ -46,20 +46,24 @@
   --app-texto: #0f172a;
   --app-secundario: #475569;
   --app-borde: #e2e8f0;
-  --app-hover: #f1f5f9;
+  --app-hover: #fffbeb;
+  --app-acento-texto: #92400e;
+  --app-exito-texto: #3f6212;
   --app-foco: #92400e;
   --app-error: #b91c1c;
 }
 
 /* Cambiar únicamente los colores adaptables al elegir modo oscuro. */
 :root[data-tema="oscuro"] {
-  --app-fondo: #0b1220;
-  --app-superficie: #1e293b;
-  --app-elevada: #263449;
+  --app-fondo: #101318;
+  --app-superficie: #1b2028;
+  --app-elevada: #222833;
   --app-texto: #f8fafc;
   --app-secundario: #cbd5e1;
-  --app-borde: #475569;
-  --app-hover: #334155;
+  --app-borde: #343c49;
+  --app-hover: #30291e;
+  --app-acento-texto: #fcd375;
+  --app-exito-texto: #bef264;
   --app-foco: #fbbf24;
   --app-error: #fca5a5;
 }

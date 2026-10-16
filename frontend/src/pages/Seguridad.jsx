@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 
 import { solicitarApi, ErrorApi } from '../services/api.js'
 import { useAuthStore } from '../stores/auth.store.js'
+import Icono from '../components/ui/Icono.jsx'
+import Badge from '../components/ui/Badge.jsx'
 
 function Seguridad() {
   const comprobarSesion = useAuthStore(state => state.comprobarSesion)
@@ -66,21 +68,21 @@ function Seguridad() {
       // AdminLayout aporta el main y la navegación de esta página.
       <section
         aria-labelledby="titulo-seguridad"
-        className="mx-auto w-full max-w-4xl rounded-2xl border border-app-borde bg-app-superficie p-6 text-app-texto shadow-sm sm:p-8"
+        className="vz-page"
       >
         {/* Los colores app-* responden al tema seleccionado. */}
-        <p className="text-sm font-semibold uppercase tracking-widest text-app-secundario">
-          SEGURIDAD
+        <p className="vz-kicker">
+          <Icono nombre="seguridad"/>Administración · Seguridad
         </p>
 
         <h1
           id="titulo-seguridad"
-          className="mt-3 font-titulo text-2xl font-bold"
+          className="vz-page-title"
         >
           Roles del sistema
         </h1>
 
-        <p className="mt-3 text-sm text-app-secundario">
+        <p className="vz-page-description">
           Consulta los perfiles de acceso y sus permisos asignados.
         </p>
 
@@ -100,12 +102,13 @@ function Seguridad() {
         )}
 
         {consulta.estado === 'completado' && (consulta.roles.length > 0 ? (
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+          <ul className="mt-7 grid gap-5 md:grid-cols-2">
             {consulta.roles.map(rol => (
               <li
                 key={rol.id}
-                className="min-w-0 rounded-xl border border-app-borde bg-app-elevada p-5"
+                className="vz-role-card min-w-0"
               >
+                <div className="mb-5 flex items-center justify-between gap-3"><span className="vz-section-symbol"><Icono nombre={rol.nombre === 'administrador' ? 'seguridad' : 'usuario'}/></span><Badge>{rol.permisos.length} permisos</Badge></div>
                 <h2 className="break-words font-titulo text-lg font-semibold">
                   {rol.nombre}
                 </h2>
@@ -117,7 +120,7 @@ function Seguridad() {
                 )}
 
                 {/* Ajustar el texto cuando existe un solo permiso. */}
-                <p className="mt-4 text-sm font-semibold">
+                <p className="mt-5 border-t border-app-borde pt-4 text-xs font-semibold">
                   {rol.permisos.length}{' '}
                   {rol.permisos.length === 1
                     ? 'permiso asignado'

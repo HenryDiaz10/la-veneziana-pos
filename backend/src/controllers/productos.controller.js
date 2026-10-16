@@ -3,6 +3,7 @@ import {
   crearProducto,
   actualizarProducto
 } from '../services/productos.service.js';
+import { normalizarBusquedaProducto } from '../validators/productos.js';
 
 // Traducir los resultados esperados sin exponer errores internos.
 const ERRORES_PRODUCTO = {
@@ -73,6 +74,13 @@ function responderErrorProducto(res, estado) {
 export async function listarProductos(req, res, next) {
   const pagina = leerEnteroPositivo(req.query.pagina ?? '1', 10000);
   const limite = leerEnteroPositivo(req.query.limite ?? '20', 50);
+  const busqueda = normalizarBusquedaProducto(req.query.busqueda);
+
+  if (busqueda === null) {
+    return res.status(400).json({
+      mensaje: 'La búsqueda debe ser texto de hasta 150 caracteres válidos.'
+    });
+  }
 
   if (pagina === null || limite === null) {
     return res.status(400).json({
@@ -81,7 +89,7 @@ export async function listarProductos(req, res, next) {
   }
 
   try {
-    const resultado = await obtenerProductosPaginados({ pagina, limite });
+    const resultado = await obtenerProductosPaginados({ pagina, limite, busqueda });
 
     if (resultado.estado !== 'consultado') {
       throw new Error('Resultado inesperado al consultar productos.');

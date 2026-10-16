@@ -51,7 +51,7 @@ function Componentes() {
     // AdminLayout aporta el main; esta sección contiene la galería.
     <section
       aria-labelledby="titulo-componentes"
-      className="mx-auto w-full max-w-4xl rounded-2xl border border-app-borde bg-app-superficie p-6 text-app-texto shadow-sm sm:p-8"
+      className="vz-page vz-panel"
     >
         <h1
           id="titulo-componentes"

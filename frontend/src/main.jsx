@@ -49,7 +49,10 @@ import('./App.jsx')
       </StrictMode>
     )
   })
-  .catch(() => {
+  .catch(error => {
+    if (import.meta.env.DEV) {
+      console.error('No se pudo cargar la aplicación.', error)
+    }
     // Falló la configuración o la carga: mostrar un mensaje comprensible.
     // No mostramos valores ni detalles internos del error.
     raiz.render(

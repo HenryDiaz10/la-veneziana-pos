@@ -1431,3 +1431,28 @@ perfil sin padrón completo, documentos únicos, direcciones preferidas bajo
 concurrencia, segmentos con ventas y límite 429. Se corrigió la serialización
 de productos y el nombre del archivo de rutas de opciones. Todos los datos
 temporales se eliminaron. Las interfaces administrativas corresponden a fase 20.
+
+## Fase 20: administración de catálogo y clientes
+
+El frontend incorpora `/catalogo` y `/clientes` con el estilo compartido de
+La Veneziana, modo claro/oscuro y navegación por permisos. El catálogo permite
+buscar productos, registrar/editar datos e imágenes, gestionar categorías y
+activar/desactivar. La eliminación definitiva exige confirmación y ausencia
+de relaciones; los registros con historial se conservan mediante desactivación.
+
+Clientes permite búsqueda exacta por documento o teléfono, alta, edición,
+perfil, actividad, nivel VIP, saldo de puntos y direcciones paginadas. Crear y
+editar requiere `clientes/gestionar`; `clientes/buscar` conserva acceso de
+consulta. El historial de puntos usa el nuevo GET `/api/clientes/:id/puntos`,
+limitado al permiso de gestión y al filtro exacto del cliente. La interfaz no
+modifica saldos ni niveles VIP, ni implementa todavía las reglas de ganancia y
+canje. Tampoco descuenta inventario: su integración pertenece a fases posteriores.
+
+Se verificaron lint y compilación del frontend, HTTP/MySQL para clientes,
+direcciones e historial de puntos, permisos separados, CSRF, duplicados,
+paginación y aislamiento entre clientes. En navegador se comprobaron alta y
+edición (incluido cambio de documento), direcciones principales, error duplicado
+sin perder captura, consulta de puntos, acceso de cajero, Escape y presentación
+clara/oscura a 390 y 320 px sin desbordamiento de la página. Los datos de prueba
+son temporales y se retiran al terminar. Detalles: [frontend/README.md](frontend/README.md),
+[backend/CATALOGO.md](backend/CATALOGO.md) y [backend/CRM.md](backend/CRM.md).

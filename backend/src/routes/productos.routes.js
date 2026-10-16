@@ -10,6 +10,7 @@ import { autenticar } from '../middlewares/autenticar.js';
 import { exigirPermiso } from '../middlewares/exigirPermiso.js';
 
 import variantesRouter from './variantes.routes.js';
+import { eliminarProducto } from '../controllers/eliminacion-catalogo.controller.js';
 import productosModificadoresRouter from './productos-modificadores.routes.js';
 
 const productosRouter = Router();
@@ -24,6 +25,7 @@ productosRouter.use(
 productosRouter.get('/', listarProductos);
 productosRouter.post('/', registrarProducto);
 productosRouter.patch('/:id', editarProducto);
+productosRouter.delete('/:id', eliminarProducto);
 
 // Heredar la sesión y catalogo/gestionar del router de productos.
 productosRouter.use('/:productoId/variantes', variantesRouter);

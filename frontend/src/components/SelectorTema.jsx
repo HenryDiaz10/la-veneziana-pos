@@ -42,7 +42,7 @@ function SelectorTema({ className = '' }) {
       </svg>
 
       {/* Mostrar el modo que se activará al pulsar. */}
-      <span>
+      <span className="hidden xl:inline">
         {esOscuro ? 'Modo claro' : 'Modo oscuro'}
       </span>
     </BotonBase>

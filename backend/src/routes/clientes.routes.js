@@ -4,7 +4,7 @@ import { autenticar } from '../middlewares/autenticar.js';
 import { exigirPermiso } from '../middlewares/exigirPermiso.js';
 import {
   listarClientes, consultarPerfilCliente, registrarCliente, editarCliente,
-  listarDireccionesCliente, registrarDireccionCliente, editarDireccionCliente
+  listarDireccionesCliente, registrarDireccionCliente, editarDireccionCliente, listarPuntosCliente
 } from '../controllers/clientes.controller.js';
 
 const clientesRouter = Router();
@@ -25,6 +25,8 @@ const gestionar = exigirPermiso('clientes', 'gestionar');
 clientesRouter.get('/', buscar, listarClientes);
 clientesRouter.get('/:clienteId', buscar, consultarPerfilCliente);
 clientesRouter.get('/:clienteId/direcciones', buscar, listarDireccionesCliente);
+// El historial administrativo requiere gestionar, además del filtro exacto.
+clientesRouter.get('/:clienteId/puntos', gestionar, listarPuntosCliente);
 clientesRouter.post('/', gestionar, registrarCliente);
 clientesRouter.patch('/:clienteId', gestionar, editarCliente);
 clientesRouter.post('/:clienteId/direcciones', gestionar, registrarDireccionCliente);

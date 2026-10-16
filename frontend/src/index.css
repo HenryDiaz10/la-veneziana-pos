@@ -1,6 +1,8 @@
 /* Cargamos Tailwind y luego los colores propios del sistema. */
 @import "tailwindcss";
 @import "./theme.css";
+@import "./styles/sistema.css";
+@import "./styles/clientes.css";
 
 /* Colocamos los estilos generales en la capa base.
    Las clases de Tailwind podrán sobrescribirlos cuando corresponda. */

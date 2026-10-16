@@ -22,6 +22,7 @@ function BotonBase({
       disabled={bloqueado}
       aria-busy={cargando || undefined}
       className={[
+        'vz-button',
         'inline-flex min-h-11 items-center justify-center gap-2',
         'rounded-xl px-5 py-3 text-sm font-semibold leading-5',
         'transition-[background-color,box-shadow,transform] duration-150',
