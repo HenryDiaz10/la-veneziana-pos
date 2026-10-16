@@ -1,4 +1,4 @@
-// Permisos mínimos definidos en el SQL del proyecto.
+// Permisos iniciales y extensión de administración de clientes de la fase 19.
 const permisos = [
   ['pedidos', 'crear', 'Confirmar o ampliar pedidos'],
   ['mesas', 'gestionar', 'Ocupar y limpiar mesas'],
@@ -9,6 +9,7 @@ const permisos = [
   ['catalogo', 'gestionar', 'Productos, variantes y recetas'],
   ['inventario', 'gestionar', 'Compras y ajustes'],
   ['clientes', 'buscar', 'Búsqueda limitada de clientes'],
+  ['clientes', 'gestionar', 'Alta y actualización de clientes y direcciones'],
   ['reportes', 'leer', 'Reportes gerenciales'],
   ['seguridad', 'gestionar', 'Usuarios y permisos'],
   ['configuracion', 'gestionar', 'Parámetros y dispositivos']

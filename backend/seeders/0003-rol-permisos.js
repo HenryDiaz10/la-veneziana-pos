@@ -17,7 +17,10 @@ export async function sembrarRolPermisos({ sequelize, transaction }) {
 
         OR (
           r.nombre = 'mesero'
-          AND p.modulo IN ('pedidos', 'mesas', 'clientes')
+          AND (
+            p.modulo IN ('pedidos', 'mesas')
+            OR (p.modulo = 'clientes' AND p.accion = 'buscar')
+          )
         )
 
         OR (
@@ -29,7 +32,8 @@ export async function sembrarRolPermisos({ sequelize, transaction }) {
           r.nombre = 'cajero'
           AND (
             (p.modulo = 'ventas' AND p.accion = 'cobrar')
-            OR p.modulo IN ('caja', 'pedidos', 'clientes')
+            OR p.modulo IN ('caja', 'pedidos')
+            OR (p.modulo = 'clientes' AND p.accion = 'buscar')
           )
         )
 

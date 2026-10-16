@@ -1384,3 +1384,50 @@ sin uso al insertar el bloque JSX de la demostración. La captura del usuario
 permite verificar filas alternadas en oscuro, precios en soles alineados a la
 derecha y cantidad cero visible. La galería permite revisar también carga,
 vacío, error, tema claro, hover y presentación en una ventana pequeña.
+
+## Fase 19: API de catálogo y soporte de clientes
+
+Se añadieron validadores, servicios, controladores y rutas para categorías,
+productos, variantes, grupos de modificadores, opciones y asignación de grupos
+a productos. Se utilizan las tablas existentes, sin DDL ni nuevas dependencias.
+Las rutas administrativas de catálogo exigen sesión y catalogo/gestionar;
+las escrituras conservan la protección CSRF global.
+Los archivos, funciones y contrato HTTP se detallan en
+[backend/CATALOGO.md](backend/CATALOGO.md).
+
+| Recurso bajo /api | Operaciones |
+| --- | --- |
+| /categorias | GET paginado, POST y PATCH /:id; activa permite desactivar. |
+| /productos | GET paginado, POST y PATCH /:id; estado permite inactivar. |
+| /productos/:productoId/variantes | GET paginado, POST y PATCH /:varianteId. |
+| /modificadores | GET paginado, POST y PATCH /:grupoId. |
+| /modificadores/:grupoId/items | GET paginado, POST y PATCH /:itemId. |
+| /productos/:productoId/modificadores | GET paginado; PUT /:grupoId asigna y DELETE /:grupoId retira solo el vínculo. |
+
+Paginación de catálogo: pagina 1 y limite 20 por defecto; máximos 10000 y 50.
+Los precios DECIMAL(12,2) no negativos se normalizan como cadenas sin redondear
+entradas con más de dos decimales. Los campos calculados, costos y stock no se
+aceptan en la escritura del catálogo. Las respuestas seleccionan sus campos.
+Productos activos requieren categoría activa; los productos directos necesitan
+insumo, activo cuando el producto lo está. Platos preparados y combos no usan
+insumo directo ni control directo de stock. Las actualizaciones comprueban
+la configuración combinada con el registro actual.
+
+Las restricciones únicas protegen slug, SKU y código de barras. Variantes y
+opciones comprueban nombre por propietario bajo bloqueo. Las rutas hijas
+validan pertenencia; asignación y retirada de grupos son repetibles y no borran
+opciones ni otros productos. Las escrituras utilizan transacciones.
+
+El CRM añade búsqueda exacta obligatoria por documento o teléfono, paginación,
+perfil limitado, actividad calculada con ventas y direcciones por cliente.
+Se separan clientes/buscar y el nuevo clientes/gestionar, asignado inicialmente
+solo al administrador. El comando idempotente npm.cmd run crm:habilitar ya se
+ejecutó en esta instalación; los seeds también reflejan la separación.
+Los datos, rutas, permisos y funciones se detallan en [backend/CRM.md](backend/CRM.md).
+
+Se verificaron sintaxis, imports y HTTP/MySQL: permisos, CSRF, paginación,
+validaciones, duplicados y altas concurrentes, relaciones, vínculos repetibles,
+perfil sin padrón completo, documentos únicos, direcciones preferidas bajo
+concurrencia, segmentos con ventas y límite 429. Se corrigió la serialización
+de productos y el nombre del archivo de rutas de opciones. Todos los datos
+temporales se eliminaron. Las interfaces administrativas corresponden a fase 20.

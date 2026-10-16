@@ -23,7 +23,14 @@ import usuariosRouter from './routes/usuarios.routes.js';
 
 import rolesRouter from './routes/roles.routes.js';
 
+import categoriasRouter from './routes/categorias.routes.js';
+
 import autorizacionesRouter from './routes/autorizaciones.routes.js';
+
+import productosRouter from './routes/productos.routes.js';
+
+import modificadoresRouter from './routes/modificadores.routes.js';
+import clientesRouter from './routes/clientes.routes.js';
 
 // Leer las cookies recibidas sin registrar su contenido.
 import cookieParser from 'cookie-parser';
@@ -161,8 +168,20 @@ app.use('/api/roles', rolesRouter);
 
 app.use('/api/autorizaciones', autorizacionesRouter);
 
+// Catálogo: categorías protegidas por sesión y permiso.
+app.use('/api/categorias', categoriasRouter);
 // Este middleware se ejecuta cuando ninguna ruta anterior respondió.
 // Debe colocarse después de todas las rutas de la aplicación.
+
+// Administración de productos con sesión y permiso de catálogo.
+app.use('/api/productos', productosRouter);
+
+// Administración de grupos de modificadores.
+app.use('/api/modificadores', modificadoresRouter);
+
+// Búsqueda limitada y administración autorizada de clientes y direcciones.
+app.use('/api/clientes', clientesRouter);
+
 app.use((req, res) => {
   // El código HTTP 404 indica que el recurso solicitado no existe.
   // Respondemos en JSON para mantener el formato de nuestra API.
