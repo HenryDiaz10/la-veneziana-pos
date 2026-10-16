@@ -1342,3 +1342,45 @@ aportadas por el usuario muestran administración en claro y oscuro y el POS
 en oscuro; confirmó las revisiones de tema persistente, disposición móvil y
 menú antes de incorporar el acceso al POS. La estructura de productos y carrito
 es preparatoria: las operaciones de venta siguen pendientes.
+
+## Fase 18: tabla de datos reutilizable
+
+Se creó DataTable para presentar registros con filas alternadas, resaltado
+al pasar el ratón y colores adaptables a claro/oscuro. Utiliza Inter y
+tabular-nums en las columnas numéricas. No se añadieron dependencias ni se
+modificaron el backend o la base de datos.
+
+### Archivos y funciones
+
+| Archivo relativo a frontend | Responsabilidad |
+| --- | --- |
+| src/components/ui/DataTable.jsx (nuevo) | DataTable muestra columnas y filas recibidas, estados de carga, error y vacío, y contenido personalizado por celda. obtenerAlineacion selecciona izquierda, centro o derecha. useId vincula el título con la región desplazable. |
+| src/pages/Componentes.jsx | Integra una demostración con cuatro registros ficticios, cantidades y precios en soles. estadoTabla y setEstadoTabla controlan el selector de registros, carga, vacío y error. formatoMoneda utiliza Intl.NumberFormat de es-PE; columnasEjemplo configura alineación y formato. |
+
+### Uso y alcance
+
+La tabla recibe titulo, columnas y filas. Cada columna tiene clave y titulo;
+puede definir alineacion, numerica y renderizar(fila). Las claves de columna
+deben ser únicas y debe proporcionarse al menos una columna. Cada fila utiliza
+su id como clave, o el resultado único y estable de obtenerClave(fila).
+Los valores null o undefined se presentan como un guion; el cero se conserva.
+
+cargando, error y mensajeVacio controlan los estados. Mientras carga o existe
+un error, no se muestran filas anteriores. La tabla utiliza caption y cabeceras
+con scope=col; el contenedor tiene nombre accesible, admite foco por teclado y
+limita el desplazamiento horizontal a su región. Los mensajes usan status o
+alert y aria-busy identifica la espera.
+
+El componente presenta los datos recibidos: todavía no incorpora paginación,
+ordenación, filtros, virtualización ni exportación a Excel. Las futuras páginas
+deberán gestionar las consultas y limitar los registros que entregan a la tabla.
+La demostración permanece en /componentes, solo en desarrollo y protegida por
+seguridad/gestionar; no consulta la API ni modifica datos del negocio.
+
+### Comprobaciones
+
+ESLint y build pasaron al cierre. Se corrigieron los cinco avisos de variables
+sin uso al insertar el bloque JSX de la demostración. La captura del usuario
+permite verificar filas alternadas en oscuro, precios en soles alineados a la
+derecha y cantidad cero visible. La galería permite revisar también carga,
+vacío, error, tema claro, hover y presentación en una ventana pequeña.

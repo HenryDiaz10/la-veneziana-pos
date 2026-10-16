@@ -64,6 +64,36 @@ ESLint y build pasaron al cierre. El usuario aportó capturas de administración
 en claro y oscuro y del POS oscuro, y confirmó la revisión del tema persistente,
 la disposición móvil y el menú. No se instalaron dependencias en esta fase.
 
+## Tabla de datos (fase 18)
+
+`src/components/ui/DataTable.jsx` presenta filas alternadas y hover con los
+colores app-* de ambos temas. Utiliza Inter y tabular-nums para las celdas
+numéricas. No realiza consultas ni añade dependencias.
+
+- Obligatorios: titulo, columnas y filas. Proporcionar al menos una columna,
+  con clave única y titulo. Cada fila necesita id único o una función
+  obtenerClave que devuelva una clave estable.
+- Opciones de columna: alineacion (izquierda, centro o derecha), numerica
+  y renderizar(fila) para personalizar una celda.
+- Estados: cargando, error y mensajeVacio. La carga tiene prioridad; las filas
+  permanecen ocultas durante carga o error. Los valores nulos se muestran
+  como un guion y se conserva el cero.
+
+Incluye caption, scope=col, región desplazable con nombre accesible y foco,
+aria-busy y mensajes status/alert. El desplazamiento horizontal queda dentro
+de la tabla. No incorpora filtros, ordenación, paginación, virtualización ni
+exportación: la página consumidora debe gestionar las consultas y el volumen.
+
+En /componentes, filasEjemplo y columnasEjemplo muestran datos ficticios y
+precios PEN con Intl.NumberFormat de es-PE. estadoTabla permite probar registros,
+carga, vacío y error sin llamar al backend. La galería sigue restringida a
+desarrollo y seguridad/gestionar.
+
+ESLint y build pasaron. Se corrigió la integración JSX que dejaba cinco
+variables sin uso; la captura del usuario muestra alternancia en oscuro,
+cantidades y precios alineados y cero visible. Los demás estados, el tema claro
+y la presentación móvil pueden revisarse con el selector de la galería.
+
 ## Instalación
 
 Ejecutar desde la carpeta CODIGO/frontend:
