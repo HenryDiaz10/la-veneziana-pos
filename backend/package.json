@@ -12,7 +12,8 @@
     "crm:habilitar": "node scripts/habilitar-clientes.js",
     "test:recetas": "node --test tests/recetas-calculo.test.js",
     "test:inventario": "node --test tests/inventario-calculo.test.js",
-    "test:inventario:integracion": "node tests/inventario-integracion.js"
+    "test:inventario:integracion": "node tests/inventario-integracion.js",
+    "test:inventario:monitor": "node tests/inventario-monitor-integracion.js"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

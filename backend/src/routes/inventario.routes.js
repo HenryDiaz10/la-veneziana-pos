@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { autenticar } from '../middlewares/autenticar.js';
+import { exigirPermiso } from '../middlewares/exigirPermiso.js';
+import { listar, consultar, consultarProducto } from '../controllers/inventario.controller.js';
+const router = Router();
+router.use(autenticar, exigirPermiso('inventario', 'gestionar'));
+router.get('/', listar);
+router.get('/productos/:productoId', consultarProducto);
+router.get('/:insumoId', consultar);
+export default router;

@@ -1,0 +1,6 @@
+@layer components {
+  .vz-inventory-search { display: flex; align-items: center; gap: 12px; padding-left: 14px; border: 1px solid var(--app-borde); border-radius: 10px; background: var(--app-fondo); color: var(--app-secundario); }
+  .vz-inventory-search .field-input { border: 0; background: transparent; }
+  .vz-inventory-search-panel .field-input { width: 100%; min-width: 0; min-height: 48px; padding: 12px 14px; border: 1px solid var(--app-borde); border-radius: 10px; background: var(--app-fondo); color: var(--app-texto); font-size: 13px; }
+  .vz-inventory-search-panel .vz-inventory-search .field-input { border: 0; background: transparent; }
+}

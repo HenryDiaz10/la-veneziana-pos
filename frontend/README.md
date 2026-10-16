@@ -255,3 +255,34 @@ Comprobaciones: `npm.cmd run lint`, `npm.cmd run test:recetas` (cuatro pruebas)
 y `npm.cmd run build`; navegador para guardado/reapertura, variantes, rechazo
 del servidor conservando captura, navegación, cajero sin acceso y móvil
 390/320 px. No se editan saldos ni se crean consumos desde este constructor.
+
+## Monitor de inventario: fase 24
+
+Ruta `/inventario`, permiso `inventario/gestionar`, accesos en menú e Inicio.
+`pages/Inventario.jsx` muestra saldos oficiales por insumo, búsqueda con espera
+de 300 ms, filtros, indicadores y paginación. Los indicadores corresponden a
+todos los resultados de la búsqueda, antes de filtrar por alerta; pueden
+coincidir quiebre con stock bajo o sin disponible.
+
+`components/inventario/DetalleInventario.jsx` muestra físico, reservado,
+disponible, mínimo, historial de movimientos y conciliación. Las diferencias
+no cambian saldos. La conciliación supone saldo inicial cero; una apertura
+debe quedar respaldada por Kardex. Las consultas usan un snapshot consistente
+por respuesta, con fecha de consulta y actualización manual.
+
+`services/inventario.service.js` consulta los endpoints protegidos.
+`components/inventario/presentacion.js` conserva cuatro decimales como texto,
+etiquetas de movimiento y fecha en hora de Lima. `styles/inventario.css`
+adapta el buscador a ambos temas; DataTable mantiene el desplazamiento de
+las tablas dentro de su panel en móviles. `useConsultaRemota` cancela consultas
+anteriores, permite reintentar y recupera la sesión ante 401.
+
+Catálogo incorpora Stock para productos directos y usuarios con permiso.
+Abre `/inventario?producto=ID`; el servidor resuelve su insumo asociado.
+El detalle de un insumo se puede abrir con `?insumo=ID`. Los IDs de la URL
+se validan y las respuestas anteriores se descartan al cambiar de selección.
+No se usa `stock_actual` del producto ni hay campos de edición de saldos.
+
+Comprobaciones: ESLint/build, búsqueda, filtros de alerta, detalle, conciliación,
+enlace Stock, cajero sin acceso ni enlace y presentación claro/oscuro y móvil
+390/320 px sin desbordamiento de la página. Datos de prueba temporales retirados.

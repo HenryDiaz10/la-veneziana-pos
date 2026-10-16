@@ -1,4 +1,7 @@
 const DIBUJOS = {
+  inventario: <><path d="m3 7 9-4 9 4v13H3Zm0 0 9 4 9-4M12 11v9M8 5l9 4"/></>,
+  historial: <><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7"/><path d="M12 7v6l4 2"/></>,
+  alerta: <><path d="m12 3 10 18H2Z"/><path d="M12 9v5m0 3h.01"/></>,
   recetas: <><path d="M6 3h13v18H6a3 3 0 0 1 0-6h13M6 3a3 3 0 0 0-3 3v12"/><path d="M9 7h6m-6 4h4"/></>,
   ingrediente: <><path d="M12 21v-9M12 15C3 15 3 7 3 7s9-1 9 8ZM12 12C12 3 21 3 21 3s1 9-9 9Z"/></>,
   balanza: <><path d="M12 3v18M5 21h14M3 7h18M5 7l-3 7h6Zm14 0-3 7h6Z"/></>,

@@ -77,6 +77,7 @@ const columnas = [
 ]
 
 function Catalogo() {
+  const puedeVerInventario = useAuthStore(s => s.usuario?.permisos?.some(p => p.modulo === 'inventario' && p.accion === 'gestionar'))
   const comprobarSesion = useAuthStore(state => state.comprobarSesion)
   const busquedaId = useId()
   const tituloRef = useRef(null)
@@ -175,6 +176,7 @@ function Catalogo() {
       renderizar: producto => (
         <div className="vz-row-actions">
         {producto.tipo_producto === 'plato_preparado' && <Link to={`/recetas?producto=${producto.id}`} aria-label={`Receta de ${producto.nombre}`} className="vz-button inline-flex min-h-11 items-center gap-2 rounded-lg border border-app-borde bg-app-superficie px-3 py-2 text-xs font-semibold"><Icono nombre="recetas"/>Receta</Link>}
+        {producto.tipo_producto === 'producto_directo' && puedeVerInventario && <Link to={`/inventario?producto=${producto.id}`} aria-label={`Stock de ${producto.nombre}`} className="vz-button inline-flex min-h-11 items-center gap-2 rounded-lg border border-app-borde bg-app-superficie px-3 py-2 text-xs font-semibold"><Icono nombre="inventario"/>Stock</Link>}
         <BotonBase
           aria-label={`Editar ${producto.nombre}`}
           onClick={() => {

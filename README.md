@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 23 implementada y probada.**
-La siguiente etapa es la **fase 24: monitor de inventario**.
+**Avance actual: fase 24 implementada y probada.**
+La siguiente etapa es la **fase 25: proveedores y compras**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -55,10 +55,12 @@ La siguiente etapa es la **fase 24: monitor de inventario**.
   o brutas, conversión de unidades, vista previa y guardado completo por variante.
 - Fase 23: servicios transaccionales de reserva, consumo, liberación y Kardex,
   promedio ponderado, costos históricos y pruebas de concurrencia/rollback en MySQL.
+- Fase 24: monitor de almacén con físico/reservado/disponible, búsqueda y alertas,
+  historial paginado, stock de productos directos y conciliación de solo lectura.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /clientes y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS conserva su estructura inicial: todavía no registra pedidos ni cobros.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
@@ -69,7 +71,7 @@ con sus modelos y asociaciones disponibles desde src/models/index.js.
 
 El backend dispone de autenticación, gestión de empleados y roles, catálogo,
 clientes, direcciones y recetas, con rutas protegidas por permisos. Siguen
-pendientes el monitor de inventario y la operación de pedidos, cocina, caja y cobros, entre
+pendientes proveedores/compras y la operación de pedidos, cocina, caja y cobros, entre
 otros módulos de las fases siguientes. Las autorizaciones sensibles se
 integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 
@@ -1555,3 +1557,26 @@ flujos de pedidos/KDS/compras deben invocar los servicios con su misma
 transacción, permisos, autorizaciones e historial; el cobro no descuenta stock.
 El monitor corresponde a la fase 24. Contratos, alcance y comandos:
 [backend/INVENTARIO.md](backend/INVENTARIO.md).
+
+## Fase 24: monitor de inventario
+
+Ruta `/inventario`, accesible desde menú e Inicio con `inventario/gestionar`.
+Muestra físico, reservado, disponible y mínimo en la unidad base del insumo.
+La búsqueda encuentra insumos por nombre/código o por nombre/SKU/código de
+barras de un producto directo vinculado. Incluye filtros de stock bajo, sin
+disponible y quiebre declarado, con indicadores de la búsqueda completa.
+
+Cada detalle presenta historial paginado de Kardex y conciliación: entradas,
+salidas, reservas activas, diferencias con saldos oficiales y último saldo
+registrado. El cálculo supone saldo inicial cero; una apertura debe tener
+movimiento. Las diferencias se muestran para revisión sin modificar los datos.
+La acción Stock del Catálogo abre el saldo del insumo de un producto directo;
+no utiliza el campo legado de stock del producto.
+
+Se añadieron servicio/controlador/router de consulta del backend, pantalla,
+servicio y componentes del frontend, con consultas cancelables y reintento.
+Pasaron lint/build y pruebas HTTP/MySQL de sesión/permisos, filtros, paginación,
+alertas, historial, producto directo y diferencias sin corrección automática.
+Revisión visual en claro/oscuro, móvil 390/320 px y perfil cajero sin acceso.
+Todos los fixtures se retiraron. Contratos y comprobaciones:
+[backend/INVENTARIO.md](backend/INVENTARIO.md), [frontend/README.md](frontend/README.md).

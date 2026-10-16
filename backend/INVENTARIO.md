@@ -163,3 +163,57 @@ reservas y todos los movimientos previos del lote. Un error del orquestador
 también revirtió el consumo. Se usó un snapshot real del resolver de recetas
 para dos platos, sin volver a aplicar merma y sin consultar cambios posteriores
 del maestro. Los datos temporales se retiraron al finalizar.
+
+## Monitor y consultas HTTP - fase 24
+
+Todas las rutas siguientes requieren sesión y `inventario/gestionar`, devuelven
+`Cache-Control: no-store` y ejecutan únicamente lecturas. No se añade un endpoint
+para editar saldos, declarar quiebre, ingresar stock o corregir diferencias.
+
+| Método y ruta | Respuesta |
+| --- | --- |
+| GET /api/inventario | Insumos paginados con físico, reservado, disponible, mínimo, estado, unidad, alerta y número de productos directos vinculados. |
+| GET /api/inventario/:insumoId | Insumo, conciliación, productos directos (primeros 10 y total) e historial paginado. |
+| GET /api/inventario/productos/:productoId | Resuelve el insumo vinculado a un producto directo y devuelve el mismo detalle; nunca usa stock_actual del producto. |
+
+Lista: `pagina` (1..10000), `limite` (1..50, predeterminado 20), `busqueda`
+(máximo 150 caracteres) y `alerta` (todos/bajo/agotado/quiebre). La búsqueda
+literal usa nombre/código de insumo o nombre/SKU/código de barras de productos
+directos vinculados. No interpreta `%` o `_` como comodines. No hay filtros SQL
+libres. Parámetros desconocidos, repetidos, arrays u objetos provocan 400.
+
+Detalles: solo `pagina`/`limite`, con los mismos rangos. ID inexistente: 404;
+producto que no es directo: 409; sesión ausente: 401; permiso ausente: 403.
+
+La lista incluye `resumen` de toda la búsqueda antes de aplicar la alerta:
+total, bajos, agotados y quiebres. Bajo = activo y 0 < disponible <= mínimo;
+agotado = activo y disponible <= 0. Quiebre es la marca declarada, independiente
+del saldo; puede coincidir con las otras alertas. En cada fila tiene prioridad
+quiebre, luego inactivo, agotado, bajo y normal. Los indicadores cuentan insumos,
+sin sumar cantidades de diferentes unidades.
+
+Cada respuesta comparte una transacción REPEATABLE READ sin escrituras y añade
+`consultado_en`. Por tanto la conciliación no mezcla momentos entre saldos,
+reservas e historial. Distintas respuestas pueden reflejar cambios posteriores;
+el frontend muestra la fecha y permite actualizar.
+
+Conciliación: entradas - salidas frente a físico; suma de reservas activas frente
+a reservado; último saldo de Kardex frente a físico. Incluye las tres diferencias
+con signo y `coincide`. **Se supone saldo inicial cero**: un saldo de apertura
+sin Kardex aparece como diferencia; no se inventa ni corrige ese movimiento.
+El historial se ordena por ID descendente (determinista aun con misma fecha),
+con cantidades positivas y dirección por tipo. Sumas y diferencias se calculan
+con decimales de MySQL/texto y BigInt, sin convertir cantidades a Number.
+
+Archivos: `src/services/inventario-consulta.service.js`,
+`src/controllers/inventario.controller.js`, `src/routes/inventario.routes.js`,
+registro en `src/app.js` y `tests/inventario-monitor-integracion.js`.
+
+Prueba desde backend: `npm.cmd run test:inventario:monitor`. Verifica 401/403,
+filtros válidos/inválidos, paginación de insumos e historial, alertas, vínculo
+de producto directo con saldo legado distinto, vacío y 404/409. Introduce una
+diferencia solo en su fixture y comprueba que la consulta la detecte sin editar
+saldo ni Kardex. Crea y retira registros propios; rechaza producción y MySQL no
+local. La opción `--vista` mantiene sus fixtures para revisión visual hasta
+recibir una línea por stdin; su acceso temporal queda fuera del repositorio y
+se elimina al finalizar normalmente.

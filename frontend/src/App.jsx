@@ -25,6 +25,7 @@ import PuntoVenta from './pages/PuntoVenta.jsx'
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
 import Recetas from './pages/Recetas.jsx'
+import Inventario from './pages/Inventario.jsx'
 
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
@@ -214,6 +215,11 @@ function App() {
           <Route element={<ProtectedRoute modulo="clientes" accion="buscar" />}>
             <Route element={<AdminLayout />}>
               <Route path="/clientes" element={<Clientes />} />
+            </Route>
+          </Route>
+          <Route element={<ProtectedRoute modulo="inventario" accion="gestionar" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/inventario" element={<Inventario />} />
             </Route>
           </Route>
 
