@@ -40,10 +40,8 @@ el login mantiene su presentación oscura propia.
 - `src/layouts/AdminLayout.jsx`: cabecera, identidad, selector, logout y menú
   lateral con opción activa dorada. En móvil se abre mediante un botón y se
   cierra al navegar o con Escape, devolviendo el foco al botón.
-- `src/layouts/PosLayout.jsx`: cabecera con usuario y rol, selector y logout;
-  sin menú lateral, con contenido proporcionado mediante Outlet.
-- `src/pages/PuntoVenta.jsx`: estructura de productos y carrito, apilados en
-  móvil y en dos columnas desde lg. Catálogo, pedidos y cobro siguen pendientes.
+- `src/layouts/PosLayout.jsx`: layout histórico de cabecera con usuario y rol sin barra lateral.
+- `src/pages/PuntoVenta.jsx`: terminal operativo de pedidos y recibo térmico con cálculo BigInt, catálogo con filtros y modal de personalización.
 - `src/components/SelectorTema.jsx`: botón que alterna el tema y anuncia la
   siguiente apariencia mediante su nombre accesible.
 - `src/stores/tema.store.js`: inicializarTema aplica la preferencia al arrancar;
@@ -54,10 +52,10 @@ el login mantiene su presentación oscura propia.
 - `src/theme.css`: variables app-* adaptables y foco visible para ambos temas.
   Los colores de marca de los botones conservan su contraste.
 
-App integra los layouts bajo ProtectedRoute: /inicio requiere sesión;
+App integra las rutas bajo ProtectedRoute: /inicio requiere sesión;
 /seguridad y /componentes requieren seguridad/gestionar; /pos requiere
-ventas/cobrar. El menú muestra enlaces según esos permisos. Las páginas
-Inicio, Seguridad y Componentes usan secciones dentro del main del layout.
+ventas/cobrar y se ejecuta dentro de AdminLayout manteniendo la barra de navegación
+lateral izquierda accesible e interactiva. El menú muestra enlaces según esos permisos.
 La consulta de roles y la autenticación por cookie mantienen su funcionamiento.
 
 ESLint y build pasaron al cierre. El usuario aportó capturas de administración

@@ -1343,11 +1343,11 @@ No se añadieron dependencias ni se modificó el backend o la base de datos.
 | src/stores/tema.store.js (nuevo) | useTemaStore mantiene la apariencia; leerTemaGuardado recupera una preferencia válida o usa claro; aplicarTema actualiza data-tema y colorScheme; inicializarTema, cambiarTema y alternarTema controlan su aplicación. |
 | src/components/SelectorTema.jsx (nuevo) | Ofrece el cambio de tema con icono decorativo y nombre accesible que identifica la siguiente apariencia. |
 | src/layouts/AdminLayout.jsx (nuevo) | Cabecera con identidad y logout, menú lateral con ruta activa dorada, enlaces según permisos y Outlet para las páginas. manejarTeclado cierra el menú móvil con Escape y devuelve el foco al botón. |
-| src/layouts/PosLayout.jsx (nuevo) | Cabecera del POS con usuario, rol, selector y logout; contenido sin menú lateral mediante Outlet. |
-| src/pages/PuntoVenta.jsx (nuevo) | Estructura inicial de productos y carrito: dos columnas en escritorio y apiladas en móvil. Todavía no consulta catálogo ni registra pedidos o cobros. |
+| src/layouts/PosLayout.jsx (histórico) | Cabecera del POS con usuario, rol, selector y logout sin menú lateral. Reemplazado por AdminLayout para mantener la barra lateral. |
+| src/pages/PuntoVenta.jsx | Terminal operativo del POS con catálogo visual, personalización en modal y recibo térmico financiero en tiempo real. |
 | src/theme.css | Variables app-* para fondos, superficies, texto, bordes, errores y foco en ambos temas, vinculadas a utilidades de Tailwind. |
 | src/main.jsx | Aplica la preferencia antes de montar React y conserva la carga diferida de App y su manejo de errores. |
-| src/App.jsx | Integra ambos layouts después de las comprobaciones de ProtectedRoute y registra /pos con ventas/cobrar. |
+| src/App.jsx | Integra las rutas protegidas bajo AdminLayout para /inicio, /catalogo, /clientes, /inventario y /pos con ventas/cobrar. |
 | src/pages/Inicio.jsx, Seguridad.jsx y Componentes.jsx | Secciones adaptadas al layout y a los colores del tema; el main y el cierre de sesión se centralizan en el layout. Seguridad conserva su consulta y añade estado vacío y singular de permiso. |
 
 ### Navegación, apariencia y alcance

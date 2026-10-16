@@ -18,8 +18,6 @@ import Seguridad from './pages/Seguridad.jsx'
 import Componentes from './pages/Componentes.jsx'
 
 import AdminLayout from './layouts/AdminLayout.jsx'
-
-import PosLayout from './layouts/PosLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
@@ -249,7 +247,7 @@ function App() {
               />
             }
           >
-            <Route element={<PosLayout />}>
+            <Route element={<AdminLayout />}>
               <Route
                 path="/pos"
                 element={<PuntoVenta />}
