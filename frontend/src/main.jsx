@@ -15,9 +15,6 @@ import '@fontsource-variable/montserrat'
 // Cargamos los estilos generales de la aplicación.
 import './index.css'
 
-// Importamos el componente principal que creamos.
-import App from './App.jsx'
-
 // Fuente local para el nombre de marca en la pantalla de login.
 import '@fontsource-variable/playfair-display'
 
@@ -27,11 +24,12 @@ const elementoRaiz = document.getElementById('root')
 // Creamos la raíz de React dentro de ese elemento.
 const raiz = createRoot(elementoRaiz)
 
-// Cargar y validar la configuración antes de mostrar la aplicación.
-// import() devuelve una promesa: puede completarse o fallar.
-import('./config/env.js')
-  .then(() => {
-    // La configuración es válida: mostrar la pantalla habitual.
+// Cargar la aplicación de forma diferida para capturar también
+// los errores de configuración de sus servicios antes de mostrarla.
+// El cliente API importa y valida env.js como parte de esta carga.
+import('./App.jsx')
+  .then(({ default: App }) => {
+    // La aplicación y su configuración se cargaron correctamente.
     raiz.render(
       <StrictMode>
         <App />
@@ -39,7 +37,7 @@ import('./config/env.js')
     )
   })
   .catch(() => {
-    // La configuración falló: mostrar un mensaje comprensible.
+    // Falló la configuración o la carga: mostrar un mensaje comprensible.
     // No mostramos valores ni detalles internos del error.
     raiz.render(
       <main className="mx-auto max-w-5xl p-4 md:p-8">
@@ -51,7 +49,7 @@ import('./config/env.js')
             Sistema no disponible
           </h1>
           <p className="mt-4 text-texto-secundario">
-            La configuración de conexión no es válida.
+            No se pudo iniciar la aplicación.
             Contacta al responsable del sistema.
           </p>
         </section>

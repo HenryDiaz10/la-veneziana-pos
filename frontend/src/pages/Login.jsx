@@ -1,10 +1,22 @@
 import { useId, useState } from 'react'
 import logoVeneziana from '../assets/logo-veneziana.png'
+import { useAuthStore } from '../stores/auth.store.js'
 
 // Pantalla de ingreso del personal.
 function Login() {
   const formularioId = useId()
   const [mostrarPassword, setMostrarPassword] = useState(false)
+
+  // Consultar la acción y el estado del login compartidos por Zustand.
+  // Las credenciales se envían al servicio, no se guardan en el store.
+  const ingresar = useAuthStore(state => state.ingresar)
+  const operacion = useAuthStore(state => state.operacion)
+  const error = useAuthStore(state => state.error)
+
+  // Bloquear los controles durante el envío y relacionar el error
+  // con el formulario para las tecnologías de asistencia.
+  const pendiente = operacion === 'login'
+  const errorId = `${formularioId}-error`
 
   const correoId = `${formularioId}-correo`
   const passwordId = `${formularioId}-password`
@@ -25,10 +37,37 @@ function Login() {
     pantalla.style.setProperty('--luz-y', `${evento.clientY - limites.top}px`)
   }
 
-  function manejarEnvio(evento) {
+  async function manejarEnvio(evento) {
     // Evitar la navegación y el envío de credenciales por la URL.
-    // Conectaremos la autenticación al implementar la sesión.
     evento.preventDefault()
+
+    // Ignorar un segundo envío mientras se comprueba el primero.
+    if (pendiente) {
+      return
+    }
+
+    // Capturar el formulario antes de esperar la respuesta.
+    const formulario = evento.currentTarget
+    const datos = new FormData(formulario)
+
+    const accesoCorrecto = await ingresar({
+      email: String(datos.get('email') ?? ''),
+      password: String(datos.get('password') ?? '')
+    })
+
+    if (accesoCorrecto) {
+      // Retirar los valores del formulario después de ingresar.
+      formulario.reset()
+    } else {
+      // Conservar el correo y retirar la contraseña del campo.
+      const campoPassword = formulario.elements.namedItem('password')
+
+      if (campoPassword instanceof HTMLInputElement) {
+        campoPassword.value = ''
+      }
+
+      setMostrarPassword(false)
+    }
   }
 
   return (
@@ -80,7 +119,13 @@ function Login() {
             Bienvenido. Ingresa con tu cuenta de empleado.
           </p>
 
-          <form onSubmit={manejarEnvio} className="mt-7 space-y-5">
+          {/* Anunciar el envío pendiente y asociar el mensaje de error. */}
+          <form
+            onSubmit={manejarEnvio}
+            aria-busy={pendiente}
+            aria-describedby={error ? errorId : undefined}
+            className="mt-7 space-y-5"
+          >
             <div>
               <label
                 htmlFor={correoId}
@@ -112,6 +157,7 @@ function Login() {
                 maxLength={100}
                 placeholder="nombre@ejemplo.com"
                 className="login-input min-h-12 w-full rounded-xl border border-white/25 py-3 pr-4 pl-12 text-base text-white placeholder:text-slate-300"
+                disabled={pendiente}
               />
               </div>
             </div>
@@ -143,10 +189,12 @@ function Login() {
                   autoComplete="current-password"
                   required
                   className="login-input min-h-12 w-full rounded-xl border border-white/25 py-3 pr-24 pl-12 text-base text-white"
+                  disabled={pendiente}
                 />
 
                 <button
                   type="button"
+                  disabled={pendiente}
                   aria-controls={passwordId}
                   aria-pressed={mostrarPassword}
                   aria-label="Mostrar contraseña"
@@ -160,12 +208,25 @@ function Login() {
               </div>
             </div>
 
+            {/* Mostrar el mensaje público del servicio sin revelar credenciales. */}
+            {error && (
+              <p
+                id={errorId}
+                role="alert"
+                className="rounded-xl border border-amber-300/30 bg-amber-950/30 px-4 py-3 text-sm leading-relaxed text-amber-100"
+              >
+                {error}
+              </p>
+            )}
+
+            {/* Evitar envíos repetidos y comunicar que el acceso está en curso. */}
             <button
               type="submit"
-              className="login-submit min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 text-base font-bold text-texto hover:bg-amber-400"
+              disabled={pendiente}
+              className="login-submit min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 text-base font-bold text-texto hover:bg-amber-400 disabled:pointer-events-none disabled:opacity-60"
             >
               <span className="inline-flex items-center justify-center gap-3">
-                Ingresar
+                {pendiente ? 'Ingresando…' : 'Ingresar'}
                 <svg
                   aria-hidden="true"
                   viewBox="0 0 24 24"

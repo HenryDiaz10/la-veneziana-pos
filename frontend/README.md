@@ -4,12 +4,14 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
-Las fases 3 y 4 preparan la interfaz inicial con React, Vite y Tailwind CSS.
+La pantalla de login está conectada al backend mediante cookies HttpOnly.
+Zustand conserva la identidad en memoria y recupera la sesión al recargar;
+no se guardan tokens ni contraseñas en localStorage.
 
-La pantalla utiliza colores compartidos, Inter para texto, Montserrat
-para títulos y un enlace de teclado para saltar al contenido principal.
-
-Las pantallas de negocio y la conexión con el backend siguen pendientes.
+Utiliza el logo original, vidrio, colores compartidos, Inter, Montserrat
+y Playfair Display locales, foco visible y efectos con movimiento reducido.
+Se puede ingresar, consultar la identidad y cerrar la sesión. Las pantallas
+de negocio y los guards de React Router corresponden a fases posteriores.
 
 ## Instalación
 
@@ -28,6 +30,16 @@ npm.cmd run dev
 ```
 
 Abrir http://localhost:5173.
+
+Preparar el .env a partir de .env.example si no existe, conservando cualquier
+configuración local previa. Usar VITE_API_URL=/api. El proxy de Vite reenvía
+/api al backend de http://127.0.0.1:3000, que debe estar ejecutándose.
+CORS_ORIGIN del backend debe coincidir con http://localhost:5173.
+Las mutaciones incluyen X-CSRF-Protection: 1 y las solicitudes envían cookies.
+Reiniciar Vite después de cambiar la configuración.
+
+En producción, publicar /api bajo el mismo origen con HTTPS para utilizar
+la cookie Secure. El proxy de desarrollo no se aplica a los archivos compilados.
 
 El puerto está fijado en 5173. Si está ocupado, Vite muestra un error
 en lugar de utilizar otro puerto.

@@ -31,8 +31,11 @@
   y base transaccional de autorizaciones sensibles de un solo uso.
 - Fase 13: pantalla de login adaptable con logo original, formulario
   de vidrio, fuente Playfair Display local y efectos de interacción.
+- Fase 14: login conectado, sesión con cookie HttpOnly, protección CSRF
+  y estado de identidad en memoria con Zustand.
 
-El frontend muestra la pantalla de login, todavía sin envío de credenciales.
+El frontend permite ingresar, recuperar la sesión al recargar y cerrarla.
+La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
@@ -896,6 +899,9 @@ la recuperación de acceso y los servicios operativos del negocio.
 
 ## Fase 12: autenticación, autorización y gestión de seguridad
 
+Esta sección describe el transporte Bearer al cerrar la fase 12;
+la fase 14 lo reemplaza por cookies, según se documenta más adelante.
+
 Los pendientes de protección de rutas, gestión de usuarios y recuperación
 administrativa descritos al cerrar la fase 11 se implementaron en esta fase.
 
@@ -1070,3 +1076,85 @@ de credenciales por la URL; todavía no realiza solicitudes al backend ni
 simula un acceso correcto. La fase 14 conectará el formulario con la sesión
 y la identidad visual, con cookies HttpOnly/Secure y protección CSRF cuando
 corresponda. No guardar credenciales de sesión en localStorage.
+
+## Fase 14: sesión con cookies y Zustand
+
+Se conectó el formulario al backend y se comprobó en el navegador el ciclo
+de ingreso, recuperación de sesión al recargar, cierre y recarga sin sesión.
+
+### Backend y cookies
+
+`security/cookies.js` define establecerCookieSesion y borrarCookieSesion.
+La cookie es `veneziana_sesion` en desarrollo y `__Host-veneziana_sesion`
+en producción. Lleva HttpOnly, SameSite=Lax, ruta raíz y ningún Domain;
+Secure se activa en producción, que requiere HTTPS. Su vencimiento coincide
+con el del JWT y no prolonga la sesión.
+
+Login emite la cookie y devuelve mensaje, expiraEn e identidad, sin JWT
+en JSON. `autenticar` lee req.cookies y mantiene las verificaciones de JWT,
+sesión en MySQL, usuario activo y permisos. Un rechazo 401 retira la cookie.
+Logout revoca la sesión antes de borrarla. Bearer ya no autentica.
+Se instaló cookie-parser 1.4.7 exacto y se habilitaron credenciales CORS
+para el origen configurado.
+
+`middlewares/protegerCsrf.js` exige Origin igual a CORS_ORIGIN y
+`X-CSRF-Protection: 1` para las solicitudes que modifican datos, incluidos
+login y logout. Si faltan o son incorrectos responde 403. GET, HEAD y OPTIONS
+quedan exentos y no deben modificar datos. Es una defensa de encabezado
+personalizado y origen estricto, no un token secreto. Las pruebas y clientes
+HTTP de las fases anteriores necesitan actualizar esos encabezados.
+
+### Cliente y estado de sesión
+
+Se instaló Zustand 5.0.15 exacto. Los nuevos archivos del frontend son:
+
+| Archivo | Funciones y responsabilidad |
+| --- | --- |
+| src/services/api.js | solicitarApi envía cookies, CSRF y JSON sin caché; ErrorApi distingue rechazos HTTP y fallos de red. Admite 204 y cancelación. |
+| src/services/auth.service.js | iniciarSesion, obtenerSesion y cerrarSesion llaman a las rutas del backend; solo se recorta el correo. |
+| src/stores/auth.store.js | comprobarSesion recupera la identidad, ingresar autentica y salir confirma el cierre. Conserva usuario, estado, operación y error en memoria. |
+
+Los estados son comprobando, autenticado, sin_sesion y error. La consulta
+inicial se comparte para evitar duplicados por StrictMode. Un 401 inicial
+significa ausencia de sesión; los fallos de conexión permiten reintentar.
+Si el cierre falla por red o error interno se conserva la identidad y se
+informa el problema. No se guardan contraseñas, cookies ni JWT en el store.
+
+`App.jsx` consulta la sesión al montar y muestra carga, reintento, login o
+identidad y cierre. `Login.jsx` envía credenciales, bloquea los controles
+durante el envío, muestra Ingresando y errores accesibles y retira la clave
+tras un rechazo, conservando el diseño. `main.jsx` carga App de forma
+diferida para capturar errores de configuración de los servicios al iniciar.
+
+### Preparación local y archivos modificados
+
+Usar VITE_API_URL=/api y abrir http://localhost:5173. El proxy de Vite
+reenvía /api a http://127.0.0.1:3000; el backend debe estar activo y su
+CORS_ORIGIN debe coincidir con el origen del frontend. Reiniciar Vite al
+cambiar la configuración. La plantilla pública se actualizó y el .env real
+sigue privado. En producción se debe publicar /api bajo el mismo origen
+con HTTPS: el proxy de Vite solo funciona durante el desarrollo.
+
+Se modificaron los manifiestos y locks de ambos proyectos, app.js,
+auth.controller.js, autenticar.js, App.jsx, Login.jsx, main.jsx,
+vite.config.js, la plantilla de desarrollo y los README. Se añadieron
+cookies.js, protegerCsrf.js y los tres archivos de servicios/store indicados.
+No se añadieron tablas ni migraciones.
+
+### Comprobaciones y pendientes
+
+Las instalaciones reportaron cero vulnerabilidades en npm audit.
+ESLint y la compilación del frontend pasaron sin avisos tras ajustar el
+arranque. Las pruebas HTTP con usuario temporal verificaron atributos y
+vencimiento de cookie, JWT excluido del JSON, dos sesiones independientes,
+logout selectivo y rechazo con retirada de cookies inválidas, sesiones
+vencidas y usuarios suspendidos. CSRF bloqueó mutaciones sin origen o
+encabezado correctos; preflight y CORS con credenciales funcionaron.
+Los registros temporales se eliminaron al terminar. El usuario confirmó
+el ciclo completo de ingreso, recarga, cierre y recarga desde el navegador.
+
+La vista autenticada confirma identidad y rol. Los guards de React Router
+corresponden a la fase 15 y las pantallas del negocio a fases posteriores.
+No se implementaron tokens de renovación ni persistencia de credenciales
+en el navegador. Las pruebas locales no validan un despliegue HTTPS de
+producción.

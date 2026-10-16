@@ -3,8 +3,12 @@ import {
   cerrarSesion
 } from '../services/auth.service.js';
 
+import {
+  establecerCookieSesion,
+  borrarCookieSesion
+} from '../security/cookies.js';
+
 export async function login(req, res, next) {
-  // Evitar que se almacenen respuestas con datos de autenticación.
   res.set('Cache-Control', 'no-store');
 
   try {
@@ -17,38 +21,39 @@ export async function login(req, res, next) {
     }
 
     if (resultado.estado === 'credenciales_invalidas') {
-      // Mantener el mismo mensaje para todos los rechazos de acceso.
       return res.status(401).json({
         mensaje: 'Correo o contraseña incorrectos.'
       });
     }
 
-    if (resultado.estado === 'autenticado') {
-      return res.status(200).json({
-        mensaje: 'Inicio de sesión correcto.',
-        token: resultado.token,
-        expiraEn: resultado.expiraEn,
-        usuario: resultado.usuario
-      });
+    if (resultado.estado !== 'autenticado') {
+      throw new Error('Resultado de autenticación inesperado.');
     }
 
-    // Un resultado inesperado debe tratarse como error interno.
-    throw new Error('Resultado de autenticación inesperado.');
+    // El navegador guarda la cookie.
+    // JavaScript no recibe el JWT en la respuesta.
+    establecerCookieSesion(res, resultado.token);
+
+    return res.status(200).json({
+      mensaje: 'Inicio de sesión correcto.',
+      expiraEn: resultado.expiraEn,
+      usuario: resultado.usuario
+    });
   } catch (error) {
-    // El manejador central enviará la respuesta general HTTP 500.
-    next(error);
+    return next(error);
   }
 }
 
-// Consultar la identidad validada por el middleware.
+// Consultar la identidad y los permisos actuales.
 export function sesionActual(req, res) {
+  res.set('Cache-Control', 'no-store');
+
   return res.status(200).json({
     usuario: req.auth.usuario
   });
 }
 
-// Cerrar la sesión del token presentado.
-// Los identificadores proceden del middleware, no del cuerpo recibido.
+// Revocar la sesión presentada y retirar la cookie del navegador.
 export async function logout(req, res, next) {
   res.set('Cache-Control', 'no-store');
 
@@ -57,6 +62,9 @@ export async function logout(req, res, next) {
       usuarioId: req.auth.usuario.id,
       sesionUid: req.auth.sesion.uid
     });
+
+    // Borrar la cookie después de guardar la revocación.
+    borrarCookieSesion(res);
 
     return res.status(204).end();
   } catch (error) {

@@ -10,9 +10,14 @@ import {
 
 import { verificarTokenAcceso } from '../security/token.js';
 
-// Mantener una respuesta general para los rechazos de autenticación.
+import {
+  NOMBRE_COOKIE_SESION,
+  borrarCookieSesion
+} from '../security/cookies.js';
+
+// Retirar una cookie ausente, inválida, vencida o revocada.
 function rechazarAcceso(res) {
-  res.set('WWW-Authenticate', 'Bearer');
+  borrarCookieSesion(res);
 
   return res.status(401).json({
     mensaje: 'Autenticación requerida.'
@@ -22,15 +27,15 @@ function rechazarAcceso(res) {
 export async function autenticar(req, res, next) {
   res.set('Cache-Control', 'no-store');
 
-  const encabezado = req.get('Authorization') ?? '';
-  const coincidencia = /^Bearer ([^\s]+)$/i.exec(encabezado);
+  // La cookie es interpretada previamente por cookie-parser.
+  const token = req.cookies?.[NOMBRE_COOKIE_SESION];
 
-  if (!coincidencia) {
+  if (typeof token !== 'string' || token.length === 0) {
     return rechazarAcceso(res);
   }
 
   try {
-    const datosToken = verificarTokenAcceso(coincidencia[1]);
+    const datosToken = verificarTokenAcceso(token);
 
     // Exigir una sesión existente, del mismo usuario,
     // sin revocación y todavía vigente.

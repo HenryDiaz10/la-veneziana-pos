@@ -25,6 +25,11 @@ import rolesRouter from './routes/roles.routes.js';
 
 import autorizacionesRouter from './routes/autorizaciones.routes.js';
 
+// Leer las cookies recibidas sin registrar su contenido.
+import cookieParser from 'cookie-parser';
+
+import { protegerCsrf } from './middlewares/protegerCsrf.js';
+
 // Creamos una aplicación Express.
 // La constante "app" nos permite configurarla y agregar rutas.
 const app = express();
@@ -62,10 +67,10 @@ app.use(pinoHttp({
   }
 }));
 
-// Configurar CORS antes de interpretar el cuerpo JSON.
+// Permitir cookies únicamente desde el origen configurado.
 app.use(cors({
-  // Leer el origen desde la configuración validada.
-  origin: env.origenFrontend
+  origin: env.origenFrontend,
+  credentials: true
 }));
 
 // Evitar que se almacenen respuestas de la API.
@@ -76,8 +81,13 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Interpretamos los cuerpos enviados en formato JSON.
-// Los datos interpretados estarán disponibles en req.body.
+// Interpretar las cookies antes de ejecutar las rutas.
+app.use(cookieParser());
+
+// Proteger todas las operaciones que modifican datos en la API.
+app.use('/api', protegerCsrf);
+
+// Interpretar el cuerpo JSON después de comprobar el origen.
 app.use(express.json());
 
 // Definimos una ruta de consulta mediante el método HTTP GET.
