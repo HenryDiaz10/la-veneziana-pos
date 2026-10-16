@@ -33,6 +33,7 @@ import modificadoresRouter from './routes/modificadores.routes.js';
 import clientesRouter from './routes/clientes.routes.js';
 import recetasRouter from './routes/recetas.routes.js';
 import inventarioRouter from './routes/inventario.routes.js';
+import comprasRouter from './routes/compras.routes.js';
 
 // Leer las cookies recibidas sin registrar su contenido.
 import cookieParser from 'cookie-parser';
@@ -188,6 +189,7 @@ app.use('/api/clientes', clientesRouter);
 app.use('/api/recetas', recetasRouter);
 // Monitor de solo consulta: saldos, historial y conciliación.
 app.use('/api/inventario', inventarioRouter);
+app.use('/api/compras', comprasRouter);
 
 app.use((req, res) => {
   // El código HTTP 404 indica que el recurso solicitado no existe.

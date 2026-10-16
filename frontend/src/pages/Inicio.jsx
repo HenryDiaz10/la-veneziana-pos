@@ -9,6 +9,7 @@ function Inicio() {
   if (!usuario) return null
   const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
   const accesos = []
+  if (permite('inventario', 'gestionar')) accesos.push({ ruta: '/compras', titulo: 'Compras', icono: 'compras', tono: 'dorado', descripcion: 'Organiza proveedores y confirma los documentos que ingresan existencias a almacén.' })
   if (permite('inventario', 'gestionar')) accesos.push({ ruta: '/inventario', titulo: 'Inventario', icono: 'inventario', tono: 'lima', descripcion: 'Revisa existencias, reservas, alertas y movimientos de cada insumo.' })
   if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/recetas', titulo: 'Recetas', icono: 'recetas', tono: 'lima', descripcion: 'Define ingredientes, cantidades y rendimiento para cada plato y variante.' })
   if (permite('clientes', 'buscar')) accesos.push({ ruta: '/clientes', titulo: 'Clientes', icono: 'clientes', tono: 'dorado', descripcion: 'Consulta sus datos de contacto, direcciones y fidelización en una sola ficha.' })

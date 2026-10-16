@@ -286,3 +286,38 @@ No se usa `stock_actual` del producto ni hay campos de edición de saldos.
 Comprobaciones: ESLint/build, búsqueda, filtros de alerta, detalle, conciliación,
 enlace Stock, cajero sin acceso ni enlace y presentación claro/oscuro y móvil
 390/320 px sin desbordamiento de la página. Datos de prueba temporales retirados.
+
+## Compras y proveedores: fase 25
+
+Ruta `/compras`, permiso `inventario/gestionar`. Menú e Inicio incorporan el
+acceso. `pages/Compras.jsx` alterna documentos y proveedores, busca con espera
+de 300 ms y pagina resultados; los documentos pueden filtrarse por estado.
+
+- `components/compras/FormularioMaestroCompra.jsx`: proveedor/insumo con campos
+  acotados, bloqueo de doble envío y captura conservada al fallar o cancelar
+  el descarte. Un insumo nuevo siempre nace con saldo cero.
+- `SelectorCompra.jsx`: búsqueda paginada de proveedores/insumos, deshabilita
+  inactivos, incompatibles e insumos repetidos.
+- `FormularioCompra.jsx`: documento y líneas, unidades base, IGV como importe,
+  preview exacto y guardado de borrador con UID estable ante reintentos.
+- `DetalleCompra.jsx`: consulta, edición de borrador, confirmación explícita,
+  vínculo a Inventario y compensación completa con aprobación administrativa.
+- `services/compras.service.js`: API protegida y solicitud de aprobación para
+  la compra concreta, con identidad de la sesión.
+- `utils/compras.js`: operaciones BigInt, redondeo por línea y total estimado.
+- `styles/compras.css`: campos, líneas y selectores en ambos temas.
+
+Las cantidades/costos son por kg, L o un, hasta cuatro decimales. No se convierte
+g/ml aquí. El costo de almacén se captura neto de descuentos y sin IGV recuperable;
+IGV se registra por separado. El servidor recalcula todos los importes.
+
+El borrador no mueve stock. Confirmar ingresa todo y cierra la edición; reintentar
+no duplica ingresos. La compensación requiere documento y motivo, respeta
+reservas y conserva la factura original. Solo usuarios con permiso de aprobación
+ven esta acción administrativa. No se editan estados de pago al proveedor.
+
+Comprobaciones: lint/build, `npm.cmd run test:compras` (dos pruebas), captura
+inválida conservada, alta/confirmación de un borrador temporal y consulta del
+ingreso/conciliación en Inventario, seguir editando tras aviso de descarte,
+diseño claro/oscuro, 390/320 px y cajero sin acceso. Pruebas HTTP/MySQL del backend
+cubren duplicados, revisiones obsoletas, concurrencia, compensación y rollback.

@@ -22,6 +22,7 @@ function AdminLayout() {
   if (permite('catalogo', 'gestionar')) enlaces.push({ ruta: '/recetas', texto: 'Recetas', icono: 'recetas' })
   if (permite('clientes', 'buscar')) enlaces.push({ ruta: '/clientes', texto: 'Clientes', icono: 'clientes' })
   if (permite('inventario', 'gestionar')) enlaces.push({ ruta: '/inventario', texto: 'Inventario', icono: 'inventario' })
+  if (permite('inventario', 'gestionar')) enlaces.push({ ruta: '/compras', texto: 'Compras', icono: 'compras' })
   if (permite('seguridad', 'gestionar')) {
     enlaces.push({ ruta: '/seguridad', texto: 'Seguridad', icono: 'seguridad' })
     if (import.meta.env.DEV) enlaces.push({ ruta: '/componentes', texto: 'Componentes', icono: 'componentes' })

@@ -1,0 +1,18 @@
+import { Router } from 'express';
+import { autenticar } from '../middlewares/autenticar.js';
+import { exigirPermiso } from '../middlewares/exigirPermiso.js';
+import * as c from '../controllers/compras.controller.js';
+const router=Router();
+router.use(autenticar,exigirPermiso('inventario','gestionar'));
+router.get('/proveedores',c.proveedores);
+router.post('/proveedores',c.crearProveedor);
+router.put('/proveedores/:id',c.editarProveedor);
+router.get('/insumos',c.insumos);
+router.post('/insumos',c.crearInsumo);
+router.get('/',c.listar);
+router.post('/',c.crear);
+router.get('/:id',c.detalle);
+router.put('/:id',c.editar);
+router.post('/:id/confirmar',c.confirmar);
+router.post('/:id/compensar',c.compensar);
+export default router;

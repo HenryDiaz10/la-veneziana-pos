@@ -13,7 +13,9 @@
     "test:recetas": "node --test tests/recetas-calculo.test.js",
     "test:inventario": "node --test tests/inventario-calculo.test.js",
     "test:inventario:integracion": "node tests/inventario-integracion.js",
-    "test:inventario:monitor": "node tests/inventario-monitor-integracion.js"
+    "test:inventario:monitor": "node tests/inventario-monitor-integracion.js",
+    "test:compras": "node --test tests/compras-calculo.test.js",
+    "test:compras:integracion": "node tests/compras-integracion.js"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

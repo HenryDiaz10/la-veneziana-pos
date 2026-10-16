@@ -1,0 +1,8 @@
+@layer components {
+  .vz-purchase-input { width: 100%; min-width: 0; min-height: 46px; padding: 12px 14px; border: 1px solid var(--app-borde); border-radius: 9px; background: var(--app-fondo); color: var(--app-texto); font-size: 13px; font-weight: 400; }
+  .vz-purchase-line { padding: 18px; border: 1px solid var(--app-borde); border-left: 3px solid #f59e0b; border-radius: 12px; background: var(--app-superficie); }
+  .vz-purchase-picker { padding: 16px; border: 1px solid var(--app-borde); border-radius: 12px; background: var(--app-fondo); }
+  .vz-purchase-pick { display: flex; flex-direction: column; align-items: start; gap: 6px; width: 100%; min-height: 44px; padding: 12px; border: 1px solid var(--app-borde); border-radius: 9px; background: var(--app-superficie); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+  .vz-purchase-pick:hover:enabled { border-color: #f59e0b; }
+  .vz-purchase-pick:disabled { opacity: .55; cursor: not-allowed; }
+}

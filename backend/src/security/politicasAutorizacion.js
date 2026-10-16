@@ -1,5 +1,6 @@
 import {
   InsumoAlmacen,
+  CompraFactura,
   VentaComprobante
 } from '../models/index.js';
 
@@ -9,6 +10,8 @@ export const VIGENCIA_AUTORIZACION_MS = 5 * 60 * 1000;
 // Catálogo interno de acciones autorizables.
 // El cliente no puede elegir modelos ni permisos arbitrarios.
 const POLITICAS = Object.freeze([
+  Object.freeze({ accion: 'compras/compensar', entidad: 'compras_facturas', modelo: CompraFactura,
+    moduloPermiso: 'inventario', accionPermiso: 'gestionar' }),
   Object.freeze({
     accion: 'inventario/ajustar',
     entidad: 'insumos_almacen',

@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 24 implementada y probada.**
-La siguiente etapa es la **fase 25: proveedores y compras**.
+**Avance actual: fase 25 implementada y probada.**
+La siguiente etapa es la **fase 26: carrito y estimación de importes**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -57,10 +57,12 @@ La siguiente etapa es la **fase 25: proveedores y compras**.
   promedio ponderado, costos históricos y pruebas de concurrencia/rollback en MySQL.
 - Fase 24: monitor de almacén con físico/reservado/disponible, búsqueda y alertas,
   historial paginado, stock de productos directos y conciliación de solo lectura.
+- Fase 25: proveedores, alta de insumos sin saldo inicial, compras en borrador,
+  confirmación con ingreso/costo promedio y documento compensatorio autorizado.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /clientes y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS conserva su estructura inicial: todavía no registra pedidos ni cobros.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
@@ -71,7 +73,7 @@ con sus modelos y asociaciones disponibles desde src/models/index.js.
 
 El backend dispone de autenticación, gestión de empleados y roles, catálogo,
 clientes, direcciones y recetas, con rutas protegidas por permisos. Siguen
-pendientes proveedores/compras y la operación de pedidos, cocina, caja y cobros, entre
+pendientes el carrito y la operación de pedidos, cocina, caja y cobros, entre
 otros módulos de las fases siguientes. Las autorizaciones sensibles se
 integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 
@@ -1580,3 +1582,28 @@ alertas, historial, producto directo y diferencias sin corrección automática.
 Revisión visual en claro/oscuro, móvil 390/320 px y perfil cajero sin acceso.
 Todos los fixtures se retiraron. Contratos y comprobaciones:
 [backend/INVENTARIO.md](backend/INVENTARIO.md), [frontend/README.md](frontend/README.md).
+
+## Fase 25: proveedores y compras
+
+Ruta `/compras`, con permiso `inventario/gestionar`, accesos desde menú e Inicio.
+Permite registrar/editar proveedores y dar de alta insumos en kg, L o un sin saldo
+inicial. Las compras tienen cabecera, líneas, fechas e IGV como importe. El
+servidor calcula subtotales y total con decimales exactos; el frontend presenta
+la misma estimación. Los borradores se pueden editar sin afectar existencias.
+
+Confirmar ingresa todas las líneas en una transacción, actualiza promedio y
+guarda Kardex. La factura por proveedor, el UID estable y la revisión del
+contenido evitan duplicados y cambios obsoletos. Una compra confirmada conserva
+sus líneas; corregirla requiere un documento compensatorio completo separado,
+aprobación sensible de un solo uso y stock disponible suficiente sin reservas.
+La compensación utiliza costo promedio vigente y conserva importes históricos;
+no se registran pagos al proveedor ni compensaciones parciales en esta fase.
+
+Pasaron tres pruebas unitarias del backend, dos de vista previa del frontend,
+lint/build y pruebas HTTP/MySQL: borrador sin ingreso, reintentos/concurrencia,
+factura duplicada, promedio, autorización y rollback en segunda línea. En
+navegador se guardó y confirmó una compra temporal, se verificó su ingreso y
+conciliación en Inventario, validación conservando captura, descarte cancelado,
+modos claro/oscuro, móvil 390/320 px y acceso denegado al cajero. Se retiraron
+todos los fixtures. Contratos, decisiones y archivos:
+[backend/COMPRAS.md](backend/COMPRAS.md).

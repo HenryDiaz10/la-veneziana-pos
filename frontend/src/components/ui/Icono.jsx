@@ -1,4 +1,5 @@
 const DIBUJOS = {
+  compras: <><path d="M6 3h12l3 5v13H3V8Zm-3 5h18M9 3v5m6-5v5M8 13h8m-8 4h5"/></>,
   inventario: <><path d="m3 7 9-4 9 4v13H3Zm0 0 9 4 9-4M12 11v9M8 5l9 4"/></>,
   historial: <><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7"/><path d="M12 7v6l4 2"/></>,
   alerta: <><path d="m12 3 10 18H2Z"/><path d="M12 9v5m0 3h.01"/></>,

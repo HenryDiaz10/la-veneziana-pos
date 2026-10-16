@@ -26,6 +26,7 @@ import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
 import Recetas from './pages/Recetas.jsx'
 import Inventario from './pages/Inventario.jsx'
+import Compras from './pages/Compras.jsx'
 
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
@@ -220,6 +221,7 @@ function App() {
           <Route element={<ProtectedRoute modulo="inventario" accion="gestionar" />}>
             <Route element={<AdminLayout />}>
               <Route path="/inventario" element={<Inventario />} />
+              <Route path="/compras" element={<Compras />} />
             </Route>
           </Route>
 
