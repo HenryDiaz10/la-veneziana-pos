@@ -334,3 +334,21 @@ Playwright con API simulada para treinta líneas, edición, F5, separación
 por empleado, precios actuales, producto retirado y móvil claro/oscuro.
 No confirma pedidos, cobros ni reservas. El contrato, archivos y límites
 se detallan en [CARRITO.md](CARRITO.md).
+
+## Fase 27: interfaz operativa del punto de venta
+
+Ruta `/pos`, permiso `ventas/cobrar`. Interfaz de caja de alta productividad construida
+con pantalla dividida (Catálogo con grilla de fotos vs Recibo térmico financiero).
+En escritorio adopta una grilla de 12 columnas (8 catálogo / 4 recibo). En tablet
+y móviles (< 1024px, 390px, 320px) incorpora pestañas y barra flotante con acceso
+directo al pedido completo, evitando columnas laterales estrechas o ilegibles.
+
+- `pages/PuntoVenta.jsx`: controlador del POS, sincronización con useCartStore y validación de titularidad de sesión.
+- `components/pos/CatalogoPos.jsx`: categorías activas, búsqueda en tiempo real, cuadrícula de tarjetas, imágenes con fallback y botón de adición.
+- `components/pos/ModalPersonalizarProducto.jsx`: configuración accesible de variantes, grupos obligatorios y opcionales, cantidades y cálculo en vivo.
+- `components/pos/ReciboTermico.jsx`: panel térmico financiero con soporte para 30 líneas, nombres largos, 10 modificadores, edición, cantidades, subtotal e IGV estimado (18%), métodos auditados y confirmación de vaciado.
+- `components/pos/BarraMovilPedido.jsx`: navegación táctil para móviles y tabletas con alternancia de vistas y total visible.
+- `services/pos.service.js`: endpoints `/api/pos/catalogo` y `/api/pos/productos/:id` protegidos por `ventas/cobrar`.
+- `styles/pos.css`: reglas de layout, tarjetas, recibo térmico y adaptación claro/oscuro.
+
+Comprobaciones: `npm.cmd run test:pos` (7 pruebas unitarias de 30 líneas, 10 extras, importes grandes, cantidades y validaciones) y `node tests/pos-navegador.mjs` (escenario Playwright: catálogo, personalización, F5, 30 líneas, responsividad 1280/768/390/320 px, rotación 844x390, claro/oscuro y 0 errores). La integración real con MySQL se valida con `npm.cmd run test:pos:integracion` en backend. Detalles en [POS.md](POS.md).

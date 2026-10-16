@@ -1,0 +1,241 @@
+/* Estilos específicos para la interfaz operativa del Punto de Venta (Fase 27).
+   Respeta los tokens adaptables (--app-*) para ambos temas y el diseño responsivo. */
+
+@layer components {
+  /* Contenedor principal del POS: grilla de 12 columnas en escritorio */
+  .pos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* Grid dividida: 8 columnas catálogo, 4 columnas recibo térmico */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .pos-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(360px, 5fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .pos-grid {
+      grid-template-columns: minmax(0, 8fr) minmax(400px, 4fr);
+    }
+  }
+
+  /* Barra de categorías horizontal con desplazamiento suave */
+  .pos-categories-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pos-category-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    padding: 0.625rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border: 1px solid var(--app-borde);
+    background: var(--app-superficie);
+    color: var(--app-texto);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    min-height: 42px;
+  }
+
+  .pos-category-btn:hover {
+    border-color: #f59e0b;
+    background: var(--app-hover);
+  }
+
+  .pos-category-btn.is-active {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #0f172a;
+    border-color: #f59e0b;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgb(245 158 11 / 22%);
+  }
+
+  /* Grilla de productos: adaptable de 1 a 4 columnas según ancho */
+  .pos-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .pos-products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 0.75rem;
+    }
+  }
+
+  /* Tarjeta de producto */
+  .pos-product-card {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background: var(--app-superficie);
+    border: 1px solid var(--app-borde);
+    border-radius: 14px;
+    padding: 0.875rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    text-align: left;
+  }
+
+  .pos-product-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 7%);
+    transform: translateY(-2px);
+  }
+
+  .pos-product-card:active {
+    transform: scale(0.98);
+  }
+
+  .pos-product-thumb {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--app-elevada);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+
+  .pos-product-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pos-product-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgb(245 158 11 / 10%), rgb(239 68 68 / 6%));
+    color: var(--app-acento-texto);
+  }
+
+  /* Panel del Recibo Térmico Financiero */
+  .pos-receipt {
+    background: var(--app-superficie);
+    border: 1px solid var(--app-borde);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgb(15 23 42 / 4%);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pos-receipt-header {
+    background: var(--app-elevada);
+    border-bottom: 2px dashed var(--app-borde);
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .pos-receipt-items {
+    max-height: 480px;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    scrollbar-width: thin;
+  }
+
+  @media (min-width: 1024px) {
+    .pos-receipt-items {
+      max-height: calc(100vh - 380px);
+      min-height: 280px;
+    }
+  }
+
+  .pos-receipt-line {
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed var(--app-borde);
+  }
+
+  .pos-receipt-line:last-child {
+    border-bottom: none;
+  }
+
+  .pos-receipt-footer {
+    background: var(--app-elevada);
+    border-top: 2px dashed var(--app-borde);
+    padding: 1.25rem;
+  }
+
+  /* Píldoras de métodos de pago simulados (Fase 28/29) */
+  .pos-payment-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--app-borde);
+    background: var(--app-superficie);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--app-secundario);
+    user-select: none;
+  }
+
+  .pos-payment-pill.is-active {
+    border-color: #f59e0b;
+    background: rgb(245 158 11 / 12%);
+    color: var(--app-acento-texto);
+  }
+
+  /* Modal de personalización con contenido desplazable sin tapar botones */
+  .pos-modal-content {
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    scrollbar-width: thin;
+  }
+
+  /* Barra flotante para móviles */
+  .pos-mobile-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    padding: 0.75rem 1rem;
+    background: var(--app-superficie);
+    border-top: 1px solid var(--app-borde);
+    box-shadow: 0 -4px 20px rgb(0 0 0 / 12%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-product-card,
+  .pos-category-btn {
+    transition: none !important;
+    transform: none !important;
+  }
+}

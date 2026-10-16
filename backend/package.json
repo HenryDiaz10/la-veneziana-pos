@@ -15,7 +15,8 @@
     "test:inventario:integracion": "node tests/inventario-integracion.js",
     "test:inventario:monitor": "node tests/inventario-monitor-integracion.js",
     "test:compras": "node --test tests/compras-calculo.test.js",
-    "test:compras:integracion": "node tests/compras-integracion.js"
+    "test:compras:integracion": "node tests/compras-integracion.js",
+    "test:pos:integracion": "node tests/pos-integracion.js"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

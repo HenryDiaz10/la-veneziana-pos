@@ -6,6 +6,7 @@
 @import "./styles/recetas.css";
 @import "./styles/inventario.css";
 @import "./styles/compras.css";
+@import "./styles/pos.css";
 
 /* Colocamos los estilos generales en la capa base.
    Las clases de Tailwind podrán sobrescribirlos cuando corresponda. */

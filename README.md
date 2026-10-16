@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 26 implementada y probada.**
-La siguiente etapa es la **fase 27: interfaz operativa del punto de venta**.
+**Avance actual: fase 27 implementada y probada.**
+La siguiente etapa es la **fase 28: creación de pedidos y cobro separado**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -61,12 +61,16 @@ La siguiente etapa es la **fase 27: interfaz operativa del punto de venta**.
   confirmación con ingreso/costo promedio y documento compensatorio autorizado.
 - Fase 26: borrador de carrito por empleado, variantes y modificadores,
   edición, estimación decimal exacta y recuperación local sin credenciales.
+- Fase 27: interfaz operativa del punto de venta, pantalla dividida
+  con catálogo y recibo térmico, navegación adaptable para móviles,
+  consultas operativas con ventas/cobrar y estimación en tiempo real.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
 Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
-El POS conserva su estructura inicial: todavía no registra pedidos ni cobros.
+El POS dispone de interfaz operativa completa con catálogo y recibo térmico;
+el registro transaccional de pedidos y cobro corresponde a la fase 28.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
@@ -1628,3 +1632,42 @@ Pasaron ocho pruebas unitarias, lint/build y escenario de navegador con API
 simulada: 30 líneas, edición, F5, actualización de precios, producto retirado,
 aislamiento por empleado, logout y móvil 390 px en ambos temas. La consulta
 real sin sesión devuelve 401. Detalles: [frontend/CARRITO.md](frontend/CARRITO.md).
+
+## Fase 27: interfaz operativa del punto de venta
+
+Ruta /pos, permiso entas/cobrar. Pantalla dividida con grilla de 12 columnas
+en escritorio (8 catálogo / 4 recibo térmico financiero) y vista adaptable con
+pestañas y barra flotante en tabletas y celulares (< 1024px, 390px, 320px) para
+evitar carritos laterales estrechos o ilegibles.
+
+El catálogo operativo presenta selector horizontal de categorías activas,
+búsqueda en tiempo real por nombre/SKU/código, cuadrícula de tarjetas con fotos
+o alternativa visual de respaldo, precios base destacados y botones de adición
+directa. El modal accesible de personalización permite elegir variantes
+(presentación base o adicionales) y grupos de modificadores obligatorios u
+opcionales (extras, bordes, exclusiones) con control de cantidad (1 a 10000) y
+cálculo en vivo de importes estimados con céntimos BigInt.
+
+El recibo térmico financiero soporta 30 líneas, nombres largos sin desborde,
+hasta 10 modificadores por ítem, modificación incremental de cantidades, edición
+conservando cantidad, eliminación de líneas, actualización de precios en el servidor,
+vaciado con confirmación, desglose de subtotal e IGV informativo (18%) y métodos
+de pago auditados (Efectivo, Tarjeta, Yape, Plin). El botón maestro de cobro
+delimita la operación hacia la fase 28 mediante un modal explicativo.
+
+El backend incorpora /api/pos/catalogo y /api/pos/productos/:id bajo el
+permiso operativo entas/cobrar, sin conceder catalogo/gestionar al cajero ni
+exponer costos, insumos directos ni configuraciones de almacén. Los productos y
+categorías inactivos quedan excluidos del POS y devuelven 404 al consultar su detalle.
+
+Pasaron siete pruebas unitarias nuevas (
+pm.cmd run test:pos), 21 pruebas
+unitarias frontend en total, lint/build y escenario de navegador Playwright en Edge
+headless (
+ode tests/pos-navegador.mjs): cajero sin permisos de catálogo,
+búsqueda, variantes, extras, F5, 30 líneas, responsividad (1280, 768, 390, 320 px),
+rotación de pantalla en pedido activo, modos claro/oscuro y cero errores de consola.
+En backend pasaron pruebas de integración HTTP/MySQL (
+pm.cmd run test:pos:integracion):
+401 sin sesión, 403 cocinero, 403 cajero en ruta administrativa y 200 en rutas
+operativas de POS. Detalles: [frontend/POS.md](frontend/POS.md).
