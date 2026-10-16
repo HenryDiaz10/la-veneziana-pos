@@ -21,6 +21,12 @@ import '@fontsource-variable/playfair-display'
 // Gestionar la navegación mediante la URL del navegador.
 import { BrowserRouter } from 'react-router-dom'
 
+// Recuperar y aplicar la preferencia visual del usuario.
+import { useTemaStore } from './stores/tema.store.js'
+
+// Aplicar el tema guardado antes de montar las pantallas.
+useTemaStore.getState().inicializarTema()
+
 // Buscamos el elemento con id="root" definido en index.html.
 const elementoRaiz = document.getElementById('root')
 

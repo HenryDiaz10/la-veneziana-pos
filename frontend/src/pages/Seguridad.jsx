@@ -63,32 +63,29 @@ function Seguridad() {
   }, [comprobarSesion])
 
   return (
-    <main
-      id="contenido-principal"
-      tabIndex={-1}
-      className="login-screen min-h-dvh px-5 py-10 sm:px-8"
-    >
+      // AdminLayout aporta el main y la navegación de esta página.
       <section
         aria-labelledby="titulo-seguridad"
-        className="login-glass relative z-10 mx-auto w-full max-w-3xl rounded-3xl p-6 text-white sm:p-9"
+        className="mx-auto w-full max-w-4xl rounded-2xl border border-app-borde bg-app-superficie p-6 text-app-texto shadow-sm sm:p-8"
       >
-        <p className="text-xs font-semibold tracking-widest text-amber-300">
+        {/* Los colores app-* responden al tema seleccionado. */}
+        <p className="text-sm font-semibold uppercase tracking-widest text-app-secundario">
           SEGURIDAD
         </p>
 
         <h1
           id="titulo-seguridad"
-          className="mt-3 font-titulo text-2xl font-semibold"
+          className="mt-3 font-titulo text-2xl font-bold"
         >
           Roles del sistema
         </h1>
 
-        <p className="mt-3 text-sm text-slate-200">
+        <p className="mt-3 text-sm text-app-secundario">
           Consulta los perfiles de acceso y sus permisos asignados.
         </p>
 
         {consulta.estado === 'cargando' && (
-          <p role="status" className="mt-6 text-sm text-slate-200">
+          <p role="status" className="mt-6 text-sm text-app-secundario">
             Consultando los roles…
           </p>
         )}
@@ -96,45 +93,52 @@ function Seguridad() {
         {consulta.estado === 'error' && (
           <p
             role="alert"
-            className="mt-6 rounded-xl border border-amber-300/30 bg-amber-950/30 p-4 text-sm text-amber-100"
+            className="mt-6 rounded-xl border border-app-borde bg-app-elevada p-4 text-sm text-app-error"
           >
             {consulta.error}
           </p>
         )}
 
-        {consulta.estado === 'completado' && (
+        {consulta.estado === 'completado' && (consulta.roles.length > 0 ? (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
             {consulta.roles.map(rol => (
               <li
                 key={rol.id}
-                className="rounded-xl border border-white/15 bg-slate-950/25 p-5"
+                className="min-w-0 rounded-xl border border-app-borde bg-app-elevada p-5"
               >
-                <h2 className="font-titulo text-lg font-semibold">
+                <h2 className="break-words font-titulo text-lg font-semibold">
                   {rol.nombre}
                 </h2>
 
                 {rol.descripcion && (
-                  <p className="mt-2 text-sm text-slate-200">
+                  <p className="mt-2 break-words text-sm text-app-secundario">
                     {rol.descripcion}
                   </p>
                 )}
 
-                <p className="mt-3 text-sm text-amber-200">
-                  {rol.permisos.length} permisos asignados
+                {/* Ajustar el texto cuando existe un solo permiso. */}
+                <p className="mt-4 text-sm font-semibold">
+                  {rol.permisos.length}{' '}
+                  {rol.permisos.length === 1
+                    ? 'permiso asignado'
+                    : 'permisos asignados'}
                 </p>
               </li>
             ))}
           </ul>
-        )}
+        ) : (
+          <p className="mt-6 text-sm text-app-secundario">
+            No hay roles disponibles.
+          </p>
+        ))}
 
         <Link
           to="/inicio"
-          className="mt-8 inline-flex min-h-12 items-center rounded-lg px-3 text-sm font-semibold text-amber-300 hover:bg-white/10"
+          className="mt-8 inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold hover:bg-app-hover"
         >
           Volver al inicio
         </Link>
       </section>
-    </main>
   )
 }
 

@@ -17,6 +17,11 @@ import Seguridad from './pages/Seguridad.jsx'
 
 import Componentes from './pages/Componentes.jsx'
 
+import AdminLayout from './layouts/AdminLayout.jsx'
+
+import PosLayout from './layouts/PosLayout.jsx'
+import PuntoVenta from './pages/PuntoVenta.jsx'
+
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
 function obtenerDestinoLogin(desde) {
@@ -148,16 +153,18 @@ function App() {
             element={<RutaLogin />}
           />
 
-          {/* Todas las rutas hijas requieren una sesión válida. */}
+          {/* Comprobar la sesión antes de mostrar el layout. */}
           <Route element={<ProtectedRoute />}>
-            <Route
-              path="/inicio"
-              element={<Inicio />}
-            />
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/inicio"
+                element={<Inicio />}
+              />
+            </Route>
           </Route>
 
-          {/* Montar Seguridad solo con sesión válida y permiso exacto.
-              El backend vuelve a comprobar el permiso al consultar roles. */}
+          {/* Comprobar el permiso antes de montar estas páginas
+              y su layout. El backend también valida el acceso. */}
           <Route
             element={
               <ProtectedRoute
@@ -166,29 +173,38 @@ function App() {
               />
             }
           >
-            <Route
-              path="/seguridad"
-              element={<Seguridad />}
-            />
+            <Route element={<AdminLayout />}>
+              <Route
+                path="/seguridad"
+                element={<Seguridad />}
+              />
+
+              {/* Galería disponible únicamente en desarrollo. */}
+              {import.meta.env.DEV && (
+                <Route
+                  path="/componentes"
+                  element={<Componentes />}
+                />
+              )}
+            </Route>
           </Route>
 
-          {/* Mostrar la galería solo en desarrollo y con permiso de seguridad.
-              Sus controles no realizan operaciones sobre datos del negocio. */}
-          {import.meta.env.DEV && (
-            <Route
-              element={
-                <ProtectedRoute
-                  modulo="seguridad"
-                  accion="gestionar"
-                />
-              }
-            >
+          {/* Acceso al POS con sesión y permiso de cobro. */}
+          <Route
+            element={
+              <ProtectedRoute
+                modulo="ventas"
+                accion="cobrar"
+              />
+            }
+          >
+            <Route element={<PosLayout />}>
               <Route
-                path="/componentes"
-                element={<Componentes />}
+                path="/pos"
+                element={<PuntoVenta />}
               />
             </Route>
-          )}
+          </Route>
 
           {/* Informar cuando la dirección no corresponde a una página. */}
           <Route

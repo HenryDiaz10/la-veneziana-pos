@@ -37,3 +37,49 @@
      El dorado de marca se conserva para los fondos y acentos. */
   --color-foco: #92400e;
 }
+
+/* Colores adaptables para los layouts y sus pantallas. */
+:root {
+  --app-fondo: #f1f5f9;
+  --app-superficie: #ffffff;
+  --app-elevada: #f8fafc;
+  --app-texto: #0f172a;
+  --app-secundario: #475569;
+  --app-borde: #e2e8f0;
+  --app-hover: #f1f5f9;
+  --app-foco: #92400e;
+  --app-error: #b91c1c;
+}
+
+/* Cambiar únicamente los colores adaptables al elegir modo oscuro. */
+:root[data-tema="oscuro"] {
+  --app-fondo: #0b1220;
+  --app-superficie: #1e293b;
+  --app-elevada: #263449;
+  --app-texto: #f8fafc;
+  --app-secundario: #cbd5e1;
+  --app-borde: #475569;
+  --app-hover: #334155;
+  --app-foco: #fbbf24;
+  --app-error: #fca5a5;
+}
+
+/* Generar utilidades de Tailwind vinculadas al tema activo. */
+@theme inline {
+  --color-app-fondo: var(--app-fondo);
+  --color-app-superficie: var(--app-superficie);
+  --color-app-elevada: var(--app-elevada);
+  --color-app-texto: var(--app-texto);
+  --color-app-secundario: var(--app-secundario);
+  --color-app-borde: var(--app-borde);
+  --color-app-hover: var(--app-hover);
+  --color-app-foco: var(--app-foco);
+  --color-app-error: var(--app-error);
+}
+
+/* Mantener un foco visible en cualquiera de los dos temas. */
+@layer base {
+  .app-shell :focus-visible {
+    outline-color: var(--app-foco);
+  }
+}

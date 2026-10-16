@@ -12,15 +12,11 @@ function Componentes() {
   const [mensaje, setMensaje] = useState('Ningún botón pulsado.')
 
   return (
-    <main
-      id="contenido-principal"
-      tabIndex={-1}
-      className="min-h-dvh bg-fondo px-5 py-10 text-texto"
+    // AdminLayout aporta el main; esta sección contiene la galería.
+    <section
+      aria-labelledby="titulo-componentes"
+      className="mx-auto w-full max-w-4xl rounded-2xl border border-app-borde bg-app-superficie p-6 text-app-texto shadow-sm sm:p-8"
     >
-      <section
-        aria-labelledby="titulo-componentes"
-        className="mx-auto max-w-3xl rounded-2xl border border-borde bg-superficie p-6 sm:p-9"
-      >
         <h1
           id="titulo-componentes"
           className="font-titulo text-2xl font-bold"
@@ -28,7 +24,7 @@ function Componentes() {
           Componentes compartidos
         </h1>
 
-        <p className="mt-3 text-sm text-texto-secundario">
+        <p className="mt-3 text-sm text-app-secundario">
           Vista de desarrollo. Los botones no modifican datos del sistema.
         </p>
 
@@ -101,19 +97,18 @@ function Componentes() {
         {/* Anunciar el resultado sin ventanas emergentes. */}
         <p
           role="status"
-          className="mt-6 rounded-xl bg-fondo p-4 text-sm text-texto-secundario"
+          className="mt-6 rounded-xl bg-app-elevada p-4 text-sm text-app-secundario"
         >
           {mensaje}
         </p>
 
         <Link
           to="/inicio"
-          className="mt-8 inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-texto hover:bg-fondo"
+          className="mt-8 inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-app-texto hover:bg-app-hover"
         >
           Volver al inicio
         </Link>
       </section>
-    </main>
   )
 }
 

@@ -26,13 +26,43 @@ el destino interno solicitado; con sesión activa no se vuelve al formulario.
 components/ui contiene BotonBase, BotonSecundario (dorado), BotonPeligro
 (rojo oscuro) y Badge. Los botones admiten carga y deshabilitado y respetan
 movimiento reducido; las etiquetas ofrecen variantes neutro, exito,
-advertencia y peligro. Inicio reutiliza el botón dorado y las etiquetas.
+advertencia y peligro. Inicio reutiliza las etiquetas y los layouts el botón
+dorado para cerrar sesión.
 
 En desarrollo, /componentes permite revisar sus estados con una sesión
 que tenga seguridad/gestionar. Sus controles solo modifican un mensaje
 local y no operan sobre datos del negocio. La ruta no se registra en
-producción. El selector global claro/oscuro queda para los layouts de la
-fase 17; actualmente el login mantiene su presentación oscura.
+producción. Los layouts incorporan el selector claro/oscuro de la fase 17;
+el login mantiene su presentación oscura propia.
+
+## Layouts y temas (fase 17)
+
+- `src/layouts/AdminLayout.jsx`: cabecera, identidad, selector, logout y menú
+  lateral con opción activa dorada. En móvil se abre mediante un botón y se
+  cierra al navegar o con Escape, devolviendo el foco al botón.
+- `src/layouts/PosLayout.jsx`: cabecera con usuario y rol, selector y logout;
+  sin menú lateral, con contenido proporcionado mediante Outlet.
+- `src/pages/PuntoVenta.jsx`: estructura de productos y carrito, apilados en
+  móvil y en dos columnas desde lg. Catálogo, pedidos y cobro siguen pendientes.
+- `src/components/SelectorTema.jsx`: botón que alterna el tema y anuncia la
+  siguiente apariencia mediante su nombre accesible.
+- `src/stores/tema.store.js`: inicializarTema aplica la preferencia al arrancar;
+  cambiarTema valida y aplica el valor; alternarTema cambia entre claro y oscuro.
+  Persiste únicamente la preferencia visual en localStorage bajo
+  `la-veneziana-tema`, con claro como valor predeterminado. Si falla el guardado,
+  el cambio permanece activo durante la visita.
+- `src/theme.css`: variables app-* adaptables y foco visible para ambos temas.
+  Los colores de marca de los botones conservan su contraste.
+
+App integra los layouts bajo ProtectedRoute: /inicio requiere sesión;
+/seguridad y /componentes requieren seguridad/gestionar; /pos requiere
+ventas/cobrar. El menú muestra enlaces según esos permisos. Las páginas
+Inicio, Seguridad y Componentes usan secciones dentro del main del layout.
+La consulta de roles y la autenticación por cookie mantienen su funcionamiento.
+
+ESLint y build pasaron al cierre. El usuario aportó capturas de administración
+en claro y oscuro y del POS oscuro, y confirmó la revisión del tema persistente,
+la disposición móvil y el menú. No se instalaron dependencias en esta fase.
 
 ## Instalación
 
@@ -109,14 +139,15 @@ además de la ampliación del navegador al 200 %.
 Se comprobó el acceso al contenido mediante teclado y el foco visible.
 Estas pruebas deberán repetirse en las futuras pantallas de negocio.
 
-La pantalla actual no utiliza animaciones ni desplazamiento animado.
-Las futuras interacciones deberán respetar prefers-reduced-motion.
+Las interacciones de los botones y los efectos del login respetan
+prefers-reduced-motion.
 
 ## Configuración de la API
 
 Crear `.env` tomando como referencia `.env.example`.
 
-En desarrollo, `VITE_API_URL` apunta a `http://127.0.0.1:3000`.
+En desarrollo, usar `VITE_API_URL=/api`; el proxy de Vite reenvía las
+solicitudes a `http://127.0.0.1:3000`.
 Reiniciar Vite después de modificar la configuración.
 
 `src/config/env.js` valida la dirección antes de mostrar la
