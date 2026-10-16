@@ -222,3 +222,36 @@ principal y edición, conflicto de documento conservando captura y foco,
 consulta de historial, permisos de cajero y diseño a 390/320 px sin que la
 página desborde. Pruebas HTTP/MySQL del historial: filtros exactos, 401/403,
 campos limitados, aislamiento de clientes, paginación y saldo sin cambios.
+
+## Constructor de recetas: fase 22
+
+Ruta `/recetas`, permiso `catalogo/gestionar`. Entrada desde menú, Inicio o
+Catálogo (platos preparados). La URL puede seleccionar `producto` y `variante`;
+el servidor verifica sus IDs y la relación entre ambos.
+
+- `pages/Recetas.jsx`: selección, consulta, recarga y aviso de cambios pendientes.
+- `components/recetas/SelectorRecursoReceta.jsx` y `SelectorVarianteReceta.jsx`:
+  búsqueda paginada de productos/insumos y selección de receta base o variante.
+- `EditorReceta.jsx`: captura completa, copia de base, validación y guardado.
+- `FilaIngrediente.jsx`: cantidad bruta/neta, unidad y merma con errores asociados.
+- `VistaPreviaReceta.jsx`: equivalencias, bruto, neto estimado y rendimiento.
+- `utils/recetas.js`: cálculo exacto con BigInt, conversión compatible y redondeo
+  final a cuatro decimales; validación completa antes de preparar la petición.
+- `services/recetas.service.js` y `hooks/useConsultaRemota.js`: API, cancelación
+  de consultas obsoletas y comprobación de sesión ante 401.
+- `styles/recetas.css`: presentación adaptable y compatible con ambos temas.
+
+La API recibe siempre bruto en kg, L o un. En captura neta se calcula
+`bruto = neto / (1 - merma/100)`. Ejemplo: 200 g netos con 20 % de merma
+equivalen a 0.2500 kg brutos. Al reabrir se usa bruto; no se duplica la merma.
+Una receta de variante sustituye a la base y se guarda independientemente.
+
+Se conservan campos tras un error; se impiden duplicados, recetas vacías y
+envíos repetidos. `main.jsx` usa `createBrowserRouter`/`RouterProvider` para
+que `useBlocker` proteja también Atrás/Adelante. `useBeforeUnload` solicita
+confirmación nativa ante recarga o cierre con cambios pendientes.
+
+Comprobaciones: `npm.cmd run lint`, `npm.cmd run test:recetas` (cuatro pruebas)
+y `npm.cmd run build`; navegador para guardado/reapertura, variantes, rechazo
+del servidor conservando captura, navegación, cajero sin acceso y móvil
+390/320 px. No se editan saldos ni se crean consumos desde este constructor.

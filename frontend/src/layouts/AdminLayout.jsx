@@ -19,6 +19,7 @@ function AdminLayout() {
   const enlaces = [{ ruta: '/inicio', texto: 'Inicio', icono: 'inicio' }]
   if (permite('ventas', 'cobrar')) enlaces.push({ ruta: '/pos', texto: 'Punto de venta', icono: 'carrito' })
   if (permite('catalogo', 'gestionar')) enlaces.push({ ruta: '/catalogo', texto: 'Catálogo', icono: 'catalogo' })
+  if (permite('catalogo', 'gestionar')) enlaces.push({ ruta: '/recetas', texto: 'Recetas', icono: 'recetas' })
   if (permite('clientes', 'buscar')) enlaces.push({ ruta: '/clientes', texto: 'Clientes', icono: 'clientes' })
   if (permite('seguridad', 'gestionar')) {
     enlaces.push({ ruta: '/seguridad', texto: 'Seguridad', icono: 'seguridad' })

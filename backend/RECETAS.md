@@ -28,6 +28,11 @@ Incluye `activo`, `unidad` y `unidades_compatibles`, sin costos ni saldos.
 El editor debe deshabilitar insumos inactivos. Otros GET devuelven `receta` o
 `deltas`. La receta del editor se consulta sin aplicar extras ni fallback.
 
+Desde la fase 22, GET /productos/:productoId devuelve también `producto`
+con identidad, nombre, SKU, imagen, estado y, cuando corresponde, el nombre
+de la variante. El constructor usa estos datos confirmados por el servidor;
+`receta` conserva el conjunto exacto consultado, sin herencia automática.
+
 ## Cantidades y unidades
 
 La unidad base se obtiene de `insumos_almacen.unidad_medida_id` y `unidades_medida`.
@@ -59,7 +64,7 @@ Si el insumo está en kg, guarda **0.2000 kg**. Responde 201 al crear y 200 al
 actualizar el mismo producto/variante/insumo. La cantidad debe ser positiva.
 Merma: de 0.00 a 99.99, máximo dos decimales, valor predeterminado 0.00.
 La cantidad ya es **bruta** y no se vuelve a multiplicar por la merma. Un futuro
-formulario que capture neto deberá calcular bruto = neto / (1 - merma/100)
+formulario que capture neto debe calcular bruto = neto / (1 - merma/100)
 antes de enviar; esta API recibe siempre bruto.
 
 ## Recetas completas y variantes

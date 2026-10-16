@@ -24,6 +24,7 @@ import PuntoVenta from './pages/PuntoVenta.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
+import Recetas from './pages/Recetas.jsx'
 
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
@@ -206,6 +207,7 @@ function App() {
                 path="/catalogo"
                 element={<Catalogo />}
               />
+              <Route path="/recetas" element={<Recetas />} />
             </Route>
           </Route>
 

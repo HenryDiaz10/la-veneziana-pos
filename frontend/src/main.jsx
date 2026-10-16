@@ -19,7 +19,7 @@ import './index.css'
 import '@fontsource-variable/playfair-display'
 
 // Gestionar la navegación mediante la URL del navegador.
-import { BrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 // Recuperar y aplicar la preferencia visual del usuario.
 import { useTemaStore } from './stores/tema.store.js'
@@ -39,13 +39,22 @@ const raiz = createRoot(elementoRaiz)
 import('./App.jsx')
   .then(({ default: App }) => {
     // La aplicación y su configuración se cargaron correctamente.
+    // El router de datos permite bloquear también Atrás/Adelante cuando
+    // una receta contiene cambios sin guardar. App conserva sus rutas.
+    const router = createBrowserRouter([{
+      path: '*',
+      element: <App />,
+      errorElement: <main className="app-shell vz-status-screen"><section className="vz-status-card" role="alert">
+        <h1 className="font-titulo text-2xl font-bold">No pudimos mostrar esta página</h1>
+        <p className="mt-4 text-app-secundario">Vuelve al inicio para intentarlo nuevamente.</p>
+        <a href="/inicio" className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-marca-dorado px-5 py-3 font-semibold text-texto">Volver al inicio</a>
+      </section></main>
+    }])
 
     raiz.render(
       <StrictMode>
         {/* Habilitar la navegación para toda la aplicación. */}
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </StrictMode>
     )
   })

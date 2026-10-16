@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 21 implementada y probada.**
-La siguiente etapa es la **fase 22: constructor visual de recetas**.
+**Avance actual: fase 22 implementada y probada.**
+La siguiente etapa es la **fase 23: inventario transaccional**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -51,13 +51,15 @@ La siguiente etapa es la **fase 22: constructor visual de recetas**.
   e historial de puntos; renovación visual adaptable con los colores de la marca.
 - Fase 21: API de recetas BOM, conversión exacta de unidades, receta por variante,
   deltas de extras/exclusiones y snapshot para tareas; pruebas unitarias y MySQL.
+- Fase 22: constructor visual de recetas, selección de insumos, cantidades netas
+  o brutas, conversión de unidades, vista previa y guardado completo por variante.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /clientes y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS conserva su estructura inicial: todavía no registra pedidos ni cobros.
-La API de recetas está lista; su editor visual corresponde a la fase 22.
+El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
@@ -1493,3 +1495,35 @@ de acceso, CSRF, unidades, precedencia, deltas, concurrencia y rollback. Se
 comprobó un snapshot persistido en una tarea temporal y su conservación tras
 cambiar la receta; físico y reservado permanecieron iguales. Se retiraron todos
 los fixtures. Contratos, ejemplos y archivos: [backend/RECETAS.md](backend/RECETAS.md).
+
+## Fase 22: constructor visual de recetas
+
+Ruta `/recetas`, protegida por `catalogo/gestionar`, disponible en el menú,
+Inicio y la acción Receta de los platos preparados del Catálogo. Permite elegir
+producto y variante, buscar insumos activos, añadir o retirar ingredientes y
+guardar la receta completa. La variante puede copiar la base para personalizarla;
+su guardado no modifica la receta base.
+
+Se captura bruto o neto, unidad compatible y merma. La vista previa muestra
+bruto, neto estimado y rendimiento por ingrediente. Por ejemplo, 200 g netos con
+20 % de merma se guardan como 0.2500 kg brutos. Al reabrir se muestra bruto en
+unidad base, evitando aplicar otra vez la merma. No se suman kg, litros y unidades.
+
+Los campos incompletos impiden enviar el conjunto. Si el servidor rechaza un
+guardado, la captura permanece disponible. Los cambios pendientes tienen aviso
+al navegar, cambiar producto/variante, usar Atrás/Adelante o recargar. Las
+consultas anteriores se cancelan para evitar mostrar otra receta por error.
+
+Archivos principales: `pages/Recetas.jsx`, los seis componentes de
+`components/recetas`, `services/recetas.service.js`, `utils/recetas.js`,
+`hooks/useConsultaRemota.js` y `styles/recetas.css`. `main.jsx` utiliza el router
+de datos para proteger también la navegación del navegador. El GET del backend
+incorpora los datos del producto seleccionado.
+
+Validación: ESLint, cuatro pruebas numéricas del frontend, compilación y pruebas
+HTTP/MySQL de recetas. En navegador se comprobaron guardado y reapertura,
+conversión, merma, variante independiente, errores conservando campos,
+protección de navegación y acceso denegado al cajero. Diseño claro/oscuro y
+adaptación a 390/320 px. Los datos temporales se retiraron después de las pruebas.
+Esta fase configura recetas; las reservas y consumos de existencias corresponden
+al inventario transaccional de la fase 23.

@@ -1,4 +1,9 @@
 const DIBUJOS = {
+  recetas: <><path d="M6 3h13v18H6a3 3 0 0 1 0-6h13M6 3a3 3 0 0 0-3 3v12"/><path d="M9 7h6m-6 4h4"/></>,
+  ingrediente: <><path d="M12 21v-9M12 15C3 15 3 7 3 7s9-1 9 8ZM12 12C12 3 21 3 21 3s1 9-9 9Z"/></>,
+  balanza: <><path d="M12 3v18M5 21h14M3 7h18M5 7l-3 7h6Zm14 0-3 7h6Z"/></>,
+  guardar: <><path d="M4 3h13l4 4v14H3V3Zm3 0v6h10V3M7 21v-8h10v8"/></>,
+  copiar: <><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></>,
   clientes: <><circle cx="9" cy="8" r="3"/><path d="M2 21v-3a7 7 0 0 1 14 0v3M16 5a3 3 0 0 1 0 6m3 3a6 6 0 0 1 3 5v2"/></>,
   ubicacion: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
   premio: <><circle cx="12" cy="9" r="6"/><path d="m8 14-2 8 6-3 6 3-2-8"/></>,

@@ -23,7 +23,7 @@ async function productoPreparado(productoId, varianteId, transaction, produccion
   exigir(esIdRecetaValido(productoId) && (varianteId === null || esIdRecetaValido(varianteId)), 'datos_invalidos');
   // Mismo orden de bloqueo que catálogo: producto antes de variante y grupos.
   const producto = await ProductoVenta.findByPk(productoId, {
-    attributes: ['id', 'nombre', 'tipo_producto', 'estado', 'categoria_id'], transaction, lock: transaction.LOCK.UPDATE
+    attributes: ['id', 'nombre', 'sku', 'imagen_url', 'tipo_producto', 'estado', 'categoria_id'], transaction, lock: transaction.LOCK.UPDATE
   });
   exigir(producto, 'producto_inexistente');
   exigir(producto.tipo_producto === 'plato_preparado', 'producto_no_preparado');
@@ -104,11 +104,11 @@ export function reemplazarReceta(productoId, datos) {
 
 export function consultarReceta(productoId, varianteId = null) {
   return ejecutar(async transaction => {
-    await productoPreparado(productoId, varianteId, transaction);
+    const producto = await productoPreparado(productoId, varianteId, transaction);
     const filas = await RecetaBom.findAll({ where: { producto_venta_id: productoId, variante_id: varianteId },
       attributes: CAMPOS_BOM, order: [['insumo_id', 'ASC']], transaction });
     const insumos = await cargarInsumos(filas.map(f => f.insumo_id), transaction, false);
-    return { estado: 'consultado', receta: { producto_venta_id: productoId, variante_id: varianteId,
+    return { estado: 'consultado', producto, receta: { producto_venta_id: productoId, variante_id: varianteId,
       ingredientes: filas.map(f => serializarFila(f, insumos)) } };
   });
 }

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import DataTable from '../components/ui/DataTable.jsx'
 import BotonBase from '../components/ui/BotonBase.jsx'
@@ -173,6 +174,7 @@ function Catalogo() {
       titulo: 'Acciones',
       renderizar: producto => (
         <div className="vz-row-actions">
+        {producto.tipo_producto === 'plato_preparado' && <Link to={`/recetas?producto=${producto.id}`} aria-label={`Receta de ${producto.nombre}`} className="vz-button inline-flex min-h-11 items-center gap-2 rounded-lg border border-app-borde bg-app-superficie px-3 py-2 text-xs font-semibold"><Icono nombre="recetas"/>Receta</Link>}
         <BotonBase
           aria-label={`Editar ${producto.nombre}`}
           onClick={() => {

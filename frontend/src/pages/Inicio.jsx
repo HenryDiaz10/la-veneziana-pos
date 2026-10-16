@@ -9,6 +9,7 @@ function Inicio() {
   if (!usuario) return null
   const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
   const accesos = []
+  if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/recetas', titulo: 'Recetas', icono: 'recetas', tono: 'lima', descripcion: 'Define ingredientes, cantidades y rendimiento para cada plato y variante.' })
   if (permite('clientes', 'buscar')) accesos.push({ ruta: '/clientes', titulo: 'Clientes', icono: 'clientes', tono: 'dorado', descripcion: 'Consulta sus datos de contacto, direcciones y fidelización en una sola ficha.' })
   if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/catalogo', titulo: 'Catálogo', icono: 'catalogo', tono: 'dorado', descripcion: 'Organiza categorías, presenta tus productos y mantén sus precios al día.' })
   if (permite('ventas', 'cobrar')) accesos.push({ ruta: '/pos', titulo: 'Punto de venta', icono: 'carrito', tono: 'lima', descripcion: 'Accede al espacio de atención y venta de la pizzería.' })
