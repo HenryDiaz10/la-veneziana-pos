@@ -321,3 +321,16 @@ inválida conservada, alta/confirmación de un borrador temporal y consulta del
 ingreso/conciliación en Inventario, seguir editando tras aviso de descarte,
 diseño claro/oscuro, 390/320 px y cajero sin acceso. Pruebas HTTP/MySQL del backend
 cubren duplicados, revisiones obsoletas, concurrencia, compensación y rollback.
+
+## Fase 26: borrador del carrito
+
+Store Zustand con selecciones, persistencia versionada por empleado y
+sincronización con la sesión. Selector reutilizable para añadir/editar,
+resumen de líneas e importes actuales y total estimado con BigInt.
+La ruta `/pruebas-carrito` se limita a desarrollo y `catalogo/gestionar`.
+
+Incluye ocho pruebas unitarias (`npm.cmd run test:carrito`) y escenario
+Playwright con API simulada para treinta líneas, edición, F5, separación
+por empleado, precios actuales, producto retirado y móvil claro/oscuro.
+No confirma pedidos, cobros ni reservas. El contrato, archivos y límites
+se detallan en [CARRITO.md](CARRITO.md).

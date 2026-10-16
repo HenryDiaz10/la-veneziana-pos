@@ -1,9 +1,22 @@
 import {
   obtenerProductosPaginados,
+  obtenerProductoCarrito,
   crearProducto,
   actualizarProducto
 } from '../services/productos.service.js';
 import { normalizarBusquedaProducto } from '../validators/productos.js';
+
+// Consulta administrativa puntual para recuperar selecciones del borrador.
+export async function consultarProducto(req, res, next) {
+  if (!/^[1-9]\d*$/.test(req.params.id) || Number(req.params.id) > 2147483647) {
+    return res.status(400).json({ mensaje: 'El identificador no es válido.' });
+  }
+  try {
+    const producto = await obtenerProductoCarrito(Number(req.params.id));
+    if (!producto) return res.status(404).json({ mensaje: 'El producto ya no existe.' });
+    return res.json({ producto });
+  } catch (error) { return next(error); }
+}
 
 // Traducir los resultados esperados sin exponer errores internos.
 const ERRORES_PRODUCTO = {

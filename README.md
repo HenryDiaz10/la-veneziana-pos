@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 25 implementada y probada.**
-La siguiente etapa es la **fase 26: carrito y estimación de importes**.
+**Avance actual: fase 26 implementada y probada.**
+La siguiente etapa es la **fase 27: interfaz operativa del punto de venta**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -59,6 +59,8 @@ La siguiente etapa es la **fase 26: carrito y estimación de importes**.
   historial paginado, stock de productos directos y conciliación de solo lectura.
 - Fase 25: proveedores, alta de insumos sin saldo inicial, compras en borrador,
   confirmación con ingreso/costo promedio y documento compensatorio autorizado.
+- Fase 26: borrador de carrito por empleado, variantes y modificadores,
+  edición, estimación decimal exacta y recuperación local sin credenciales.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
@@ -1607,3 +1609,22 @@ conciliación en Inventario, validación conservando captura, descarte cancelado
 modos claro/oscuro, móvil 390/320 px y acceso denegado al cajero. Se retiraron
 todos los fixtures. Contratos, decisiones y archivos:
 [backend/COMPRAS.md](backend/COMPRAS.md).
+
+## Fase 26: carrito y estimación decimal
+
+Borrador Zustand por empleado con variantes, modificadores y cantidades,
+edición en diálogo y cálculo estimado con céntimos BigInt. La recuperación
+local guarda exclusivamente identificadores y cantidades, sin credenciales.
+La vista de desarrollo `/pruebas-carrito`, con `catalogo/gestionar`, comprueba
+30 líneas, corrección y recuperación. Catálogo actualizado en memoria; una
+línea inválida impide presentar un total parcial como total completo.
+
+La consulta puntual `GET /api/productos/:id` permite rehidratar productos
+fuera de la página visible, con los permisos administrativos existentes.
+No registra pedidos ni reserva stock; el futuro servidor de pedidos debe
+validar disponibilidad/precios y devolver el importe definitivo.
+
+Pasaron ocho pruebas unitarias, lint/build y escenario de navegador con API
+simulada: 30 líneas, edición, F5, actualización de precios, producto retirado,
+aislamiento por empleado, logout y móvil 390 px en ambos temas. La consulta
+real sin sesión devuelve 401. Detalles: [frontend/CARRITO.md](frontend/CARRITO.md).

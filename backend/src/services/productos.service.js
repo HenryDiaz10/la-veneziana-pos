@@ -44,6 +44,14 @@ function esIdValido(id) {
   );
 }
 
+// Recuperar un producto concreto al rehidratar un borrador, sin recorrer
+// todas las páginas del catálogo ni confiar en precios guardados localmente.
+export async function obtenerProductoCarrito(id) {
+  if (!esIdValido(id)) return null;
+  const producto = await ProductoVenta.findByPk(id, { attributes: CAMPOS_PRODUCTO });
+  return producto ? serializarProducto(producto) : null;
+}
+
 // Comprobar la configuración completa, incluso en cambios parciales.
 async function comprobarRelaciones(producto, transaction) {
   const categoria = await CategoriaVenta.findByPk(

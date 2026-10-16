@@ -27,6 +27,9 @@ import Clientes from './pages/Clientes.jsx'
 import Recetas from './pages/Recetas.jsx'
 import Inventario from './pages/Inventario.jsx'
 import Compras from './pages/Compras.jsx'
+import SincronizadorCarrito from './components/SincronizadorCarrito.jsx'
+import PruebasCarrito from './pages/PruebasCarrito.jsx'
+
 
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
@@ -97,6 +100,10 @@ function App() {
 
   return (
     <>
+
+    {/* Recuperar y guardar el borrador según la sesión activa. */}
+    <SincronizadorCarrito />
+
       <a
         href="#contenido-principal"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-superficie focus:px-4 focus:py-3 focus:text-texto"
@@ -210,6 +217,14 @@ function App() {
                 element={<Catalogo />}
               />
               <Route path="/recetas" element={<Recetas />} />
+              {/* Prueba protegida por el permiso de catálogo y disponible
+                  únicamente al ejecutar la aplicación en desarrollo. */}
+              {import.meta.env.DEV && (
+                <Route
+                  path="/pruebas-carrito"
+                  element={<PruebasCarrito />}
+                />
+              )}
             </Route>
           </Route>
 

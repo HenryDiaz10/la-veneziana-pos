@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   listarProductos,
+  consultarProducto,
   registrarProducto,
   editarProducto
 } from '../controllers/productos.controller.js';
@@ -23,6 +24,8 @@ productosRouter.use(
 );
 
 productosRouter.get('/', listarProductos);
+// Mantener el mismo permiso administrativo del catálogo. No habilita cobros.
+productosRouter.get('/:id', consultarProducto);
 productosRouter.post('/', registrarProducto);
 productosRouter.patch('/:id', editarProducto);
 productosRouter.delete('/:id', eliminarProducto);
