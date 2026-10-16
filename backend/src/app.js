@@ -31,6 +31,7 @@ import productosRouter from './routes/productos.routes.js';
 
 import modificadoresRouter from './routes/modificadores.routes.js';
 import clientesRouter from './routes/clientes.routes.js';
+import recetasRouter from './routes/recetas.routes.js';
 
 // Leer las cookies recibidas sin registrar su contenido.
 import cookieParser from 'cookie-parser';
@@ -181,6 +182,9 @@ app.use('/api/modificadores', modificadoresRouter);
 
 // Búsqueda limitada y administración autorizada de clientes y direcciones.
 app.use('/api/clientes', clientesRouter);
+
+// Recetas y deltas: datos maestros; no realizan movimientos de inventario.
+app.use('/api/recetas', recetasRouter);
 
 app.use((req, res) => {
   // El código HTTP 404 indica que el recurso solicitado no existe.

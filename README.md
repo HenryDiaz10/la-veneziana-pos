@@ -1,5 +1,8 @@
 ## Estado del proyecto
 
+**Avance actual: fase 21 implementada y probada.**
+La siguiente etapa es la **fase 22: constructor visual de recetas**.
+
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.
@@ -37,24 +40,39 @@
   y permisos, retorno tras login y consulta de roles desde Seguridad.
 - Fase 16: botones compartidos, etiquetas de estado, integración en Inicio
   y galería protegida de componentes disponible solo en desarrollo.
+- Fase 17: layouts de administración y punto de venta, navegación por permisos
+  y selector de modo claro/oscuro con preferencia guardada.
+- Fase 18: tabla de datos reutilizable, con estados de carga, error y vacío,
+  columnas configurables y desplazamiento horizontal dentro de su panel.
+- Fase 19: API de categorías, productos, variantes y modificadores; búsqueda
+  limitada de clientes, perfiles, direcciones y permisos de consulta/gestión.
+- Fase 20: interfaces de Catálogo y Clientes, búsqueda, formularios, imágenes,
+  activación/desactivación, eliminación sin relaciones, perfiles, direcciones
+  e historial de puntos; renovación visual adaptable con los colores de la marca.
+- Fase 21: API de recetas BOM, conversión exacta de unidades, receta por variante,
+  deltas de extras/exclusiones y snapshot para tareas; pruebas unitarias y MySQL.
 
-El frontend permite ingresar, recuperar la sesión al recargar y cerrarla.
-Las rutas /inicio y /seguridad exigen sesión; Seguridad requiere además
-el permiso seguridad/gestionar.
+El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
+administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
+Las rutas /inicio, /pos, /catalogo, /clientes y /seguridad exigen sesión;
+las secciones de negocio comprueban también su permiso específico.
+El POS conserva su estructura inicial: todavía no registra pedidos ni cobros.
+La API de recetas está lista; su editor visual corresponde a la fase 22.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
 con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
 
-El backend dispone de login, consulta y cierre de sesión, rutas protegidas
-por permisos y gestión administrativa de empleados y roles. Siguen
-pendientes los servicios operativos de negocio y su integración con el
-frontend. Las autorizaciones sensibles se integrarán en las transacciones
-de ajustes y devoluciones cuando se implementen esos módulos.
+El backend dispone de autenticación, gestión de empleados y roles, catálogo,
+clientes, direcciones y recetas, con rutas protegidas por permisos. Siguen
+pendientes la operación de pedidos, inventario, cocina, caja y cobros, entre
+otros módulos de las fases siguientes. Las autorizaciones sensibles se
+integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 
 Las secciones por fase describen lo realizado en cada etapa.
 Los pendientes de migraciones y asociaciones mencionados en las
-fases 7 a 9 se resolvieron en la fase 10, documentada al final.
+fases 7 a 9 se resolvieron en la fase 10. El detalle de las fases posteriores
+también se conserva más abajo y en la documentación específica del backend.
 
 ## Preparación del backend
 
@@ -1456,3 +1474,22 @@ sin perder captura, consulta de puntos, acceso de cajero, Escape y presentación
 clara/oscura a 390 y 320 px sin desbordamiento de la página. Los datos de prueba
 son temporales y se retiran al terminar. Detalles: [frontend/README.md](frontend/README.md),
 [backend/CATALOGO.md](backend/CATALOGO.md) y [backend/CRM.md](backend/CRM.md).
+
+## Fase 21: API de recetas BOM y deltas
+
+Se añadió `/api/recetas` con permiso `catalogo/gestionar`, validación estricta,
+consulta de insumos/unidades, vínculos de ingredientes, reemplazo completo
+atómico y deltas de modificadores. Una receta de variante sustituye a la base;
+los extras y exclusiones respetan sus grupos y no pueden dejar consumo negativo.
+
+La conversión utiliza decimales exactos: 200 g se almacenan como 0.2000 kg.
+La cantidad guardada ya es bruta; la merma no se aplica dos veces. El resolver
+produce una copia congelada para persistirla al crear la tarea, dentro de la
+misma transacción. No crea pedidos reales, cambia tareas existentes ni realiza
+reservas o movimientos de stock. La interfaz corresponde a la fase 22.
+
+Pasaron seis pruebas unitarias (`npm.cmd run test:recetas`) y pruebas HTTP/MySQL
+de acceso, CSRF, unidades, precedencia, deltas, concurrencia y rollback. Se
+comprobó un snapshot persistido en una tarea temporal y su conservación tras
+cambiar la receta; físico y reservado permanecieron iguales. Se retiraron todos
+los fixtures. Contratos, ejemplos y archivos: [backend/RECETAS.md](backend/RECETAS.md).
