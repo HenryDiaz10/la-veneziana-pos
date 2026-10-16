@@ -1,5 +1,8 @@
 import { useAuthStore } from '../stores/auth.store.js'
 
+import BotonSecundario from '../components/ui/BotonSecundario.jsx'
+import Badge from '../components/ui/Badge.jsx'
+
 // Pantalla inicial disponible únicamente con una sesión válida.
 function Inicio() {
   const usuario = useAuthStore(state => state.usuario)
@@ -7,7 +10,7 @@ function Inicio() {
   const error = useAuthStore(state => state.error)
   const salir = useAuthStore(state => state.salir)
 
-  // ProtectedRoute controlará el acceso antes de mostrar esta página.
+  // ProtectedRoute comprueba el acceso antes de mostrar esta página.
   if (!usuario) {
     return null
   }
@@ -35,33 +38,35 @@ function Inicio() {
           Bienvenido, {usuario.nombre}
         </h1>
 
-        <p className="mt-3 text-sm text-slate-200">
-          Tu sesión está activa.
-        </p>
+        {/* Comunicar los estados mediante texto y color. */}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <Badge variante="exito">
+            Sesión activa
+          </Badge>
 
-        <p className="mt-2 text-sm text-slate-200">
-          Rol: {usuario.rol.nombre}
-        </p>
+          <Badge>
+            Rol: {usuario.rol.nombre}
+          </Badge>
+        </div>
 
-        {/* Informar si el servidor no pudo confirmar el cierre. */}
+        {/* Conservar el mensaje si no se pudo confirmar el cierre. */}
         {error && (
           <p role="alert" className="mt-5 text-sm text-amber-200">
             {error}
           </p>
         )}
 
-        <button
-          type="button"
-          disabled={cerrandoSesion}
+        {/* El componente recibe el estado; Zustand ejecuta el cierre. */}
+        <BotonSecundario
+          cargando={cerrandoSesion}
+          textoCargando="Cerrando sesión…"
           onClick={() => {
             void salir()
           }}
-          className="login-submit mt-6 min-h-12 w-full rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto hover:bg-amber-400 disabled:pointer-events-none disabled:opacity-60"
+          className="mt-6 w-full"
         >
-          {cerrandoSesion
-            ? 'Cerrando sesión…'
-            : 'Cerrar sesión'}
-        </button>
+          Cerrar sesión
+        </BotonSecundario>
       </section>
     </main>
   )

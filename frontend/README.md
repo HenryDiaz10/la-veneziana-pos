@@ -21,6 +21,19 @@ Seguridad consulta los roles existentes sin modificarlos. Las rutas
 desconocidas muestran Página no encontrada. Después del login se recupera
 el destino interno solicitado; con sesión activa no se vuelve al formulario.
 
+## Componentes compartidos
+
+components/ui contiene BotonBase, BotonSecundario (dorado), BotonPeligro
+(rojo oscuro) y Badge. Los botones admiten carga y deshabilitado y respetan
+movimiento reducido; las etiquetas ofrecen variantes neutro, exito,
+advertencia y peligro. Inicio reutiliza el botón dorado y las etiquetas.
+
+En desarrollo, /componentes permite revisar sus estados con una sesión
+que tenga seguridad/gestionar. Sus controles solo modifican un mensaje
+local y no operan sobre datos del negocio. La ruta no se registra en
+producción. El selector global claro/oscuro queda para los layouts de la
+fase 17; actualmente el login mantiene su presentación oscura.
+
 ## Instalación
 
 Ejecutar desde la carpeta CODIGO/frontend:

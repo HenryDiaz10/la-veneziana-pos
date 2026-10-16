@@ -15,6 +15,8 @@ import { useAuthStore } from './stores/auth.store.js'
 
 import Seguridad from './pages/Seguridad.jsx'
 
+import Componentes from './pages/Componentes.jsx'
+
 // Aceptar únicamente destinos internos.
 // Evitar enlaces externos y el regreso al propio login.
 function obtenerDestinoLogin(desde) {
@@ -169,6 +171,24 @@ function App() {
               element={<Seguridad />}
             />
           </Route>
+
+          {/* Mostrar la galería solo en desarrollo y con permiso de seguridad.
+              Sus controles no realizan operaciones sobre datos del negocio. */}
+          {import.meta.env.DEV && (
+            <Route
+              element={
+                <ProtectedRoute
+                  modulo="seguridad"
+                  accion="gestionar"
+                />
+              }
+            >
+              <Route
+                path="/componentes"
+                element={<Componentes />}
+              />
+            </Route>
+          )}
 
           {/* Informar cuando la dirección no corresponde a una página. */}
           <Route

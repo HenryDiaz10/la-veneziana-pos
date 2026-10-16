@@ -35,6 +35,8 @@
   y estado de identidad en memoria con Zustand.
 - Fase 15: navegación con React Router, rutas protegidas por sesión
   y permisos, retorno tras login y consulta de roles desde Seguridad.
+- Fase 16: botones compartidos, etiquetas de estado, integración en Inicio
+  y galería protegida de componentes disponible solo en desarrollo.
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla.
 Las rutas /inicio y /seguridad exigen sesión; Seguridad requiere además
@@ -1232,3 +1234,67 @@ pantallas del negocio y los layouts generales se desarrollarán después.
 En producción, el alojamiento deberá resolver rutas del frontend mediante
 index.html sin interceptar /api; BrowserRouter necesita esa configuración
 para abrir direcciones internas directamente.
+
+## Fase 16: componentes visuales compartidos
+
+Se añadieron componentes puros para estandarizar botones y etiquetas.
+Reciben propiedades y delegan las operaciones a la pantalla que los usa;
+no consultan la API ni guardan credenciales. No se instalaron dependencias.
+
+### Archivos y responsabilidades
+
+| Archivo relativo a frontend | Función |
+| --- | --- |
+| src/components/ui/BotonBase.jsx (nuevo) | BotonBase concentra tipo, bloqueo, carga, texto pendiente y estilos comunes de interacción. |
+| src/components/ui/BotonSecundario.jsx (nuevo) | Botón dorado con texto oscuro que reutiliza BotonBase. |
+| src/components/ui/BotonPeligro.jsx (nuevo) | Botón rojo oscuro con texto blanco para acciones destructivas; reutiliza BotonBase. |
+| src/components/ui/Badge.jsx (nuevo) | Etiqueta con variantes neutro, exito, advertencia y peligro; variante desconocida usa neutro. |
+| src/pages/Componentes.jsx (nuevo) | Galería de desarrollo con botones, etiquetas y controles locales para simular carga y deshabilitado. |
+| src/pages/Inicio.jsx | Reutiliza el botón dorado para logout y Badge para sesión activa y rol. |
+| src/App.jsx | Registra /componentes únicamente con import.meta.env.DEV, bajo seguridad/gestionar. |
+
+Se actualizaron también este README y frontend/README.md. Los componentes
+residen juntos en components/ui y utilizan imports relativos entre ellos.
+
+### Comportamiento y accesibilidad
+
+BotonBase usa type=button por defecto para evitar envíos accidentales.
+Admite disabled, cargando y textoCargando, además de propiedades nativas
+como onClick y atributos accesibles. Mientras está cargando se deshabilita,
+expone aria-busy y muestra un texto de operación pendiente. La lógica de
+negocio y las confirmaciones pertenecen a la pantalla, no al componente.
+
+Los botones tienen una altura mínima de 44 px, foco visible heredado,
+elevación breve al pasar el ratón y escala leve al pulsar. La interacción
+animada se aplica solo a botones habilitados y respeta movimiento reducido.
+Los colores de las variantes se mantienen como clases estáticas para que
+Tailwind los incluya. Dorado utiliza texto oscuro; peligro utiliza un rojo
+más oscuro con texto blanco. Badge comunica el estado mediante texto y color
+y no incorpora animaciones ni controles interactivos.
+
+### Integración y comprobaciones
+
+Inicio conserva el cierre de sesión mediante Zustand; el componente recibe
+el estado de logout y muestra Cerrando sesión sin permitir pulsaciones
+repetidas. Las etiquetas presentan Sesión activa y el rol del usuario.
+
+La galería /componentes requiere sesión y seguridad/gestionar, y solo
+existe en desarrollo. Sus botones cambian un mensaje local: no ejecutan
+operaciones destructivas ni modifican datos del sistema. Las casillas
+permiten activar carga y deshabilitado de forma independiente.
+
+ESLint y la compilación de producción pasaron. Se comprobó visualmente
+la integración en Inicio y la galería con las cuatro variantes de Badge.
+El usuario confirmó las pulsaciones de ambos botones, el cambio de mensaje,
+el bloqueo durante carga y deshabilitado y la activación con Tab y Enter.
+Se corrigió el import de Componentes sin uso al registrar su ruta.
+
+### Temas y siguientes fases
+
+El proyecto contempla modo claro para administración, caja e inventario,
+y modo oscuro para cocina y perfiles que lo habiliten. Todavía no existe
+un selector global de tema; el login conserva su presentación oscura propia.
+La base de selección claro/oscuro y su preferencia visual se preparará con
+los layouts de la fase 17. La preferencia de apariencia puede persistirse
+sin almacenar credenciales de sesión. Las siguientes pantallas reutilizarán
+estos componentes conforme se implementen sus operaciones reales.
