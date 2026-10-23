@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Transaction } from 'sequelize';
 import { sequelize } from '../config/database.js';
-import { Usuario, IdempotenciaOperacion, AuditLog, EventoOutbox } from '../models/index.js';
+import { Usuario, Rol, IdempotenciaOperacion, AuditLog, EventoOutbox } from '../models/index.js';
 import { ErrorPedido, exigirPedido as exigir, idEntero } from './pedidos-calculo.js';
 
 // Canonizar claves de objetos, preservando el orden de líneas/pagos.
@@ -10,7 +10,7 @@ function canonico(v) {
   if (v && typeof v === 'object') return Object.fromEntries(Object.keys(v).sort().map(k => [k, canonico(v[k])]));
   return v;
 }
-export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, transaction }, ejecutar) {
+export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, transaction, seguridad = false }, ejecutar) {
   exigir(idEntero(usuarioId) && typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   const hash = createHash('sha256').update(JSON.stringify(canonico(cuerpo))).digest('hex');
   for (let intento = 0; ; intento++) {
@@ -18,6 +18,9 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
       // Las pruebas pueden aportar una transacción padre; el savepoint mantiene
       // la atomicidad si falla una operación dentro de esa transacción.
       return await sequelize.transaction(transaction ? { transaction } : { isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, async tx => {
+        // Las operaciones sensibles respetan la barrera de roles antes del actor,
+        // igual que crear/consumir autorizaciones y gestionar empleados.
+        if (seguridad) await Rol.findOne({ where: { nombre: 'administrador' }, transaction: tx, lock: tx.LOCK.UPDATE });
         const actor = await Usuario.findByPk(usuarioId, { transaction: tx, lock: tx.LOCK.UPDATE });
         exigir(actor?.estado === 'activo', 'USUARIO_NO_DISPONIBLE');
         const anterior = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave }, transaction: tx, lock: tx.LOCK.UPDATE });
@@ -28,7 +31,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
         }
         const registro = await IdempotenciaOperacion.create({ usuario_id: usuarioId, tipo_operacion: tipo, clave, request_hash: hash, estado: 'procesando' }, { transaction: tx });
         const resultado = await ejecutar(tx, randomUUID());
-        await registro.update({ estado: 'confirmada', http_status: ['pedido.crear', 'pedido.cobrar', 'caja.abrir'].includes(tipo) ? 201 : 200, respuesta_json: resultado }, { transaction: tx });
+        await registro.update({ estado: 'confirmada', http_status: ['pedido.crear', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'venta.devolver'].includes(tipo) ? 201 : 200, respuesta_json: resultado }, { transaction: tx });
         return { ...resultado, repetida: false };
       });
     } catch (e) {
@@ -42,7 +45,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
 // Cancelar usa la misma barrera por actor: espera al commit y recupera su
 // resultado, o deja una lápida que impide ejecutar más tarde esa identidad.
 export function resolverIntento(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'venta.devolver'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   return sequelize.transaction(async tx => {
     const actor = await Usuario.findByPk(usuarioId, { transaction: tx, lock: tx.LOCK.UPDATE });
@@ -59,7 +62,7 @@ export function resolverIntento(usuarioId, tipo, clave) {
 }
 // Recuperar exclusivamente una operación propia ante pérdida de la respuesta.
 export async function recuperarOperacion(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'venta.devolver'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   const registro = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave, estado: 'confirmada' } });
   exigir(registro, 'OPERACION_INEXISTENTE');

@@ -9,7 +9,7 @@ import {
   AutorizacionSensible
 } from '../models/index.js';
 
-import { validarAltaAutorizacion } from '../validators/autorizaciones.js';
+import { validarAltaAutorizacion, idRecursoAutorizacion } from '../validators/autorizaciones.js';
 
 import {
   obtenerPoliticaAutorizacion,
@@ -221,8 +221,7 @@ export async function consumirAutorizacion({
     !Number.isSafeInteger(actorId) ||
     actorId <= 0 ||
     actorId > 2147483647 ||
-    !Number.isSafeInteger(entidadId) ||
-    entidadId <= 0 ||
+    !idRecursoAutorizacion(entidadId) ||
     politica === null
   ) {
     throw new AutorizacionNoValidaError();

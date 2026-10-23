@@ -9,6 +9,7 @@ import * as m from '../src/models/index.js';
 import { crearHashPassword } from '../src/security/password.js';
 import { crearPedido, ampliarPedido, cambiarBloqueoPago } from '../src/services/pedidos.service.js';
 import { abrirCaja } from '../src/services/caja.service.js';
+import { consultarResumenCaja, cerrarCaja } from '../src/services/caja-cierre.service.js';
 import { cobrarPedido } from '../src/services/cobros.service.js';
 import { resolverIntento, recuperarOperacion } from '../src/services/operacion-comercial.js';
 import { registrarMovimiento, consumirTarea } from '../src/services/inventario.service.js';
@@ -173,6 +174,17 @@ try {
   try { await assert.rejects(()=>cobrarPedido(fallido.id,{...cobrar,version:fallido.version},ctx(usuarios[0].id,padre)),/fallo ticket controlado/); }
   finally {m.TrabajoImpresion.removeHook('beforeCreate',falloTicket);}
   assert.equal(await m.VentaComprobante.count({where:{pedido_id:fallido.id},transaction:padre}),0);
+  // Una deuda autorizada puede amortizarse con compras sin canje; nunca gastar
+  // puntos inexistentes. Todo permanece en la transacción fiscal de prueba.
+  await cliente.update({puntos_vip_actuales:-20},{transaction:padre});
+  let deuda=(await crearPedido({...llevar([linea(productos[1])]),cliente_id:cliente.id},ctx(usuarios[0].id,padre))).pedido;
+  deuda=(await cambiarBloqueoPago(deuda.id,{version:deuda.version},ctx(usuarios[0].id,padre))).pedido;
+  await rechaza(()=>cobrarPedido(deuda.id,{version:deuda.version,sesion_caja_id:sesion.id,pagos:[{metodo_pago:'puntos_vip',monto_pagado:'1.00',puntos:10},{metodo_pago:'efectivo',monto_pagado:'9',monto_entregado:'9'}]},ctx(usuarios[0].id,padre)),'PUNTOS_INSUFICIENTES');
+  await cobrarPedido(deuda.id,{version:deuda.version,sesion_caja_id:sesion.id,pagos:[{metodo_pago:'efectivo',monto_pagado:'10',monto_entregado:'10'}]},ctx(usuarios[0].id,padre));
+  assert.equal((await m.Cliente.findByPk(cliente.id,{transaction:padre})).puntos_vip_actuales,-10);
+  const arqueo=await consultarResumenCaja(sesion.id,ctx(usuarios[0].id,padre));
+  await cerrarCaja(sesion.id,{cierre_real_efectivo:arqueo.resumen.totales.teorico_efectivo,revision:arqueo.revision},ctx(usuarios[0].id,padre));
+  await rechaza(()=>cobrarPedido(fallido.id,{...cobrar,version:fallido.version},ctx(usuarios[0].id,padre)),'SESION_CAJA_NO_DISPONIBLE');
   await padre.rollback();padre=null;
   // Dos usuarios compiten por el último disponible: solo uno puede reservar.
   const competencia=await Promise.allSettled([crearPedido(llevar([linea(productos[1],10)]),ctx()),crearPedido(llevar([linea(productos[1],10)]),ctx(usuarios[1].id))]);

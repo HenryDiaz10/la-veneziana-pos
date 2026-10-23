@@ -1,5 +1,10 @@
 # Fase 28: pedidos, caja mínima y cobro separado
 
+**Fase 31:** cierre Z, movimientos, devoluciones y compensación de puntos
+disponibles en backend. Ver [CAJA.md](CAJA.md). Cobrar exige todavía sesión
+abierta; una deuda de puntos autorizada puede amortizarse con nuevas ganancias
+sin permitir canje. La pantalla de arqueo se incorpora en fase 32.
+
 **Actualización fase 30:** el POS y Pagos ya registran pedidos y confirman cobros.
 El cobro encola ticket y outbox en la misma transacción. Se añaden resolución
 segura de intentos desconocidos, consulta de mesas y agente autenticado de

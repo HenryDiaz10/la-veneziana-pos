@@ -1,0 +1,12 @@
+import { Router } from 'express';
+import { autenticar } from '../middlewares/autenticar.js';
+import { exigirPermiso } from '../middlewares/exigirPermiso.js';
+import * as c from '../controllers/caja-cierre.controller.js';
+const router = Router();
+router.use(autenticar, exigirPermiso('ventas', 'devolver'));
+router.get('/operaciones/:tipo/:clave', c.recuperar);
+router.post('/operaciones/:tipo/:clave/resolver', c.resolver);
+router.get('/:id/devoluciones', c.historialDevoluciones);
+router.post('/:id/devoluciones/previsualizar', c.propuestaDevolucion);
+router.post('/:id/devoluciones', exigirPermiso('caja', 'gestionar'), c.devolver);
+export default router;

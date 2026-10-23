@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 30 implementada y probada.**
-La siguiente etapa es la **fase 31: backend de cierre de caja y devoluciones**.
+**Avance actual: fase 31 implementada y probada.**
+La siguiente etapa es la **fase 32: interfaz de arqueo de caja**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -77,10 +77,15 @@ La siguiente etapa es la **fase 31: backend de cierre de caja y devoluciones**.
   del cobro con recuperación idempotente tras desconexión o recarga. Limpieza
   selectiva del carrito confirmado y trabajo de impresión transaccional;
   agente local autenticado probado en simulación de 58/80 mm, sin impresión física.
+- Fase 31: backend del cierre Z con conteo, diferencia y snapshot inmutable por
+  servicio; movimientos de caja y devoluciones autorizadas con límites acumulados,
+  conciliación por sesión/medio, compensación de puntos, idempotencia y pruebas
+  de concurrencia y rollback en MySQL.
 
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
+Cierres y devoluciones: [backend/CAJA.md](backend/CAJA.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan

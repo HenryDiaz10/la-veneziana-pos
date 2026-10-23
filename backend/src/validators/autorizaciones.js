@@ -1,3 +1,9 @@
+// Admitir BIGINT como cadena sin redondear ventas de identificador grande.
+export function idRecursoAutorizacion(valor) {
+  const id = String(valor);
+  return (typeof valor === 'string' || Number.isSafeInteger(valor)) &&
+    /^[1-9]\d{0,18}$/.test(id) && BigInt(id) <= 9223372036854775807n;
+}
 // Validar los datos de una solicitud de autorización sensible.
 export function validarAltaAutorizacion(datos) {
   if (
@@ -26,8 +32,7 @@ export function validarAltaAutorizacion(datos) {
     !Number.isSafeInteger(datos.actorId) ||
     datos.actorId <= 0 ||
     datos.actorId > 2147483647 ||
-    !Number.isSafeInteger(datos.entidadId) ||
-    datos.entidadId <= 0
+    !idRecursoAutorizacion(datos.entidadId)
   ) {
     return null;
   }

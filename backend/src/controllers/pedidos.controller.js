@@ -9,8 +9,20 @@ import { recuperarOperacion, resolverIntento } from '../services/operacion-comer
 
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key'),
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
-const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE']);
+const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE']);
 const mensajes = {
+  AUTORIZACION_NO_VALIDA: 'La autorización no está vigente, ya fue usada o no corresponde a este actor, acción y recurso.',
+  CAJA_DESACTUALIZADA: 'La caja cambió desde la consulta. Actualiza y revisa el conteo antes de cerrar.',
+  EFECTIVO_INSUFICIENTE: 'La sesión no tiene efectivo teórico suficiente para este desembolso.',
+  CAJA_INCONSISTENTE: 'Los registros de caja no concilian. Requieren revisión antes de cerrar.',
+  CIERRE_SIN_SNAPSHOT: 'El cierre no tiene un snapshot válido; requiere revisión sin sobrescribirlo.',
+  DEVOLUCION_EXCEDE_VENTA: 'Las cantidades o importes acumulados superan lo vendido, o el importe devuelto es cero.',
+  DEVOLUCION_DESACTUALIZADA: 'La devolución cambió desde la propuesta. Vuelve a previsualizarla.',
+  DEVOLUCION_NO_DISTRIBUIBLE: 'El importe no puede devolverse por los medios originales y sus puntos enteros. Revisa las líneas o solicita devolución completa.',
+  DETALLE_NO_PERTENECE: 'Una de las líneas no corresponde a la venta indicada.',
+  VENTA_NO_DEVOLVIBLE: 'Esta operación admite ventas emitidas con ticket interno; no sustituye una nota de crédito fiscal.',
+  VENTA_SIN_SNAPSHOT: 'La venta no tiene detalles o reglas congeladas suficientes para calcular la devolución.',
+  DEVOLUCION_INCONSISTENTE: 'El historial de devoluciones requiere revisión antes de continuar.',
   DATOS_INVALIDOS: 'Revisa los campos permitidos, cantidades, notas y clave de idempotencia.',
   PEDIDO_INEXISTENTE: 'El pedido no existe.', PEDIDO_DESACTUALIZADO: 'El pedido cambió. Consulta su versión actual.',
   FINANZAS_PENDIENTES: 'Configura y valida FINANZAS antes de cobrar: tasa de impuesto y precios con impuesto incluido.',

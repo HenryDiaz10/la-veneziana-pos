@@ -34,7 +34,7 @@ export function consultarContextoPago(id, usuarioId, puedeCanjear) {
       venta: venta ? { id: String(venta.id), pedido_id: String(pedido.id), total: venta.total_final_venta,
         serie_correlativo: venta.serie_correlativo, impresion: ticket ? { job_uid: ticket.job_uid, estado: ticket.estado } : null } : null,
       finanzas_habilitadas: Boolean(politica),
-      canje: { disponible: Boolean(politica && puedeCanjear && cliente?.estado === 'activo' && valorPunto),
+      canje: { disponible: Boolean(politica && puedeCanjear && cliente?.estado === 'activo' && valorPunto && cliente.puntos_vip_actuales > 0),
         saldo_puntos: puedeCanjear && cliente?.estado === 'activo' ? cliente.puntos_vip_actuales ?? 0 : 0,
         valor_punto_pen: valorPunto } };
   });
@@ -66,7 +66,7 @@ export function cobrarPedido(id, datos, contexto) {
     exigir(!pagos.canje || (pedido.cliente_id && contexto.puedeCanjear === true), 'CANJE_NO_AUTORIZADO');
     const cliente = pedido.cliente_id && await Cliente.findByPk(pedido.cliente_id, { transaction: tx, lock: tx.LOCK.UPDATE });
     exigir(!pedido.cliente_id || cliente?.estado === 'activo', 'CLIENTE_NO_DISPONIBLE');
-    if (cliente) exigir(cliente.puntos_vip_actuales >= pagos.canje, 'PUNTOS_INSUFICIENTES');
+    if (cliente && pagos.canje) exigir(cliente.puntos_vip_actuales >= pagos.canje, 'PUNTOS_INSUFICIENTES');
     const lineas = items.map(l => ({ item: l, fiscal: desglosarImpuesto(centimos(l.subtotal_item), politica.tasa) }));
     const base = lineas.reduce((s, l) => s + centimos(l.fiscal.base), 0n);
     const impuesto = lineas.reduce((s, l) => s + centimos(l.fiscal.impuesto), 0n);
@@ -95,7 +95,10 @@ export function cobrarPedido(id, datos, contexto) {
     if (cliente) {
       const saldo = BigInt(cliente.puntos_vip_actuales ?? 0) - BigInt(pagos.canje) + ganados;
       const historico = BigInt(cliente.puntos_vip_historicos ?? 0) + ganados;
-      exigir(saldo >= 0n && saldo <= 2147483647n && historico <= 2147483647n, 'PUNTOS_FUERA_RANGO');
+      // Una deuda de puntos aprobada en una devolución puede reducirse con
+      // compras posteriores. No permite canje ni genera deuda nueva al cobrar.
+      const minimo = !pagos.canje && cliente.puntos_vip_actuales < 0 ? BigInt(cliente.puntos_vip_actuales) : 0n;
+      exigir(saldo >= minimo && saldo <= 2147483647n && historico <= 2147483647n, 'PUNTOS_FUERA_RANGO');
       if (pagos.canje) await CrmMovimientoPuntos.create({ cliente_id: cliente.id, venta_id: venta.id, tipo_movimiento: 'canje_premio', puntos: -pagos.canje,
         operacion_uid: `${uid}:canje`, descripcion: 'Canje como medio de pago, sin descuento adicional.' }, { transaction: tx });
       if (ganados > 0n) await CrmMovimientoPuntos.create({ cliente_id: cliente.id, venta_id: venta.id, tipo_movimiento: 'ganancia_compra', puntos: Number(ganados),
