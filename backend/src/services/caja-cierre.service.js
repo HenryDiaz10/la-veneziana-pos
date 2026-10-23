@@ -1,6 +1,7 @@
 import { QueryTypes } from 'sequelize';
 import { sequelize } from '../config/database.js';
-import { SesionCajaZ, CajaFisica, VentaComprobante, MovimientoCajaChica, AutorizacionSensible } from '../models/index.js';
+import { SesionCajaZ, CajaFisica, VentaComprobante, MovimientoCajaChica, AutorizacionSensible, TrabajoImpresion } from '../models/index.js';
+import { encolarCierre } from './impresion.service.js';
 import { consumirAutorizacion, AutorizacionNoValidaError } from './autorizaciones.service.js';
 import { operacionComercial, auditoriaComercial, eventoComercial } from './operacion-comercial.js';
 import { campos, idEntero, centimos, dinero, texto, ErrorPedido, exigirPedido as exigir } from './pedidos-calculo.js';
@@ -51,7 +52,9 @@ export function consultarResumenCaja(id, contexto) {
     const s = await bloquearSesionPropia(id, contexto.usuarioId, tx, false);
     const resumen = s.estado_sesion === 'abierta' ? await construirResumenCaja(s, tx) : s.snapshot_memento_json;
     exigir(resumen && typeof resumen === 'object' && !Array.isArray(resumen), 'CIERRE_SIN_SNAPSHOT');
-    return { estado: s.estado_sesion, resumen, revision: revisionCaja(resumen) };
+    const trabajo = s.estado_sesion !== 'abierta' && await TrabajoImpresion.findOne({ where: { sesion_id: s.id, tipo: 'cierre', solicitado_por: contexto.usuarioId }, transaction: tx });
+    return { estado: s.estado_sesion, resumen, revision: revisionCaja(resumen),
+      impresion: trabajo ? { job_uid: trabajo.job_uid, estado: trabajo.estado } : null };
   });
 }
 export function registrarMovimientoCaja(id, datos, contexto) {
@@ -94,6 +97,18 @@ export function cerrarCaja(id, datos, contexto) {
       descuadre_monto: diferencia, snapshot_memento_json: snapshot, estado_sesion: 'cerrada' }, { transaction: tx });
     await auditoriaComercial(contexto.usuarioId, 'sesiones_caja_z', id, { estado: 'cerrada', contado, teorico, diferencia, revision }, tx);
     await eventoComercial('caja.cerrada', 'sesiones_caja_z', id, 1, { sesion_id: id, corte_utc: corte.toISOString() }, tx);
-    return { cierre: { sesion_id: id, estado: 'cerrada', teorico, contado, descuadre: diferencia, snapshot } };
+    const impresion = await encolarCierre(id, snapshot, contexto.usuarioId, tx);
+    return { cierre: { sesion_id: id, estado: 'cerrada', teorico, contado, descuadre: diferencia, snapshot, impresion } };
+  });
+}
+export function copiarCierre(id, datos, contexto) {
+  campos(datos, []);
+  return operacionComercial({ ...contexto, tipo: 'caja.copia', cuerpo: { id } }, async tx => {
+    const s = await bloquearSesionPropia(id, contexto.usuarioId, tx, false);
+    exigir(['cerrada', 'auditada'].includes(s.estado_sesion) && s.snapshot_memento_json?.cierre, 'CIERRE_SIN_SNAPSHOT');
+    const numero = await TrabajoImpresion.count({ where: { sesion_id: id, tipo: 'copia', destino: 'caja', 'contenido_json.documento': 'cierre_caja' }, transaction: tx }) + 1;
+    const impresion = await encolarCierre(id, s.snapshot_memento_json, contexto.usuarioId, tx, numero);
+    await auditoriaComercial(contexto.usuarioId, 'sesiones_caja_z', id, { accion: 'copia', numero_copia: numero, job_uid: impresion.job_uid }, tx);
+    return { copia: { sesion_id: id, impresion } };
   });
 }

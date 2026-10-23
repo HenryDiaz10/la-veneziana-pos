@@ -31,7 +31,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
         }
         const registro = await IdempotenciaOperacion.create({ usuario_id: usuarioId, tipo_operacion: tipo, clave, request_hash: hash, estado: 'procesando' }, { transaction: tx });
         const resultado = await ejecutar(tx, randomUUID());
-        await registro.update({ estado: 'confirmada', http_status: ['pedido.crear', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'venta.devolver'].includes(tipo) ? 201 : 200, respuesta_json: resultado }, { transaction: tx });
+        await registro.update({ estado: 'confirmada', http_status: ['pedido.crear', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.copia', 'venta.devolver'].includes(tipo) ? 201 : 200, respuesta_json: resultado }, { transaction: tx });
         return { ...resultado, repetida: false };
       });
     } catch (e) {
@@ -45,7 +45,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
 // Cancelar usa la misma barrera por actor: espera al commit y recupera su
 // resultado, o deja una lápida que impide ejecutar más tarde esa identidad.
 export function resolverIntento(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'venta.devolver'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   return sequelize.transaction(async tx => {
     const actor = await Usuario.findByPk(usuarioId, { transaction: tx, lock: tx.LOCK.UPDATE });
@@ -62,7 +62,7 @@ export function resolverIntento(usuarioId, tipo, clave) {
 }
 // Recuperar exclusivamente una operación propia ante pérdida de la respuesta.
 export async function recuperarOperacion(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'venta.devolver'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   const registro = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave, estado: 'confirmada' } });
   exigir(registro, 'OPERACION_INEXISTENTE');

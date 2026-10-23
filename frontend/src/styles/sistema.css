@@ -185,3 +185,27 @@
 .vz-payment-summary { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--app-borde); border-radius: 14px; background: var(--app-elevada); }
 .vz-payment-summary > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; }
 .vz-payment-summary strong { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+/* Arqueo: tarjetas y conteo permanecen montados al actualizar el turno. */
+.vz-cash-lookup { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1.5rem; }
+.vz-cash-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--app-borde); border-left: 4px solid #f59e0b; border-radius: 1rem; padding: 1.5rem; background: var(--app-superficie); }
+.vz-cash-stats { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vz-cash-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.vz-cash-grid.is-closed { grid-template-columns: minmax(0, 1fr); }
+.vz-cash-count { border-top: 3px solid #f59e0b; min-width: 0; }
+.vz-cash-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+.vz-cash-tabs button { flex: 1 1 8rem; min-height: 44px; border: 1px solid var(--app-borde); border-radius: .75rem; padding: .65rem; font-size: .8rem; font-weight: 600; }
+.vz-cash-tabs button[aria-pressed="true"] { border-color: #f59e0b; background: #f59e0b22; }
+.vz-denominations { display: grid; gap: .65rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vz-denominations label { min-width: 0; font-size: .8rem; font-weight: 600; }
+.vz-denominations input { margin-top: .35rem; }
+.vz-cash-count-total { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .65rem; border-radius: .75rem; padding: 1rem; background: #f59e0b18; }
+.vz-cash-count-total strong { overflow-wrap: anywhere; font-family: monospace; font-size: 1.4rem; }
+.vz-cash-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.vz-cash-method { min-width: 0; padding: 1rem; border: 1px solid var(--app-borde); border-radius: .85rem; background: var(--app-fondo); }
+.vz-cash-method dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; }
+.vz-cash-method dd { overflow-wrap: anywhere; font-family: monospace; }
+.vz-cash-result { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; border: 1px solid var(--app-borde); border-radius: 1rem; padding: 1.5rem; background: var(--app-superficie); }
+.vz-cash-result strong { display: block; font-family: monospace; font-size: 1.7rem; overflow-wrap: anywhere; margin-top: .4rem; }
+.vz-cash-result > p { grid-column: 1 / -1; }
+@media (max-width: 1099px) { .vz-cash-grid { grid-template-columns: minmax(0, 1fr); } .vz-cash-grid:not(.is-closed) > .vz-cash-count { grid-row: 1; } }
+@media (max-width: 639px) { .vz-cash-stats, .vz-cash-result { grid-template-columns: minmax(0, 1fr); } .vz-cash-methods { grid-template-columns: minmax(0, 1fr); } .vz-cash-banner { padding: 1.15rem; } .vz-cash-lookup > label { flex-basis: 100%; } }

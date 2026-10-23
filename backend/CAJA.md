@@ -191,6 +191,55 @@ ventas; no se cambia FINANZAS real. La regresión de cobro usa su política
 ficticia dentro de una transacción revertida. No ejecutar estas pruebas contra
 producción. No se transfieren fondos ni se emiten documentos fiscales reales.
 
-Siguiente: fase 32, interfaz responsive de arqueo, consulta y confirmación del
-conteo sobre estos contratos. Resumen PDF: `DOCUMENTACION/FASES/FASE_31.pdf`,
-fuera del repositorio CODIGO.
+La interfaz de estos contratos está implementada en fase 32:
+[ARQUEO.md](../frontend/ARQUEO.md). Resúmenes PDF fuera del repositorio CODIGO:
+`DOCUMENTACION/FASES/FASE_31.pdf` y `FASE_32.pdf`.
+
+## Ampliación fase 32: original y copias del cierre
+
+El cierre crea su trabajo original y el evento de impresión dentro de la misma
+transacción del snapshot, auditoría y estado. Si falla la cola, se revierte el
+cierre. Consultar el resumen cerrado añade los metadatos del original cuando
+existe; los cierres anteriores sin trabajo también se pueden consultar y copiar.
+
+Rutas adicionales, con autenticación, `caja/gestionar` y pertenencia al usuario:
+
+| Método y ruta `/api/caja` | Resultado |
+| --- | --- |
+| `POST /sesiones/:id/copias` | Cuerpo `{}` y clave idempotente. Nueva copia numerada de un cierre guardado. |
+| `GET /impresion/pendientes` | Trabajos propios de documento `cierre_caja`, originales y copias. |
+| `GET /impresion/:uid` | Estado y contenido del trabajo propio. |
+| `POST /impresion/:uid/simulacion` | Agente registra formato simulado; exige CSRF e idempotencia. |
+
+`copiarCierre` bloquea la sesión cerrada/auditada para asignar el número;
+una repetición con la misma clave devuelve el mismo trabajo. La copia conserva
+el snapshot original, solicitante y número. No modifica el memento, no reabre
+el turno y no solicita apertura de cajón. La recuperación tipada admite
+`caja.copia`; trabajos de tickets y cierres están separados por ámbito documental,
+incluso cuando ambos tienen tipo `copia`.
+
+`encolarCierre` guarda el contenido congelado y publica el evento durable.
+`formatearCierre` produce texto de 32/48 columnas para 58/80 mm con original/copia,
+sesión, solicitante, corte UTC, importes, medios y observaciones saneadas.
+El agente reutiliza cookie HttpOnly, origen autorizado, CSRF, idempotencia y
+archivo exclusivo por UID. No imprime en hardware ni abre un puerto de escucha.
+
+Desde backend, con las variables de autenticación del agente ya configuradas
+según [VENTA_FINAL.md](../VENTA_FINAL.md), seleccionar el canal y ejecutar:
+
+```powershell
+$env:IMPRESION_CANAL = 'caja'
+$env:IMPRESION_ANCHO = '80'
+node scripts/agente-impresion.mjs
+```
+
+El canal predeterminado sigue siendo `ventas`. `IMPRESION_CARPETA` señala la
+carpeta local de salida; no se deben guardar cookies ni secretos en Git.
+Un estado `enviado` significa simulación registrada, sin confirmación física.
+
+Validación fase 32: 34 pruebas unitarias backend, integración HTTP/MySQL de
+caja y regresión de pedidos. Se comprueba original atómico, fallo al encolarlo,
+pertenencia, separación de documentos, copias consecutivas, reintento sin
+duplicados y conservación del snapshot. El agente prueba reanudación y ACK
+perdido en ambos canales. Frontend: 36 unitarias, navegador de arqueo y
+regresiones de pagos, journal, POS y sesión, además de lint y build.

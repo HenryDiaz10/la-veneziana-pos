@@ -2,15 +2,15 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
-import { formatearTicket } from '../src/services/ticket-formato.js';
+import { formatearTicket, formatearCierre } from '../src/services/ticket-formato.js';
 
 // Agente autenticado de una pasada. No abre puertos ni escucha conexiones.
 // Solo simulación: NO envía ESC/POS, no corta papel ni abre el cajón.
-export async function ejecutarAgente({ api, origen, cookie, carpeta, ancho = 80 }) {
+export async function ejecutarAgente({ api, origen, cookie, carpeta, ancho = 80, canal = 'ventas' }) {
   const url = new URL(api), origin = new URL(origen);
   if (url.username || url.password || url.search || url.hash || origin.origin !== origen ||
     (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) throw new Error('Usa HTTPS o localhost sin credenciales en la URL.');
-  if (typeof cookie !== 'string' || !cookie || /[\r\n]/.test(cookie) || !carpeta || ![58, 80].includes(ancho)) throw new Error('Configura sesión, carpeta de salida y ancho 58/80.');
+  if (typeof cookie !== 'string' || !cookie || /[\r\n]/.test(cookie) || !carpeta || ![58, 80].includes(ancho) || !['ventas', 'caja'].includes(canal)) throw new Error('Configura sesión, carpeta, ancho 58/80 y canal ventas/caja.');
   const raiz = resolve(carpeta);
   await mkdir(raiz, { recursive: true });
   const pedir = async (ruta, body, key) => {
@@ -21,11 +21,12 @@ export async function ejecutarAgente({ api, origen, cookie, carpeta, ancho = 80 
     if (!r.ok) throw new Error(`Agente rechazado por el servidor (${r.status}).`);
     return r.json();
   };
-  const { trabajos } = await pedir('/pedidos/impresion/pendientes');
+  const prefijo = canal === 'caja' ? '/caja/impresion' : '/pedidos/impresion';
+  const { trabajos } = await pedir(`${prefijo}/pendientes`);
   const resultados = [];
   for (const job of trabajos) {
     if (!/^[a-zA-Z0-9_-]{8,64}$/.test(job.job_uid) || job.destino !== 'caja') throw new Error('Trabajo no válido.');
-    const texto = formatearTicket(job.contenido, ancho);
+    const texto = canal === 'caja' ? formatearCierre(job.contenido, ancho) : formatearTicket(job.contenido, ancho);
     const sha256 = createHash('sha256').update(texto).digest('hex');
     const archivo = join(raiz, `${job.job_uid}.txt`);
     // Creación exclusiva: un reinicio o dos agentes no producen otra copia.
@@ -35,7 +36,7 @@ export async function ejecutarAgente({ api, origen, cookie, carpeta, ancho = 80 
       if (e.code !== 'EEXIST') throw e;
       if (await readFile(archivo, 'utf8') !== texto) throw new Error('El archivo previo no coincide. Revisa el trabajo antes de continuar.');
     }
-    const r = await pedir(`/pedidos/impresion/${job.job_uid}/simulacion`, { sha256 }, `sim-${job.job_uid}`);
+    const r = await pedir(`${prefijo}/${job.job_uid}/simulacion`, { sha256 }, `sim-${job.job_uid}`);
     resultados.push({ job_uid: r.job_uid, modo: r.modo, impresion_fisica: false });
   }
   return resultados;
@@ -44,7 +45,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   try {
     const resultados = await ejecutarAgente({ api: process.env.IMPRESION_API_URL ?? 'http://localhost:3000/api',
       origen: process.env.IMPRESION_ORIGEN ?? 'http://localhost:5173', cookie: process.env.IMPRESION_COOKIE,
-      carpeta: process.env.IMPRESION_CARPETA, ancho: Number(process.env.IMPRESION_ANCHO ?? '80') });
+      carpeta: process.env.IMPRESION_CARPETA, ancho: Number(process.env.IMPRESION_ANCHO ?? '80'), canal: process.env.IMPRESION_CANAL ?? 'ventas' });
     console.log(JSON.stringify({ modo: 'simulacion', resultados }));
   } catch (e) { console.error(e.message); process.exitCode = 1; }
 }

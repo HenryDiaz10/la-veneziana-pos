@@ -21,6 +21,7 @@ import AdminLayout from './layouts/AdminLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
 import RecuperarOperacion from './components/RecuperarOperacion.jsx'
 import Pagos from './pages/Pagos.jsx'
+import ArqueoCaja from './pages/ArqueoCaja.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
@@ -234,6 +235,11 @@ function App() {
           <Route element={<ProtectedRoute modulo="clientes" accion="buscar" />}>
             <Route element={<AdminLayout />}>
               <Route path="/clientes" element={<Clientes />} />
+            </Route>
+          </Route>
+          <Route element={<ProtectedRoute modulo="caja" accion="gestionar" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/caja" element={<ArqueoCaja />} />
             </Route>
           </Route>
           <Route element={<ProtectedRoute modulo="inventario" accion="gestionar" />}>

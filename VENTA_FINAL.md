@@ -1,5 +1,11 @@
 # Fase 30 · Venta confirmada y recuperación
 
+Actualización fase 32: el journal también recupera movimientos, cierres y copias
+de caja, sin retirar líneas del carrito. El agente admite el canal de cierres
+descrito en [backend/CAJA.md](backend/CAJA.md); la interfaz está documentada en
+[frontend/ARQUEO.md](frontend/ARQUEO.md). Las indicaciones inferiores sobre
+impresión de ventas conservan su ámbito original.
+
 Implementada el 23/10/2026. Integra los servicios de fase 28 con la captura de
 fase 29. No requiere tablas ni migraciones nuevas; reutiliza idempotencias,
 trabajos de impresión y outbox existentes.

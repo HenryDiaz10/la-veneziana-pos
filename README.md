@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 31 implementada y probada.**
-La siguiente etapa es la **fase 32: interfaz de arqueo de caja**.
+**Avance actual: fase 32 implementada y probada.**
+La siguiente etapa es la **fase 33: interfaz de salón y mesas**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -82,10 +82,16 @@ La siguiente etapa es la **fase 32: interfaz de arqueo de caja**.
   conciliación por sesión/medio, compensación de puntos, idempotencia y pruebas
   de concurrencia y rollback en MySQL.
 
+- Fase 32: interfaz responsive de arqueo, conteo directo o por denominaciones,
+  movimientos autorizados, revisión y cierre oficial recuperable tras F5.
+  Consulta del corte guardado y copias numeradas; agente de cierre probado
+  en simulación de 58/80 mm, sin confirmación de impresión física.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
 Cierres y devoluciones: [backend/CAJA.md](backend/CAJA.md).
+Interfaz de arqueo: [frontend/ARQUEO.md](frontend/ARQUEO.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -94,7 +100,7 @@ formularios ni equivalen a logout. Implementación y pruebas:
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS permite revisar y registrar pedidos; Pagos confirma el cobro con caja
 propia, versión y bloqueo vigentes. Solo la confirmación oficial permite retirar

@@ -5,6 +5,8 @@ import { solicitarApi, ErrorApi } from '../services/api.js'
 
 const EVENTO = 'veneziana-operacion-comercial'
 const VACIO = '{"pendiente":null,"vinculos":{},"ultimaVenta":null}'
+const TIPOS_CAJA = ['caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia']
+const TIPOS = ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', ...TIPOS_CAJA]
 const clave = id => `la-veneziana-comercial-v1:${id}`
 function propietario(id) {
   const s = useAuthStore.getState()
@@ -16,7 +18,7 @@ function leer(id) {
   const r = JSON.parse(raw)
   if (!r || !r.vinculos || typeof r.vinculos !== 'object' || Array.isArray(r.vinculos) ||
     Object.keys(r.vinculos).length > 100 || Object.entries(r.vinculos).some(([id, v]) => !/^[1-9]\d{0,18}$/.test(id) || !Array.isArray(v?.origen)) ||
-    (r.pendiente && (!/^[a-zA-Z0-9_-]{8,64}$/.test(r.pendiente.clave) || !['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir'].includes(r.pendiente.tipo)))) throw new Error('El registro local de operaciones requiere revisión.')
+    (r.pendiente && (!/^[a-zA-Z0-9_-]{8,64}$/.test(r.pendiente.clave) || !TIPOS.includes(r.pendiente.tipo)))) throw new Error('El registro local de operaciones requiere revisión.')
   return r
 }
 function guardar(id, datos) {
@@ -55,13 +57,26 @@ async function limpiarConfirmadas(id, origen) {
   useCartStore.setState(actual => actual.usuarioCarritoId === id && actual.carritoPreparado ? { lineas: actual.lineas.filter(l => !quitar.has(l)) } : {})
 }
 function rutaRecuperacion(p) {
-  return p.tipo === 'caja.abrir' ? `/caja/operaciones/${p.clave}` : `/pedidos/operaciones/${p.tipo}/${p.clave}`
+  if (TIPOS_CAJA.includes(p.tipo)) return `/caja/operaciones/${p.tipo}/${p.clave}`
+  return `/pedidos/operaciones/${p.tipo}/${p.clave}`
 }
 async function finalizar(id, pendiente, resultado) {
   propietario(id)
   const r = leer(id)
   if (r.pendiente?.clave !== pendiente.clave) throw new Error('La operación local cambió. Recupera su resultado antes de continuar.')
   if (!resultado.cancelada) {
+    if (TIPOS_CAJA.includes(pendiente.tipo)) {
+      const recurso = resultado.cierre ?? resultado.movimiento ?? resultado.copia ?? resultado.sesion
+      const sesionId = recurso?.sesion_id ?? recurso?.id
+      if (!Number.isSafeInteger(sesionId) || sesionId <= 0 || (pendiente.sesionId && sesionId !== pendiente.sesionId) ||
+        (pendiente.tipo === 'caja.cerrar' && (resultado.cierre?.estado !== 'cerrada' || !resultado.cierre.snapshot?.cierre))) throw new Error('Resultado de caja incompleto. Recupera la misma operación.')
+      // Solo referencias de navegación. El conteo, observaciones y memento se
+      // consultan en el servidor; nunca se guardan como prueba local de cierre.
+      r.ultimaOperacionCaja = { clave: pendiente.clave, tipo: pendiente.tipo, sesionId }
+      if (pendiente.tipo === 'caja.cerrar') r.ultimoCierre = { sesionId }
+      const impresion = recurso.impresion
+      if (impresion?.job_uid) r.ultimoTrabajoCaja = { sesionId, job_uid: impresion.job_uid, numero_copia: impresion.numero_copia ?? 0 }
+    }
     if (pendiente.tipo === 'pedido.crear') {
       if (!resultado.pedido?.id) throw new Error('Respuesta sin identidad de pedido. Recupera el resultado.')
       r.vinculos[resultado.pedido.id] = { origen: pendiente.origen, codigo: resultado.pedido.codigo_pedido }
@@ -88,12 +103,13 @@ async function exclusividad(id, fn) {
     return fn()
   })
 }
-export function ejecutarComercial({ tipo, ruta, cuerpo, pedidoId = null, origen = [] }) {
+export function ejecutarComercial({ tipo, ruta, cuerpo, pedidoId = null, origen = [], sesionId = null }) {
+  if (!TIPOS.includes(tipo)) return Promise.reject(new Error('Tipo de operación no permitido.'))
   const id = useAuthStore.getState().usuario?.id
   return exclusividad(id, async () => {
     const registro = leer(id)
     if (registro.pendiente) throw new Error('Recupera la operación pendiente antes de enviar otra.')
-    const p = { tipo, clave: crypto.randomUUID(), pedidoId, origen: tipo === 'pedido.cobrar' ? registro.vinculos[pedidoId]?.origen ?? [] : origen }
+    const p = { tipo, clave: crypto.randomUUID(), pedidoId, sesionId, origen: tipo === 'pedido.cobrar' ? registro.vinculos[pedidoId]?.origen ?? [] : origen }
     // Se conserva solo identidad y huellas: nunca cuerpo, referencias bancarias,
     // credenciales ni pagos. Si guardar falla, no se manda el POST.
     guardar(id, { ...registro, pendiente: p })

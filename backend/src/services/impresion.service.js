@@ -23,24 +23,25 @@ export async function encolarTicket({ venta, pedido, items, pagos, usuarioId }, 
 }
 const publica = j => ({ job_uid: j.job_uid, estado: j.estado, intentos: j.intentos,
   destino: j.destino, contenido: j.contenido_json });
-export async function pendientesImpresion(usuarioId) {
-  const trabajos = await TrabajoImpresion.findAll({ where: { solicitado_por: usuarioId, estado: 'pendiente' },
+const alcance = tipos => tipos.includes('cierre') ? { 'contenido_json.documento': 'cierre_caja' } : {};
+export async function pendientesImpresion(usuarioId, tipos = ['ticket']) {
+  const trabajos = await TrabajoImpresion.findAll({ where: { solicitado_por: usuarioId, estado: 'pendiente', tipo: tipos, ...alcance(tipos) },
     order: [['id', 'ASC']], limit: 20 });
   return { trabajos: trabajos.map(publica) };
 }
-export async function consultarImpresion(uid, usuarioId) {
+export async function consultarImpresion(uid, usuarioId, tipos = ['ticket']) {
   exigir(typeof uid === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(uid));
-  const j = await TrabajoImpresion.findOne({ where: { job_uid: uid, solicitado_por: usuarioId } });
+  const j = await TrabajoImpresion.findOne({ where: { job_uid: uid, solicitado_por: usuarioId, tipo: tipos, ...alcance(tipos) } });
   exigir(j, 'OPERACION_INEXISTENTE');
   return { trabajo: publica(j) };
 }
 // La simulación valida transporte y formato. Nunca confirma papel impreso.
-export function registrarSimulacion(uid, datos, contexto) {
+export function registrarSimulacion(uid, datos, contexto, tipos = ['ticket']) {
   campos(datos, ['sha256']);
   exigir(typeof datos.sha256 === 'string' && /^[a-f0-9]{64}$/.test(datos.sha256));
   exigir(typeof uid === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(uid));
-  return operacionComercial({ ...contexto, tipo: 'impresion.simular', cuerpo: { uid, ...datos } }, async tx => {
-    const j = await TrabajoImpresion.findOne({ where: { job_uid: uid, solicitado_por: contexto.usuarioId }, transaction: tx, lock: tx.LOCK.UPDATE });
+  return operacionComercial({ ...contexto, tipo: 'impresion.simular', cuerpo: { uid, tipos, ...datos } }, async tx => {
+    const j = await TrabajoImpresion.findOne({ where: { job_uid: uid, solicitado_por: contexto.usuarioId, tipo: tipos, ...alcance(tipos) }, transaction: tx, lock: tx.LOCK.UPDATE });
     exigir(j, 'OPERACION_INEXISTENTE');
     if (j.estado !== 'enviado') {
       exigir(j.estado === 'pendiente');
@@ -49,4 +50,14 @@ export function registrarSimulacion(uid, datos, contexto) {
     }
     return { job_uid: uid, estado: 'enviado', modo: 'simulacion', impresion_fisica: false };
   });
+}
+// Original y copias parten exclusivamente del memento cerrado. Una copia no
+// vuelve a consultar pagos actuales ni abre el cajón de efectivo.
+export async function encolarCierre(sesionId, snapshot, usuarioId, tx, numeroCopia = 0) {
+  const j = await TrabajoImpresion.create({ job_uid: randomUUID(), sesion_id: sesionId,
+    solicitado_por: usuarioId, tipo: numeroCopia ? 'copia' : 'cierre', destino: 'caja',
+    contenido_json: { version: 1, documento: 'cierre_caja', titulo: 'LA VENEZIANA',
+      usuario_id: usuarioId, numero_copia: numeroCopia, snapshot, apertura_cajon: false } }, { transaction: tx });
+  await eventoComercial('impresion.pendiente', 'trabajos_impresion', j.id, 1, { job_uid: j.job_uid }, tx);
+  return { job_uid: j.job_uid, estado: j.estado, numero_copia: numeroCopia };
 }

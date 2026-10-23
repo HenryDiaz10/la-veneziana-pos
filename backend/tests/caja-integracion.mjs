@@ -104,8 +104,32 @@ try {
   const sinCorte = await m.SesionCajaZ.findByPk(sesiones[2].id);
   assert.equal(sinCorte.estado_sesion, 'abierta'); assert.equal(sinCorte.snapshot_memento_json, null);
   assert.equal(await m.IdempotenciaOperacion.count({ where: { usuario_id: usuarios[2].id, clave: operacionCorte.clave } }), 0);
+  // Un fallo al crear el original también revierte cierre y evento durable.
+  const hookImpresion = `impresion-${marca}`, operacionImpresion = ctx(2);
+  m.TrabajoImpresion.addHook('beforeCreate', hookImpresion, () => { throw new Error('fallo impresion cierre controlado'); });
+  try { await assert.rejects(() => cerrarCaja(sesiones[2].id, conteo, operacionImpresion), /fallo impresion cierre controlado/); }
+  finally { m.TrabajoImpresion.removeHook('beforeCreate', hookImpresion); }
+  const sinImpresion = await m.SesionCajaZ.findByPk(sesiones[2].id);
+  assert.equal(sinImpresion.estado_sesion, 'abierta'); assert.equal(sinImpresion.snapshot_memento_json, null);
+  assert.equal(await m.IdempotenciaOperacion.count({ where: { usuario_id: usuarios[2].id, clave: operacionImpresion.clave } }), 0);
+  assert.equal(await m.TrabajoImpresion.count({ where: { sesion_id: sesiones[2].id } }), 0);
   const cierreHttp = await pedir(ruta + '/cierre', 'POST', conteo, 2, true, keyCierre);
   assert.equal(cierreHttp.status, 200, JSON.stringify(cierreHttp.json)); assert.equal(cierreHttp.json.cierre.descuadre, '-1.00');
+  const jobUid = cierreHttp.json.cierre.impresion.job_uid;
+  assert.equal((await pedir(`/caja/impresion/${jobUid}`, 'GET', undefined, 2)).status, 200);
+  assert.equal((await pedir(`/caja/impresion/${jobUid}`, 'GET', undefined, 0)).status, 404);
+  assert.equal((await pedir(`/pedidos/impresion/${jobUid}`, 'GET', undefined, 2)).status, 404);
+  const copiaKey = randomUUID();
+  const otroDocumento = await m.TrabajoImpresion.create({ job_uid: randomUUID(), sesion_id: sesiones[2].id, tipo: 'copia', destino: 'caja', solicitado_por: usuarios[2].id, contenido_json: { documento: 'ticket_interno' } });
+  assert.equal((await pedir(`/caja/impresion/${otroDocumento.job_uid}`, 'GET', undefined, 2)).status, 404);
+  const copia = await pedir(ruta + '/copias', 'POST', {}, 2, true, copiaKey);
+  assert.equal(copia.status, 201); assert.equal(copia.json.copia.impresion.numero_copia, 1);
+  assert.ok((await pedir('/caja/impresion/pendientes', 'GET', undefined, 2)).json.trabajos.every(j => j.contenido.documento === 'cierre_caja'));
+  const repetida = await pedir(ruta + '/copias', 'POST', {}, 2, true, copiaKey);
+  assert.equal(repetida.json.copia.impresion.job_uid, copia.json.copia.impresion.job_uid);
+  assert.equal((await pedir(ruta + '/copias', 'POST', {}, 2)).json.copia.impresion.numero_copia, 2);
+  assert.equal(await m.TrabajoImpresion.count({ where: { sesion_id: sesiones[2].id, tipo: 'cierre' } }), 1);
+  assert.deepEqual((await m.TrabajoImpresion.findOne({ where: { job_uid: copia.json.copia.impresion.job_uid } })).contenido_json.snapshot, cierreHttp.json.cierre.snapshot);
   assert.equal(typeof cierreHttp.json.cierre.snapshot, 'object');
   assert.equal((await pedir(ruta + '/cierre', 'POST', conteo, 2, true, keyCierre)).json.repetida, true);
   assert.equal((await pedir(ruta + '/movimientos', 'POST', ingreso, 2)).status, 409);
@@ -201,6 +225,11 @@ try {
 } finally {
   if (servidor) await new Promise(r => servidor.close(r));
   const uids = usuarios.map(u => u.id), sids = sesiones.map(s => s.id);
+  if (uids.length) {
+    const trabajos = await m.TrabajoImpresion.findAll({ where: { solicitado_por: uids }, attributes: ['id'] });
+    if (trabajos.length) await m.EventoOutbox.destroy({ where: { entidad: 'trabajos_impresion', entidad_id: trabajos.map(j => j.id) } });
+    await m.TrabajoImpresion.destroy({ where: { solicitado_por: uids } });
+  }
   const ventas = uids.length ? await m.VentaComprobante.findAll({ where: { cajero_id: uids }, attributes: ['id'] }) : [], vids = ventas.map(v => v.id);
   const devoluciones = vids.length ? await m.VentaDevolucion.findAll({ where: { venta_id: vids }, attributes: ['id'] }) : [], dids = devoluciones.map(d => d.id);
   if (dids.length) { await m.DevolucionPago.destroy({ where: { devolucion_id: dids } }); await m.DevolucionDetalle.destroy({ where: { devolucion_id: dids } }); await m.VentaDevolucion.destroy({ where: { id: dids } }); }
