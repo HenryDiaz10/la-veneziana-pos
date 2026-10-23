@@ -40,7 +40,10 @@ try {
   const recibidas = d.mesas.filter(m => m.zona_id === zonas[0].id);
   assert.equal(recibidas.length, 5);
   for (const original of originales) {
-    assert.deepEqual(recibidas.find(m => m.id === original.id), original);
+    const recibida = recibidas.find(m => m.id === original.id);
+    assert.match(recibida.revision, /^[a-f0-9]{64}$/); assert.equal(recibida.pedido_abierto, null);
+    const { revision, pedido_abierto, ...campos } = recibida;
+    assert.deepEqual(campos, original);
     assert.deepEqual((await MesaSalon.findByPk(original.id)).get({ plain: true }), original);
   }
   assert.ok(!JSON.stringify(d).includes(usuarios[0].email) && !JSON.stringify(d).includes(hash));

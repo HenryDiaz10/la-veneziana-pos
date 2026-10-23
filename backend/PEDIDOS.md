@@ -59,7 +59,10 @@ No aceptar precios, totales, costos, actor ni receta enviados por el navegador.
 Cantidad: entero 1-10000. Máximo 100 líneas activas por pedido y 50 opciones por
 línea. Indicaciones: 250 caracteres; notas globales: 500. No se fusionan líneas.
 
-`salon` requiere `mesa_id` libre y sin dirección; `llevar` no admite mesa ni
+`salon` requiere `mesa_id` libre o ya ocupada por el mismo actor sin cuenta activa,
+y no admite dirección. El registro asigna responsable; la ampliación de un
+pedido de salón exige al responsable asignado. Ver [MESAS.md](MESAS.md).
+`llevar` no admite mesa ni
 dirección; `delivery` requiere cliente activo y dirección que le pertenezca.
 El snapshot conserva nombre/contacto y dirección usados. En esta entrega los
 totales corresponden a productos: las tarifas de reparto de CARTA siguen siendo

@@ -1,5 +1,11 @@
 # Fase 33 - Mapa de mesas
 
+Actualización fase 34: las consultas incluyen `revision` y `pedido_abierto` por
+mesa. El backend ya implementa los comandos y su relación con el cobro; contrato
+vigente en [MESAS.md](../backend/MESAS.md). El mapa conserva su alcance de consulta:
+no se conectaron aún botones para ocupar, liberar o limpiar. La guía siguiente
+describe la interfaz creada en fase 33.
+
 Ruta `/salon`, menú **Salón y mesas**, permiso `mesas/gestionar` en cliente y
 servidor. Lo tienen administrador y mesero según los datos iniciales existentes;
 no se modificaron roles, permisos ni migraciones.
@@ -28,10 +34,10 @@ no se modificaron roles, permisos ni migraciones.
    mientras carga, sin desmontar el mapa. Un fallo muestra un error y permite
    reintentar; no transforma una desconexión en cierre de sesión.
 
-La hora de consulta se presenta en Lima. Esta fase no tiene actualización en
-tiempo real, arrastre ni comandos para ocupar, liberar, limpiar o reasignar.
-Las transiciones y relación con pedidos abiertos se completarán en fase 34,
-revisando los efectos ya existentes de creación y cobro de pedidos.
+La hora de consulta se presenta en Lima. La interfaz no tiene actualización en
+tiempo real, arrastre ni controles para ocupar, liberar, limpiar o reasignar.
+Las transiciones de backend se completaron en fase 34, revisando los efectos
+existentes de creación y cobro de pedidos.
 
 La base local revisada al cerrar esta fase no tenía zonas ni mesas. No se
 inventaron zonas, cantidades o coordenadas del local: la pantalla muestra el

@@ -45,7 +45,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
 // Cancelar usa la misma barrera por actor: espera al commit y recupera su
 // resultado, o deja una lápida que impide ejecutar más tarde esa identidad.
 export function resolverIntento(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver', 'mesa.ocupar', 'mesa.liberar', 'mesa.limpiar'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   return sequelize.transaction(async tx => {
     const actor = await Usuario.findByPk(usuarioId, { transaction: tx, lock: tx.LOCK.UPDATE });
@@ -62,7 +62,7 @@ export function resolverIntento(usuarioId, tipo, clave) {
 }
 // Recuperar exclusivamente una operación propia ante pérdida de la respuesta.
 export async function recuperarOperacion(usuarioId, tipo, clave) {
-  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver'].includes(tipo) &&
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir', 'caja.movimiento', 'caja.cerrar', 'caja.copia', 'venta.devolver', 'mesa.ocupar', 'mesa.liberar', 'mesa.limpiar'].includes(tipo) &&
     typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
   const registro = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave, estado: 'confirmada' } });
   exigir(registro, 'OPERACION_INEXISTENTE');
@@ -71,4 +71,4 @@ export async function recuperarOperacion(usuarioId, tipo, clave) {
 export const auditoriaComercial = (usuarioId, entidad, id, datos, tx) => AuditLog.create({ usuario_id: usuarioId,
   entidad_afectada: entidad, entidad_id: id, tipo_evento: 'UPDATE', datos_nuevos: datos, descripcion: 'Operación comercial transaccional, fase 28.' }, { transaction: tx });
 export const eventoComercial = (tipo, entidad, id, version, payload, tx) => EventoOutbox.create({ event_uid: randomUUID(), tipo, entidad,
-  entidad_id: id, version, sala_destino: tipo === 'pedido.cocina' ? 'kds' : tipo.startsWith('impresion.') ? 'impresion' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });
+  entidad_id: id, version, sala_destino: tipo === 'pedido.cocina' ? 'kds' : tipo.startsWith('impresion.') ? 'impresion' : tipo.startsWith('mesa.') ? 'salon' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });

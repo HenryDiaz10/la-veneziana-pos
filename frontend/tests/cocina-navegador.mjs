@@ -78,7 +78,7 @@ try {
   // Registrar el borrador no lo limpia. El total del servidor se usa al cobrar.
   await page.getByRole('button', { name: 'Datos y registro del pedido', exact: true }).click()
   await page.getByLabel('Atención', { exact: true }).selectOption('salon')
-  await page.getByLabel('Mesa libre', { exact: true }).selectOption('5')
+  await page.getByLabel('Mesa disponible', { exact: true }).selectOption('5')
   if (process.argv[3]) {
     await page.getByRole('button', { name: 'Datos y registro del pedido', exact: true }).click()
     await page.setViewportSize({ width: 1366, height: 900 }); await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: process.argv[3] + '-laptop.png' })

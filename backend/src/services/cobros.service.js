@@ -1,9 +1,10 @@
 import { VentaComprobante, VentaPagoSplit, VentaDetalleSnapshot, PedidoMaster, PedidoItemKds, SesionCajaZ,
-  CajaFisica, Cliente, CrmMovimientoPuntos, ConfiguracionGlobal, MesaSalon, TrabajoImpresion } from '../models/index.js';
+  CajaFisica, Cliente, CrmMovimientoPuntos, ConfiguracionGlobal, TrabajoImpresion } from '../models/index.js';
 import { operacionComercial, auditoriaComercial, eventoComercial } from './operacion-comercial.js';
 import { bloquearPedido, comprobarVersion } from './pedidos.service.js';
 import { sequelize } from '../config/database.js';
 import { encolarTicket } from './impresion.service.js';
+import { finalizarMesaTrasCobro } from './mesas.service.js';
 import { ErrorPedido } from './pedidos-calculo.js';
 import { campos, idEntero, idGrande, exigirPedido as exigir, centimos, dinero, politicaFinanciera, desglosarImpuesto, validarPagos } from './pedidos-calculo.js';
 
@@ -106,10 +107,7 @@ export function cobrarPedido(id, datos, contexto) {
       await cliente.update({ puntos_vip_actuales: Number(saldo), puntos_vip_historicos: Number(historico) }, { transaction: tx });
     }
     await pedido.update({ estado_cuenta: 'pagada', bloqueo_usuario_id: null, bloqueo_hasta: null, version: pedido.version + 1 }, { transaction: tx });
-    if (pedido.mesa_id) {
-      const mesa = await MesaSalon.findByPk(pedido.mesa_id, { transaction: tx, lock: tx.LOCK.UPDATE });
-      if (mesa?.estado_actual === 'ocupada') await mesa.update({ estado_actual: 'sucia_por_limpiar' }, { transaction: tx });
-    }
+    await finalizarMesaTrasCobro(pedido, contexto.usuarioId, tx);
     await auditoriaComercial(contexto.usuarioId, 'ventas_comprobantes', venta.id, { pedido_id: String(pedido.id), sesion_caja_id: sesion.id, total: dinero(total) }, tx);
     await eventoComercial('venta.confirmada', 'ventas_comprobantes', venta.id, 1, { venta_id: String(venta.id), pedido_id: String(pedido.id) }, tx);
     const impresion = await encolarTicket({ venta, pedido, items, pagos: pagos.filas, usuarioId: contexto.usuarioId }, tx);

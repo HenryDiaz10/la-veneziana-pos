@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 33 implementada y probada.**
-La siguiente etapa es la **fase 34: backend de mesas y pedidos abiertos**.
+**Avance actual: fase 34 implementada y probada.**
+La siguiente etapa es la **fase 35: modificadores y notas de preparación**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -92,12 +92,19 @@ La siguiente etapa es la **fase 34: backend de mesas y pedidos abiertos**.
   superposiciones. Consulta coherente de solo lectura, pruebas HTTP/MySQL
   y navegador. Las transiciones operativas continúan en fase 34.
 
+- Fase 34: backend de mesas con ocupar/liberar/limpiar, revisión, idempotencia,
+  responsable asignado y cuenta abierta vinculada. Registro/ampliación del
+  pedido coordinados con la mesa; cobro deja por limpiar y limpieza libera.
+  Auditoría, outbox, pruebas de carreras y rollback. El mapa sigue de consulta;
+  los botones de estas acciones todavía no están conectados a la interfaz.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
 Cierres y devoluciones: [backend/CAJA.md](backend/CAJA.md).
 Interfaz de arqueo: [frontend/ARQUEO.md](frontend/ARQUEO.md).
 Mapa de mesas: [frontend/SALON.md](frontend/SALON.md).
+Operaciones de mesas: [backend/MESAS.md](backend/MESAS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan

@@ -1,4 +1,4 @@
-import { MesaSalon } from '../models/index.js';
+import { mesasDisponiblesPedido } from '../services/mesas.service.js';
 import * as impresion from '../services/impresion.service.js';
 import * as pedidos from '../services/pedidos.service.js';
 import { cobrarPedido, consultarContextoPago } from '../services/cobros.service.js';
@@ -9,8 +9,15 @@ import { recuperarOperacion, resolverIntento } from '../services/operacion-comer
 
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key'),
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
-const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE']);
+const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE']);
 const mensajes = {
+  MESA_INEXISTENTE: 'La mesa no existe.',
+  MESA_DESACTUALIZADA: 'La mesa o su cuenta cambiaron. Consulta nuevamente antes de confirmar.',
+  MESA_CON_CUENTA_ACTIVA: 'La mesa tiene una cuenta abierta o en pago. Continúa sobre ese pedido.',
+  TRANSICION_MESA_NO_VALIDA: 'El estado actual no permite esa acción. Revisa la mesa y confirma su limpieza cuando corresponda.',
+  MESA_NO_DISPONIBLE: 'La mesa no está libre ni ocupada por ti sin cuenta. Consulta su estado y responsable.',
+  MESA_NO_ASIGNADA: 'Solo el responsable asignado puede ampliar el pedido de esta mesa.',
+  MESA_INCONSISTENTE: 'La mesa y su cuenta no concilian. Se necesita revisión antes de cobrar.',
   AUTORIZACION_NO_VALIDA: 'La autorización no está vigente, ya fue usada o no corresponde a este actor, acción y recurso.',
   CAJA_DESACTUALIZADA: 'La caja cambió desde la consulta. Actualiza y revisa el conteo antes de cerrar.',
   EFECTIVO_INSUFICIENTE: 'La sesión no tiene efectivo teórico suficiente para este desembolso.',
@@ -68,7 +75,7 @@ export const resolver = manejarComercial(req => {
   return resolverIntento(req.auth.usuario.id, req.params.tipo ?? 'caja.abrir', req.params.clave);
 });
 
-export const registro = manejarComercial(async () => ({ mesas: await MesaSalon.findAll({ where: { estado_actual: 'libre' }, attributes: ['id', 'codigo_mesa'], order: [['codigo_mesa', 'ASC']] }) }));
+export const registro = manejarComercial(async req => ({ mesas: await mesasDisponiblesPedido(req.auth.usuario.id) }));
 export const colaImpresion = manejarComercial(req => impresion.pendientesImpresion(req.auth.usuario.id));
 export const estadoImpresion = manejarComercial(req => impresion.consultarImpresion(req.params.uid, req.auth.usuario.id));
 export const simularImpresion = manejarComercial(req => impresion.registrarSimulacion(req.params.uid, req.body, contexto(req)));

@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { sequelize } from '../config/database.js';
 import { PedidoMaster, PedidoItemKds, PedidoItemModificador, ProductoVenta, VarianteProducto,
   CategoriaVenta, ModificadorCatalogo, ModificadorItem, ProductoModificador, ModificadorBom,
-  Cliente, DireccionCliente, MesaSalon, InsumoAlmacen, UnidadMedida, KdsTarea } from '../models/index.js';
+  Cliente, DireccionCliente, InsumoAlmacen, UnidadMedida, KdsTarea } from '../models/index.js';
 import { resolverReceta } from './recetas.service.js';
 import { reservarTareas } from './inventario.service.js';
+import { tomarMesaParaPedido, comprobarMesaAmpliacion } from './mesas.service.js';
 import { operacionComercial, auditoriaComercial, eventoComercial } from './operacion-comercial.js';
 import { exigirPedido as exigir, idEntero, idGrande, campos, texto, validarLineas, dinero, centimos } from './pedidos-calculo.js';
 
@@ -42,7 +43,7 @@ export async function consultarPedido(id) {
     return respuestaPedido(pedido, tx);
   });
 }
-async function contextoPedido(datos, tx) {
+async function contextoPedido(datos, usuarioId, tx) {
   exigir(['salon', 'llevar', 'delivery'].includes(datos.tipo_atencion));
   const mesaId = datos.mesa_id ?? null, clienteId = datos.cliente_id ?? null, direccionId = datos.direccion_id ?? null;
   exigir([mesaId, clienteId, direccionId].every(id => id === null || idEntero(id)));
@@ -60,9 +61,7 @@ async function contextoPedido(datos, tx) {
     }
   }
   if (mesaId) {
-    const mesa = await MesaSalon.findByPk(mesaId, { transaction: tx, lock: tx.LOCK.UPDATE });
-    exigir(mesa?.estado_actual === 'libre', 'MESA_NO_DISPONIBLE');
-    await mesa.update({ estado_actual: 'ocupada' }, { transaction: tx });
+    await tomarMesaParaPedido(mesaId, usuarioId, tx);
   }
   return { mesa_id: mesaId, cliente_id: clienteId, direccion_id: direccionId, snapshot_cliente_json: snapshot };
 }
@@ -137,7 +136,7 @@ export function crearPedido(datos, contexto) {
   campos(datos, ['tipo_atencion', 'mesa_id', 'cliente_id', 'direccion_id', 'notas_globales', 'lineas']);
   const lineas = validarLineas(datos.lineas), notas = texto(datos.notas_globales, 500);
   return operacionComercial({ ...contexto, tipo: 'pedido.crear', cuerpo: datos }, async tx => {
-    const valores = await contextoPedido(datos, tx);
+    const valores = await contextoPedido(datos, contexto.usuarioId, tx);
     const pedido = await PedidoMaster.create({ ...valores, codigo_pedido: `P-${randomUUID().replaceAll('-', '').slice(0, 18)}`,
       tipo_atencion: datos.tipo_atencion, usuario_creador_id: contexto.usuarioId, notas_globales: notas || null }, { transaction: tx });
     await agregarLineas(pedido, lineas, contexto.usuarioId, tx);
@@ -151,6 +150,7 @@ export function ampliarPedido(id, datos, contexto) {
     await liberarBloqueoVencido(pedido, tx);
     comprobarVersion(pedido, datos.version);
     exigir(pedido.estado_cuenta === 'abierta', 'PEDIDO_NO_ABIERTO');
+    await comprobarMesaAmpliacion(pedido, contexto.usuarioId, tx);
     await agregarLineas(pedido, lineas, contexto.usuarioId, tx);
     return respuestaPedido(pedido, tx);
   });

@@ -4,11 +4,16 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Fase 34:** backend de mesas y pedidos abiertos implementado; el registro del
+POS ofrece mesas libres o propias ocupadas sin cuenta. El mapa continúa de
+consulta; los comandos operativos se documentan en [MESAS.md](../backend/MESAS.md).
+Siguiente: fase 35, modificadores y notas de preparación.
+
 **Fase 33:** mapa de salón en `/salon`, con zonas, búsqueda y filtros de mesas,
 croquis por coordenadas o cuadrícula cuando faltan posiciones o espacio.
 Detalle de estado, capacidad y empleado asignado; permiso `mesas/gestionar`.
 Guía y contrato de consulta: [SALON.md](SALON.md).
-Siguiente: fase 34, backend de mesas y pedidos abiertos.
+La fase 34 añade los servicios de operación sin conectar botones al mapa.
 
 **Fase 32:** arqueo responsive en `/caja`, conteo directo o por denominaciones,
 movimientos autorizados, confirmación del cierre y recuperación tras F5.
