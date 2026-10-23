@@ -114,7 +114,7 @@ async function agregarLineas(pedido, lineas, usuarioId, tx) {
   for (const id of ids) await ProductoVenta.findByPk(id, { transaction: tx, lock: tx.LOCK.UPDATE });
   const preparadas = [];
   for (const l of lineas) preparadas.push(await prepararLinea(l, tx));
-  const tareas = [], cocina = [];
+  const tareas = [], cocina = [], despacho = [];
   let total = centimos(pedido.total_preliminar);
   for (const r of preparadas) {
     const item = await PedidoItemKds.create({ pedido_id: pedido.id, producto_venta_id: r.p.id, variante_id: r.linea.varianteId,
@@ -126,6 +126,7 @@ async function agregarLineas(pedido, lineas, usuarioId, tx) {
         modificadores: r.snapshot.modificadores, canal: r.categoria.es_para_kds ? 'cocina' : 'despacho' } }, { transaction: tx });
     tareas.push(tarea.id);
     if (r.categoria.es_para_kds) cocina.push(String(tarea.id));
+    else despacho.push(String(tarea.id));
     total += centimos(r.subtotal);
   }
   await reservarTareas(tareas, { transaction: tx });
@@ -133,6 +134,7 @@ async function agregarLineas(pedido, lineas, usuarioId, tx) {
   await auditoriaComercial(usuarioId, 'pedidos_master', pedido.id, { version: pedido.version, tareas: tareas.map(String), total: pedido.total_preliminar }, tx);
   await eventoComercial('pedido.confirmado', 'pedidos_master', pedido.id, pedido.version, { pedido_id: String(pedido.id), tareas: tareas.map(String) }, tx);
   if (cocina.length) await eventoComercial('pedido.cocina', 'pedidos_master', pedido.id, pedido.version, { pedido_id: String(pedido.id), tareas: cocina }, tx);
+  if (despacho.length) await eventoComercial('pedido.despacho', 'pedidos_master', pedido.id, pedido.version, { pedido_id: String(pedido.id), tareas: despacho }, tx);
 }
 export function crearPedido(datos, contexto) {
   campos(datos, ['tipo_atencion', 'mesa_id', 'cliente_id', 'direccion_id', 'notas_globales', 'lineas']);

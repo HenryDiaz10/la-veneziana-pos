@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 35 implementada y probada.**
-La siguiente etapa es la **fase 36: backend de eventos KDS al confirmar pedidos**.
+**Avance actual: fase 36 implementada y probada.**
+La siguiente etapa es la **fase 37: tablero KDS de cocina y despacho**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -103,6 +103,11 @@ La siguiente etapa es la **fase 36: backend de eventos KDS al confirmar pedidos*
   snapshots con `es_exclusion` conservado para pedido, cocina y ticket.
   Pruebas de deltas, reserva/consumo, edición histórica, recuperación y móvil.
 
+- Fase 36: publicación KDS después del commit mediante worker de outbox y
+  WebSocket autenticado, avisos de cocina/despacho, reintentos con identidad
+  estable, consulta paginada para recuperación y revisión continua de acceso.
+  Transacciones y canales reales probados; el tablero visual continúa en fase 37.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
@@ -111,6 +116,7 @@ Interfaz de arqueo: [frontend/ARQUEO.md](frontend/ARQUEO.md).
 Mapa de mesas: [frontend/SALON.md](frontend/SALON.md).
 Operaciones de mesas: [backend/MESAS.md](backend/MESAS.md).
 Modificadores y notas: [MODIFICADORES_NOTAS.md](MODIFICADORES_NOTAS.md).
+Eventos y protocolo KDS: [backend/KDS.md](backend/KDS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan

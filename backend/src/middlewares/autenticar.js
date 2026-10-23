@@ -23,14 +23,10 @@ function rechazarAcceso(res) {
   });
 }
 
-export async function autenticar(req, res, next) {
-  res.set('Cache-Control', 'no-store');
-
-  // La cookie es interpretada previamente por cookie-parser.
-  const token = req.cookies?.[NOMBRE_COOKIE_SESION];
-
+// Compartir la misma verificación entre HTTP y conexiones KDS persistentes.
+export async function autenticarTokenSesion(token) {
   if (typeof token !== 'string' || token.length === 0) {
-    return rechazarAcceso(res);
+    return null;
   }
 
   try {
@@ -88,12 +84,12 @@ export async function autenticar(req, res, next) {
 
     if (!sesion || usuario?.estado !== 'activo' || !rol ||
         limiteAbsolutoSesion(sesion.creado_en).getTime() <= Date.now()) {
-      return rechazarAcceso(res);
+      return null;
     }
 
     // Guardar únicamente datos seleccionados para los siguientes handlers.
     // Los permisos se consultan en MySQL, no se confía en datos del cliente.
-    req.auth = {
+    return {
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre_completo,
@@ -119,14 +115,23 @@ export async function autenticar(req, res, next) {
       }
     };
 
-    return next();
   } catch (error) {
     // Incluye errores de firma, formato y vencimiento del JWT.
     if (error instanceof jwt.JsonWebTokenError) {
-      return rechazarAcceso(res);
+      return null;
     }
 
     // Un fallo de MySQL es un error interno, no credenciales inválidas.
-    return next(error);
+    throw error;
   }
+}
+
+export async function autenticar(req, res, next) {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const identidad = await autenticarTokenSesion(req.cookies?.[NOMBRE_COOKIE_SESION]);
+    if (!identidad) return rechazarAcceso(res);
+    req.auth = identidad;
+    return next();
+  } catch (error) { return next(error); }
 }

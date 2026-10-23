@@ -10,6 +10,9 @@ import logger from './logger.js';
 
 // Importar el pool compartido para cerrarlo al detener el backend.
 import { sequelize } from './config/database.js';
+import { crearCanalKds } from './realtime/kds.js';
+import { iniciarWorkerKds } from './workers/kds-outbox.js';
+let canalKds, workerKds;
 
 // Utilizar el puerto que config/env.js ya convirtió y validó.
 const PORT = env.puerto;
@@ -32,6 +35,8 @@ const server = app.listen(PORT, HOST, (err) => {
   if (err) {
     return;
   }
+  canalKds = crearCanalKds(server);
+  workerKds = iniciarWorkerKds({ publicar: canalKds.publicar });
 
   // Este mensaje se registra únicamente cuando el servidor inició.
   logger.info(
@@ -60,6 +65,8 @@ server.on('error', (err) => {
   // Indicamos que el proceso debe terminar con un código de fallo.
   // Permite que Node finalice cuando no queden tareas pendientes.
   process.exitCode = 1;
+  void workerKds?.detener();
+  void canalKds?.cerrar();
 });
 
 // Guardamos las conexiones que todavía no enviaron una solicitud.
@@ -109,6 +116,9 @@ function cerrarServidor(signal) {
 
   // El temporizador no mantiene vivo el proceso por sí solo.
   limite.unref();
+  // Detener avisos y conexiones persistentes antes de cerrar HTTP y el pool.
+  const cierreWorker = workerKds?.detener();
+  const cierreCanal = canalKds?.cerrar();
 
   // Dejar de aceptar conexiones HTTP y esperar a que terminen las solicitudes.
 server.close(async (err) => {
@@ -120,6 +130,8 @@ server.close(async (err) => {
     }
 
     // Cerrar el pool después de terminar las solicitudes HTTP.
+    await cierreWorker;
+    await cierreCanal;
     await sequelize.close();
     logger.info('Pool de MySQL cerrado correctamente.');
 

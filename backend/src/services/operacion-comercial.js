@@ -71,4 +71,4 @@ export async function recuperarOperacion(usuarioId, tipo, clave) {
 export const auditoriaComercial = (usuarioId, entidad, id, datos, tx) => AuditLog.create({ usuario_id: usuarioId,
   entidad_afectada: entidad, entidad_id: id, tipo_evento: 'UPDATE', datos_nuevos: datos, descripcion: 'Operación comercial transaccional, fase 28.' }, { transaction: tx });
 export const eventoComercial = (tipo, entidad, id, version, payload, tx) => EventoOutbox.create({ event_uid: randomUUID(), tipo, entidad,
-  entidad_id: id, version, sala_destino: tipo === 'pedido.cocina' ? 'kds' : tipo.startsWith('impresion.') ? 'impresion' : tipo.startsWith('mesa.') ? 'salon' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });
+  entidad_id: id, version, sala_destino: ['pedido.cocina', 'pedido.despacho'].includes(tipo) ? 'kds' : tipo.startsWith('impresion.') ? 'impresion' : tipo.startsWith('mesa.') ? 'salon' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });

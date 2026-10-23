@@ -30,7 +30,9 @@
     "test:salon:integracion": "node tests/salon-integracion.mjs",
     "test:mesas": "node --test tests/mesas-reglas.test.mjs",
     "test:mesas:integracion": "node tests/mesas-integracion.mjs",
-    "test:modificadores:integracion": "node tests/modificadores-pedido-integracion.mjs"
+    "test:modificadores:integracion": "node tests/modificadores-pedido-integracion.mjs",
+    "test:kds": "node --test tests/kds-protocolo.test.mjs",
+    "test:kds:integracion": "node tests/kds-integracion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",
@@ -44,7 +46,8 @@
     "pino": "10.4.0",
     "pino-http": "11.0.0",
     "sequelize": "6.37.8",
-    "umzug": "3.8.3"
+    "umzug": "3.8.3",
+    "ws": "8.22.0"
   },
   "overrides": {
     "sequelize": {

@@ -1,5 +1,10 @@
 # Fase 28: pedidos, caja mínima y cobro separado
 
+**Fase 36:** los eventos `pedido.cocina` y `pedido.despacho` se guardan junto a
+tareas y reservas; el worker los publica después de commit. WebSocket y API
+de consulta autenticada: [KDS.md](KDS.md). Los demás eventos del outbox mantienen
+su destino; este worker no publica indiscriminadamente todos los tipos.
+
 **Fase 35:** las selecciones conservan grupo, nombre, precio y `es_exclusion`
 en el snapshot comercial y KDS. Las notas se normalizan y se guardan en
 `notas_preparacion`; extras/exclusiones afectan ingredientes mediante los

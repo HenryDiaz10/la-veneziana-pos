@@ -9,7 +9,7 @@ import { recuperarOperacion, resolverIntento } from '../services/operacion-comer
 
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key'),
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
-const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE']);
+const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE']);
 const mensajes = {
   MESA_INEXISTENTE: 'La mesa no existe.',
   MESA_DESACTUALIZADA: 'La mesa o su cuenta cambiaron. Consulta nuevamente antes de confirmar.',

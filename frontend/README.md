@@ -4,11 +4,15 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Fase 36:** backend KDS con notificaciones WebSocket y consulta paginada de
+tareas. Vite reenvía HTTP y WebSocket bajo `/api`; no se añadió pantalla KDS
+ni dependencia al navegador. Contrato para la fase 37: [KDS.md](../backend/KDS.md).
+
 **Fase 35:** extras, exclusiones y notas diferenciados en personalización,
 recibo y revisión. Configuración validada, etiquetas reutilizables y edición
 del borrador sin perder selecciones/notas. Guía de todo el recorrido:
 [MODIFICADORES_NOTAS.md](../MODIFICADORES_NOTAS.md).
-Siguiente: fase 36, backend de eventos KDS al confirmar pedidos.
+La fase 36 añade publicación durable y recuperación; sigue el tablero de fase 37.
 
 **Fase 34:** backend de mesas y pedidos abiertos implementado; el registro del
 POS ofrece mesas libres o propias ocupadas sin cuenta. El mapa continúa de
