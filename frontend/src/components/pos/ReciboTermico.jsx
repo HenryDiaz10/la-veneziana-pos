@@ -8,6 +8,7 @@ import Icono from '../ui/Icono.jsx'
 import ModalBebidaPos from './ModalBebidaPos.jsx'
 import { obtenerFamiliaBebida } from '../../utils/bebidas-pos.js'
 import ModalPersonalizarProducto from './ModalPersonalizarProducto.jsx'
+import ResumenModificadores from '../carrito/ResumenModificadores.jsx'
 import { useCartStore } from '../../stores/useCartStore.js'
 import { useAuthStore } from '../../stores/auth.store.js'
 
@@ -170,18 +171,7 @@ export default function ReciboTermico({ consulta, registrado = false }) {
                       )}
 
                       {/* Modificadores / Extras / Exclusiones */}
-                      {resultado?.modificadoresNombres?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {resultado.modificadoresNombres.map((modNombre, mIdx) => (
-                            <span
-                              key={mIdx}
-                              className="inline-block max-w-full break-words text-[11px] px-2 py-0.5 rounded bg-app-elevada border border-app-borde text-app-secundario"
-                            >
-                              + {modNombre}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <ResumenModificadores opciones={resultado?.modificadoresDetalle}/>
 
                       {linea.indicaciones && <p className="mt-2 break-words rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs"><strong>Cocina:</strong> {linea.indicaciones}</p>}
 
@@ -348,7 +338,7 @@ export default function ReciboTermico({ consulta, registrado = false }) {
                 return <li key={linea.id} className="break-words rounded-xl border border-app-borde p-3 text-sm">
                   <p className="font-bold">{linea.cantidad} × {datos?.[linea.productoId]?.producto.nombre ?? `Producto #${linea.productoId}`}</p>
                   {detalle?.varianteNombre && <p>{detalle.varianteNombre}</p>}
-                  {detalle?.modificadoresNombres?.length > 0 && <p>{detalle.modificadoresNombres.join(' · ')}</p>}
+                  <ResumenModificadores opciones={detalle?.modificadoresDetalle}/>
                   {linea.indicaciones && <p className="mt-2"><strong>Cocina:</strong> {linea.indicaciones}</p>}
                   {detalle?.error && <p className="text-app-error">{detalle.error}</p>}
                 </li>

@@ -4,10 +4,16 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Fase 35:** extras, exclusiones y notas diferenciados en personalización,
+recibo y revisión. Configuración validada, etiquetas reutilizables y edición
+del borrador sin perder selecciones/notas. Guía de todo el recorrido:
+[MODIFICADORES_NOTAS.md](../MODIFICADORES_NOTAS.md).
+Siguiente: fase 36, backend de eventos KDS al confirmar pedidos.
+
 **Fase 34:** backend de mesas y pedidos abiertos implementado; el registro del
 POS ofrece mesas libres o propias ocupadas sin cuenta. El mapa continúa de
 consulta; los comandos operativos se documentan en [MESAS.md](../backend/MESAS.md).
-Siguiente: fase 35, modificadores y notas de preparación.
+La fase 35 consolida el recorrido de modificadores y notas existente en el POS.
 
 **Fase 33:** mapa de salón en `/salon`, con zonas, búsqueda y filtros de mesas,
 croquis por coordenadas o cuadrícula cuando faltan posiciones o espacio.

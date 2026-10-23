@@ -7,6 +7,7 @@ import {
 import {
   normalizarLineaCarrito
 } from '../stores/useCartStore.js'
+import { validarGruposModificadores } from './modificadores.js'
 
 // Validar y estimar una selección utilizando información
 // recién consultada. No modifica el borrador ni reserva stock.
@@ -46,6 +47,7 @@ export function estimarSeleccionCarrito({
   }
 
   const idsElegidos = new Set(linea.modificadoresIds)
+  validarGruposModificadores(grupos)
   const opcionesElegidas = []
   const idsEncontrados = new Set()
 
@@ -107,6 +109,8 @@ export function estimarSeleccionCarrito({
     modificadoresNombres: opcionesElegidas.map(
       opcion => opcion.nombre_modificador
     ),
+    // Solo para presentación en memoria; el comando y la persistencia usan IDs.
+    modificadoresDetalle: opcionesElegidas.map(o => ({ id: o.id, nombre: o.nombre_modificador, es_exclusion: o.es_exclusion === true })),
     cantidad: linea.cantidad,
     ...(linea.indicaciones ? { indicaciones: linea.indicaciones } : {}),
     ...importes

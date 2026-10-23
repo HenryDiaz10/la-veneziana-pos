@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import BotonBase from '../ui/BotonBase.jsx'
 import IndicacionesProducto from './IndicacionesProducto.jsx'
+import ResumenModificadores from './ResumenModificadores.jsx'
 import useConsultaRemota from '../../hooks/useConsultaRemota.js'
 import {
   consultarConfiguracionCarrito
@@ -225,6 +226,7 @@ export default function SelectorProductoCarrito({
             ))}
           </fieldset>
 
+          <ResumenModificadores opciones={estimacion?.modificadoresDetalle}/>
           <IndicacionesProducto valor={indicaciones} onChange={setIndicaciones} disabled={deshabilitado}/>
           {errorPrecio && <p role="alert">{errorPrecio}</p>}
 

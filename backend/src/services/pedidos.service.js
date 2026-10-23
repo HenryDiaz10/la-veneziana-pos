@@ -102,7 +102,9 @@ async function prepararLinea(linea, tx) {
   }
   return { linea, p, categoria, receta, opciones, unitario: dinero(unitario), subtotal,
     snapshot: { version: 1, nombre: p.nombre, sku: p.sku, variante: variante?.nombre_variante ?? null,
-      puntos_recompensa: p.puntos_recompensa ?? 0, modificadores: opciones.map(o => ({ id: o.id, nombre: o.nombre_modificador, precio: o.precio_adicional })), indicaciones: linea.indicaciones } };
+      puntos_recompensa: p.puntos_recompensa ?? 0, modificadores: opciones.map(o => ({ id: o.id, grupo_id: o.grupo_id,
+        grupo_nombre: grupos.find(g => g.id === o.grupo_id).nombre_grupo, nombre: o.nombre_modificador,
+        precio: o.precio_adicional, es_exclusion: Boolean(o.es_exclusion) })), indicaciones: linea.indicaciones } };
 }
 async function agregarLineas(pedido, lineas, usuarioId, tx) {
   const existentes = await PedidoItemKds.count({ where: { pedido_id: pedido.id, estado_item: 'activo' }, transaction: tx });

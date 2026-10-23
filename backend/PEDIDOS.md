@@ -1,5 +1,11 @@
 # Fase 28: pedidos, caja mínima y cobro separado
 
+**Fase 35:** las selecciones conservan grupo, nombre, precio y `es_exclusion`
+en el snapshot comercial y KDS. Las notas se normalizan y se guardan en
+`notas_preparacion`; extras/exclusiones afectan ingredientes mediante los
+deltas configurados de la receta. Guía vigente:
+[MODIFICADORES_NOTAS.md](../MODIFICADORES_NOTAS.md).
+
 **Fase 31:** cierre Z, movimientos, devoluciones y compensación de puntos
 disponibles en backend. Ver [CAJA.md](CAJA.md). Cobrar exige todavía sesión
 abierta; una deuda de puntos autorizada puede amortizarse con nuevas ganancias

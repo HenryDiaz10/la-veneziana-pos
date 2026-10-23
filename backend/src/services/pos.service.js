@@ -1,4 +1,5 @@
-import { Op, fn, col, where } from 'sequelize';
+import { Op, fn, col, where, Transaction } from 'sequelize';
+import { sequelize } from '../config/database.js';
 
 import {
   ProductoVenta,
@@ -118,13 +119,14 @@ export async function obtenerProductoPos(productoId) {
   if (!esIdValido(productoId)) {
     return null;
   }
-
+  // Una sola vista de lectura para no mezclar vínculos y opciones de dos cortes.
+  return sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ }, async transaction => {
   const producto = await ProductoVenta.findOne({
     where: {
       id: productoId,
       estado: 'activo'
     },
-    attributes: CAMPOS_PRODUCTO_POS
+    attributes: CAMPOS_PRODUCTO_POS, transaction
   });
 
   if (!producto) {
@@ -132,21 +134,21 @@ export async function obtenerProductoPos(productoId) {
   }
 
   const categoria = await CategoriaVenta.findOne({
-    where: { id: producto.categoria_id, activa: true }, attributes: ['id']
+    where: { id: producto.categoria_id, activa: true }, attributes: ['id'], transaction
   });
   if (!categoria) return null;
 
   // Variantes pertenecientes al producto (el modelo no tiene estado independiente).
   const variantes = await VarianteProducto.findAll({
     where: { producto_id: productoId },
-    attributes: CAMPOS_VARIANTE_POS,
+    attributes: CAMPOS_VARIANTE_POS, transaction,
     order: [['id', 'ASC']]
   });
 
   // Grupos de modificadores asignados al producto.
   const vinculosGrupos = await ProductoModificador.findAll({
     where: { producto_id: productoId },
-    attributes: ['grupo_id'],
+    attributes: ['grupo_id'], transaction,
     order: [['grupo_id', 'ASC']]
   });
 
@@ -156,16 +158,14 @@ export async function obtenerProductoPos(productoId) {
   if (gruposIds.length > 0) {
     const grupos = await ModificadorCatalogo.findAll({
       where: { id: { [Op.in]: gruposIds } },
-      attributes: ['id', 'nombre_grupo', 'es_multiple', 'es_obligatorio'],
+      attributes: ['id', 'nombre_grupo', 'es_multiple', 'es_obligatorio'], transaction,
       order: [['id', 'ASC']]
     });
 
+    // Consultar opciones en lote evita una petición SQL adicional por grupo.
+    const todasOpciones = await ModificadorItem.findAll({ where: { grupo_id: gruposIds }, attributes: CAMPOS_ITEM_POS, order: [['id', 'ASC']], transaction });
     for (const grupo of grupos) {
-      const opciones = await ModificadorItem.findAll({
-        where: { grupo_id: grupo.id },
-        attributes: CAMPOS_ITEM_POS,
-        order: [['id', 'ASC']]
-      });
+      const opciones = todasOpciones.filter(o => o.grupo_id === grupo.id);
 
       gruposConOpciones.push({
         id: grupo.id,
@@ -207,4 +207,5 @@ export async function obtenerProductoPos(productoId) {
       grupos: gruposConOpciones
     }
   };
+  });
 }

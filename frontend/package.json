@@ -23,7 +23,9 @@
     "test:arqueo": "node --test tests/arqueo-calculo.test.mjs",
     "test:arqueo:navegador": "node tests/arqueo-navegador.mjs",
     "test:salon": "node --test tests/salon-mapa.test.mjs",
-    "test:salon:navegador": "node tests/salon-navegador.mjs"
+    "test:salon:navegador": "node tests/salon-navegador.mjs",
+    "test:modificadores": "node --test tests/modificadores.test.mjs",
+    "test:modificadores:navegador": "node tests/modificadores-navegador.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",

@@ -9,6 +9,7 @@ import { consultarProductoPos } from '../../services/pos.service.js'
 import { obtenerFamiliaBebida } from '../../utils/bebidas-pos.js'
 import { estimarSeleccionCarrito } from '../../utils/carrito-estimacion.js'
 import IndicacionesProducto from '../carrito/IndicacionesProducto.jsx'
+import ResumenModificadores from '../carrito/ResumenModificadores.jsx'
 
 function cargarConfiguracion(productoId, signal) {
   return consultarProductoPos(productoId, { signal })
@@ -255,7 +256,7 @@ export default function ModalPersonalizarProducto({
                       {' (precio base)'}
                     </span>
                   </div>
-                  <span className="text-xs text-app-secundario">+ S/ 0.00</span>
+                  <span className="shrink-0 whitespace-nowrap text-xs text-app-secundario">+ S/ 0.00</span>
                 </label>
 
                 {/* Variantes del producto */}
@@ -356,6 +357,7 @@ export default function ModalPersonalizarProducto({
               )
             })}
 
+            <ResumenModificadores opciones={estimacion?.modificadoresDetalle}/>
             <IndicacionesProducto valor={indicaciones} onChange={setIndicaciones} disabled={deshabilitado}/>
 
             {/* Selector de Cantidad */}

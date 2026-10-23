@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 34 implementada y probada.**
-La siguiente etapa es la **fase 35: modificadores y notas de preparación**.
+**Avance actual: fase 35 implementada y probada.**
+La siguiente etapa es la **fase 36: backend de eventos KDS al confirmar pedidos**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -98,6 +98,11 @@ La siguiente etapa es la **fase 35: modificadores y notas de preparación**.
   Auditoría, outbox, pruebas de carreras y rollback. El mapa sigue de consulta;
   los botones de estas acciones todavía no están conectados a la interfaz.
 
+- Fase 35: recorrido completo de modificadores y notas: consulta operativa
+  coherente, grupos obligatorios/múltiples/exclusivos, exclusiones visibles y
+  snapshots con `es_exclusion` conservado para pedido, cocina y ticket.
+  Pruebas de deltas, reserva/consumo, edición histórica, recuperación y móvil.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
@@ -105,6 +110,7 @@ Cierres y devoluciones: [backend/CAJA.md](backend/CAJA.md).
 Interfaz de arqueo: [frontend/ARQUEO.md](frontend/ARQUEO.md).
 Mapa de mesas: [frontend/SALON.md](frontend/SALON.md).
 Operaciones de mesas: [backend/MESAS.md](backend/MESAS.md).
+Modificadores y notas: [MODIFICADORES_NOTAS.md](MODIFICADORES_NOTAS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
