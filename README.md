@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 27 implementada y probada.**
-La siguiente etapa es la **fase 28: creación de pedidos y cobro separado**.
+**Avance actual: fase 28 implementada y probada en backend.**
+La siguiente etapa es la **fase 29: interfaz de pagos mixtos**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -66,6 +66,12 @@ La siguiente etapa es la **fase 28: creación de pedidos y cobro separado**.
   consultas operativas con ventas/cobrar y estimación en tiempo real.
   Incluye elección de presa para caldo de gallina e indicaciones por preparación,
   conservadas en el borrador y su revisión; envío real a cocina pendiente.
+- Fase 28: API transaccional para crear/ampliar pedidos, reservar insumos,
+  bloquear checkout, abrir caja y cobrar por separado. Snapshots comerciales,
+  pagos mixtos, puntos, idempotencia y eventos durables. La integración visual
+  de pagos y confirmación continúa en las fases 29 y 30.
+
+Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -76,8 +82,8 @@ El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
 Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
-El POS dispone de interfaz operativa completa con catálogo y recibo térmico;
-el registro transaccional de pedidos y cobro corresponde a la fase 28.
+El POS dispone de catálogo, recibo del borrador y revisión. El backend de pedidos
+y cobro ya existe; la interfaz de pagos y su conexión se completan en fases 29 y 30.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
@@ -85,8 +91,9 @@ con MySQL y tiene creadas las 51 tablas del SQL de referencia,
 con sus modelos y asociaciones disponibles desde src/models/index.js.
 
 El backend dispone de autenticación, gestión de empleados y roles, catálogo,
-clientes, direcciones y recetas, con rutas protegidas por permisos. Siguen
-pendientes el carrito y la operación de pedidos, cocina, caja y cobros, entre
+clientes, direcciones, recetas, pedidos y cobros separados, con rutas protegidas
+por permisos. Ya hay borrador de carrito y apertura mínima de caja. Siguen
+pendientes la interfaz de pagos, KDS en vivo, cierres y devoluciones, entre
 otros módulos de las fases siguientes. Las autorizaciones sensibles se
 integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 

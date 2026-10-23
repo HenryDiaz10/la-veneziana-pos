@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { autenticar } from '../middlewares/autenticar.js';
+import { exigirPermiso } from '../middlewares/exigirPermiso.js';
+import { abrir, cajaActual, recuperar } from '../controllers/pedidos.controller.js';
+const router = Router();
+router.use(autenticar, exigirPermiso('caja', 'gestionar'));
+router.get('/sesion', cajaActual);
+router.get('/operaciones/:clave', recuperar);
+router.post('/sesiones', abrir);
+export default router;

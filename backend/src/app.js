@@ -18,6 +18,8 @@ import { env } from './config/env.js';
 import { sequelize } from './config/database.js';
 
 import authRouter from './routes/auth.routes.js';
+import pedidosRouter from './routes/pedidos.routes.js';
+import cajaRouter from './routes/caja.routes.js';
 
 import usuariosRouter from './routes/usuarios.routes.js';
 
@@ -194,6 +196,8 @@ app.use('/api/compras', comprasRouter);
 
 // Catálogo y consultas operativas del punto de venta con permiso ventas/cobrar.
 app.use('/api/pos', posRouter);
+app.use('/api/pedidos', pedidosRouter);
+app.use('/api/caja', cajaRouter);
 
 app.use((req, res) => {
   // El código HTTP 404 indica que el recurso solicitado no existe.

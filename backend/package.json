@@ -20,7 +20,9 @@
     "carta:validar": "node scripts/importar-carta.mjs",
     "carta:importar": "node scripts/importar-carta.mjs --aplicar",
     "test:carta": "node --test tests/carta.test.mjs",
-    "test:sesion:integracion": "node tests/sesion-integracion.mjs"
+    "test:sesion:integracion": "node tests/sesion-integracion.mjs",
+    "test:pedidos": "node --test tests/pedidos-calculo.test.mjs",
+    "test:pedidos:integracion": "node tests/pedidos-integracion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",
