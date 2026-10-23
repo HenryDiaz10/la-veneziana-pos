@@ -2,10 +2,11 @@ import { API_URL } from '../config/env.js'
 
 // Error controlado para distinguir rechazos HTTP y fallos de conexión.
 export class ErrorApi extends Error {
-  constructor(estado, mensaje) {
+  constructor(estado, mensaje, codigo = '') {
     super(mensaje)
     this.name = 'ErrorApi'
     this.estado = estado
+    this.codigo = codigo
   }
 }
 
@@ -22,7 +23,9 @@ export async function solicitarApi(
   {
     metodo = 'GET',
     datos,
-    signal
+    signal,
+    claveIdempotencia,
+    timeoutMs = 10000
   } = {}
 ) {
   // Recibir rutas internas como /auth/login.
@@ -46,6 +49,10 @@ export async function solicitarApi(
   const headers = {
     Accept: 'application/json'
   }
+  if (claveIdempotencia !== undefined) {
+    if (metodo === 'GET' || typeof claveIdempotencia !== 'string' || !/^[a-zA-Z0-9_-]{8,64}$/.test(claveIdempotencia)) throw new TypeError('Clave de operación no válida.')
+    headers['Idempotency-Key'] = claveIdempotencia
+  }
 
   if (metodo !== 'GET') {
     headers['X-CSRF-Protection'] = '1'
@@ -67,7 +74,7 @@ export async function solicitarApi(
 
       cache: 'no-store',
       redirect: 'error',
-      signal,
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
 
       body: datos === undefined
         ? undefined
@@ -113,7 +120,7 @@ export async function solicitarApi(
       ? contenido.mensaje
       : 'No se pudo completar la solicitud.'
 
-    throw new ErrorApi(respuesta.status, mensaje)
+    throw new ErrorApi(respuesta.status, mensaje, typeof contenido?.codigo === 'string' ? contenido.codigo : '')
   }
 
   if (!esJson) {

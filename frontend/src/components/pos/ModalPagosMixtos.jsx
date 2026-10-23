@@ -45,7 +45,7 @@ export default function ModalPagosMixtos({ contexto, inicial = null, onPreparar,
   }
   function preparar(evento) {
     evento.preventDefault()
-    try { onPreparar(prepararComandoPago(contexto, filas), evaluacion.vuelto); onCerrar() }
+    try { onPreparar(prepararComandoPago(contexto, filas), evaluacion.vuelto); onCerrar('preparado') }
     catch (e) { setError(e.message) }
   }
   const solicitarCierre = () => sucio ? setSalida(true) : onCerrar()

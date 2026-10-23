@@ -1,4 +1,10 @@
-# Fase 29: interfaz de pagos mixtos
+# Pagos mixtos · fases 29 y 30
+
+**Estado vigente:** la fase 30 conecta registro de pedido, apertura de caja,
+checkout y confirmación. La captura sigue sin cobrar por sí sola: después de
+prepararla se pulsa «Confirmar cobro». Guía del flujo y recuperación:
+[VENTA_FINAL.md](../VENTA_FINAL.md). El detalle siguiente describe la captura
+original de fase 29; sus límites de integración ya fueron resueltos en fase 30.
 
 Implementada el 23/10/2026. Ruta `/pagos`, accesible desde el menú con permiso
 `ventas/cobrar`. También acepta `/pagos?pedido=ID` para abrir un pedido existente.
@@ -90,7 +96,7 @@ La prueba de navegador requiere Vite en `http://localhost:5173` y Edge instalado
 Usa API simulada: Yape40+efectivo60/recibido100/vuelto40, invalidación al editar,
 descarte protegido, reapertura, actualización, referencias sin persistencia,
 permisos, cuenta pagada, 404, foco, temas y anchos 320/390/768/1366 px. Comprueba
-que todas las solicitudes son GET. Cinco pruebas puras cubren precisión,
+que preparar no cobra y la confirmación registra una sola venta. Cinco pruebas puras cubren precisión,
 límites, canje y compatibilidad del paquete con el validador del backend.
 
 Desde backend, `npm.cmd run test:pedidos:integracion` verifica con HTTP/MySQL

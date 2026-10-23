@@ -1,8 +1,9 @@
 import { VentaComprobante, VentaPagoSplit, VentaDetalleSnapshot, PedidoMaster, PedidoItemKds, SesionCajaZ,
-  CajaFisica, Cliente, CrmMovimientoPuntos, ConfiguracionGlobal, MesaSalon } from '../models/index.js';
+  CajaFisica, Cliente, CrmMovimientoPuntos, ConfiguracionGlobal, MesaSalon, TrabajoImpresion } from '../models/index.js';
 import { operacionComercial, auditoriaComercial, eventoComercial } from './operacion-comercial.js';
 import { bloquearPedido, comprobarVersion } from './pedidos.service.js';
 import { sequelize } from '../config/database.js';
+import { encolarTicket } from './impresion.service.js';
 import { ErrorPedido } from './pedidos-calculo.js';
 import { campos, idEntero, idGrande, exigirPedido as exigir, centimos, dinero, politicaFinanciera, desglosarImpuesto, validarPagos } from './pedidos-calculo.js';
 
@@ -24,10 +25,14 @@ export function consultarContextoPago(id, usuarioId, puedeCanjear) {
     try { if (politica?.valorPunto && centimos(politica.valorPunto) > 0n) valorPunto = dinero(centimos(politica.valorPunto)); }
     catch (e) { if (!(e instanceof ErrorPedido)) throw e; }
     const vencido = pedido.estado_cuenta === 'bloqueada_en_pago' && pedido.bloqueo_hasta <= new Date();
+    const venta = pedido.estado_cuenta === 'pagada' && await VentaComprobante.findOne({ where: { pedido_id: pedido.id }, transaction: tx });
+    const ticket = venta && await TrabajoImpresion.findOne({ where: { venta_id: venta.id, solicitado_por: usuarioId, tipo: 'ticket' }, transaction: tx });
     return { pedido: { id: String(pedido.id), codigo_pedido: pedido.codigo_pedido, version: pedido.version,
       total: pedido.total_preliminar, estado_cuenta: pedido.estado_cuenta, bloqueo_vencido: vencido,
       bloqueo_propio: pedido.bloqueo_usuario_id === usuarioId, bloqueo_hasta: pedido.bloqueo_hasta },
       sesion_caja: caja?.estado === 'activa' ? { id: sesion.id, nombre_caja: caja.nombre_terminal } : null,
+      venta: venta ? { id: String(venta.id), pedido_id: String(pedido.id), total: venta.total_final_venta,
+        serie_correlativo: venta.serie_correlativo, impresion: ticket ? { job_uid: ticket.job_uid, estado: ticket.estado } : null } : null,
       finanzas_habilitadas: Boolean(politica),
       canje: { disponible: Boolean(politica && puedeCanjear && cliente?.estado === 'activo' && valorPunto),
         saldo_puntos: puedeCanjear && cliente?.estado === 'activo' ? cliente.puntos_vip_actuales ?? 0 : 0,
@@ -104,10 +109,11 @@ export function cobrarPedido(id, datos, contexto) {
     }
     await auditoriaComercial(contexto.usuarioId, 'ventas_comprobantes', venta.id, { pedido_id: String(pedido.id), sesion_caja_id: sesion.id, total: dinero(total) }, tx);
     await eventoComercial('venta.confirmada', 'ventas_comprobantes', venta.id, 1, { venta_id: String(venta.id), pedido_id: String(pedido.id) }, tx);
+    const impresion = await encolarTicket({ venta, pedido, items, pagos: pagos.filas, usuarioId: contexto.usuarioId }, tx);
     // No invocar consumo de inventario: ya está reservado y se consume al
     // iniciar preparación/despachar, con los servicios internos de inventario.
     return { venta: { id: String(venta.id), pedido_id: String(pedido.id), sesion_caja_id: sesion.id, tipo_documento: 'ticket_interno',
       serie_correlativo: venta.serie_correlativo, subtotal: venta.subtotal_gravado, impuesto: venta.igv_total,
-      total: venta.total_final_venta, pagos: pagos.filas, fidelizacion }, pedido: { id: String(pedido.id), estado_cuenta: pedido.estado_cuenta, version: pedido.version } };
+      total: venta.total_final_venta, pagos: pagos.filas, fidelizacion, impresion }, pedido: { id: String(pedido.id), estado_cuenta: pedido.estado_cuenta, version: pedido.version } };
   });
 }

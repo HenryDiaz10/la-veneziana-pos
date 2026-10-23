@@ -1,4 +1,4 @@
-// Navegación real con API simulada. La fase 29 debe producir únicamente GET.
+// Navegación real con API simulada. Fase 30: checkout y cobro explicito, sin pagos al preparar.
 import assert from 'node:assert/strict'
 import { pathToFileURL } from 'node:url'
 const runtime = process.argv[2] ?? 'C:/Users/Henry/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs'
@@ -8,14 +8,18 @@ const context = await browser.newContext({ viewport: { width: 1366, height: 900 
 const page = await context.newPage()
 page.setDefaultTimeout(10000)
 const errores=[], solicitudes=[]
-let modo='abierta', autorizado=true
+let modo='abierta', autorizado=true, version=3, propio=false, cobros=0
 page.on('pageerror', e => errores.push(e.message))
 await context.route('**/api/**', async route => {
   const req = route.request(), ruta = new URL(req.url()).pathname.replace(/^\/api/, '')
   solicitudes.push({ ruta, metodo: req.method() })
   let body, status=200
   if (ruta === '/auth/session') body={usuario:{id:9876,nombre:'Prueba pagos',rol:{nombre:'cajero'},permisos:autorizado?[{modulo:'ventas',accion:'cobrar'}]:[]}}
-  else if(ruta==='/pedidos/42/contexto-pago')body={pedido:{id:'42',codigo_pedido:'P-PRUEBA-42',total:'100.00',version:3,estado_cuenta:modo,bloqueo_propio:false,bloqueo_vencido:false},sesion_caja:{id:1,nombre_caja:'Caja temporal'},finanzas_habilitadas:true,canje:{disponible:false,saldo_puntos:0,valor_punto_pen:null}}
+  else if(ruta==='/pedidos/42/contexto-pago')body={pedido:{id:'42',codigo_pedido:'P-PRUEBA-42',total:'100.00',version,estado_cuenta:modo,bloqueo_propio:propio,bloqueo_hasta:new Date(Date.now()+300000).toISOString(),bloqueo_vencido:false},sesion_caja:{id:1,nombre_caja:'Caja temporal'},finanzas_habilitadas:true,canje:{disponible:false,saldo_puntos:0,valor_punto_pen:null}}
+  else if(ruta==='/pedidos/42/bloqueo-pago'){modo='bloqueada_en_pago';propio=true;version++;body={pedido:{id:'42',version}}}
+  else if(ruta==='/pedidos/42/liberar-pago'){modo='abierta';propio=false;version++;body={pedido:{id:'42',version}}}
+  else if(ruta==='/pedidos/42/cobro'){cobros++;modo='pagada';body={venta:{id:'77',pedido_id:'42',total:'100.00',serie_correlativo:'T-TEST',impresion:{job_uid:'print_test_123',estado:'pendiente'}},pedido:{id:'42',estado_cuenta:'pagada',version:++version}}}
+  else if(ruta==='/pedidos/impresion/print_test_123')body={trabajo:{estado:'enviado'}}
   else if(ruta==='/pedidos/99/contexto-pago'){status=404;body={mensaje:'El pedido no existe.'}}
   else throw new Error(`Ruta inesperada ${req.method()} ${ruta}`)
   await route.fulfill({status,json:body})
@@ -73,6 +77,17 @@ try {
     await dialog.getByRole('button',{name:'Cancelar',exact:true}).click()
     await dialog.getByRole('button',{name:'Descartar distribución',exact:true}).click()
   }
+  // La captura no cobra; solo la confirmacion explicita crea una venta.
+  assert.equal(cobros,0)
+  await page.setViewportSize({width:1366,height:900})
+  await page.getByRole('button',{name:'Distribuir pago',exact:true}).click()
+  await page.getByRole('dialog').getByLabel('Efectivo recibido (S/)',{exact:true}).fill('100')
+  await page.getByRole('button',{name:'Preparar distribuci\u00f3n',exact:true}).click()
+  await page.getByRole('button',{name:'Confirmar cobro',exact:true}).dblclick()
+  await page.getByRole('region',{name:'\u00daltimo cobro confirmado'}).waitFor()
+  assert.equal(cobros,1)
+  await page.getByRole('button',{name:'Consultar impresi\u00f3n',exact:true}).click()
+  await page.getByText('Formato simulado por el agente; sin confirmaci\u00f3n de impresi\u00f3n f\u00edsica.',{exact:true}).waitFor()
   modo='pagada'
   await page.goto('http://localhost:5173/pagos?pedido=42')
   await page.getByText('La cuenta está pagada; no se puede preparar otro pago.',{exact:true}).waitFor()
@@ -83,7 +98,8 @@ try {
   autorizado=false
   await page.goto('http://localhost:5173/pagos?pedido=42')
   await page.getByRole('heading',{name:'No tienes acceso a esta sección',exact:true}).waitFor()
-  assert.ok(solicitudes.every(r=>r.metodo==='GET'),'No registrar ni cobrar en la fase 29')
+  assert.equal(cobros,1)
+  assert.ok(solicitudes.filter(r=>r.metodo==='POST').every(r=>/bloqueo-pago|liberar-pago|cobro/.test(r.ruta)))
   assert.deepEqual(errores,[])
-  console.log('OK fase 29: Yape40+efectivo60, vuelto40, verificación invalidada al editar, salida protegida, 320-1366px, temas, foco, errores, permisos y cero escrituras.')
+  console.log('OK fase 30: Yape40+efectivo60, vuelto40, verificación invalidada al editar, salida protegida, 320-1366px, temas, foco, errores, permisos y confirmacion explicita unica.')
 } finally {await context.close();await browser.close()}

@@ -1,3 +1,5 @@
+import RegistrarPedido from '../components/pos/RegistrarPedido.jsx'
+import { useComercial } from '../stores/comercial.store.js'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Icono from '../components/ui/Icono.jsx'
@@ -15,6 +17,8 @@ import { useAuthStore } from '../stores/auth.store.js'
 
 export default function PuntoVenta() {
   const usuario = useAuthStore(s => s.usuario)
+  const comercial = useComercial(usuario?.id)
+  const operacionBloqueada = Boolean(comercial.pendiente || comercial.error || Object.keys(comercial.vinculos).length)
   const lineas = useCartStore(s => s.lineas)
   const carritoPreparado = useCartStore(s => s.carritoPreparado)
   const usuarioCarritoId = useCartStore(s => s.usuarioCarritoId)
@@ -71,6 +75,7 @@ export default function PuntoVenta() {
       throw new Error('Espera a que se recupere la sesión de tu borrador.')
     }
 
+    if (operacionBloqueada) throw new Error('Completa la operación registrada antes de modificar el borrador.')
     carrito.agregarLinea(seleccion)
     setMensajeNotificacion(`Añadido: ${productoPersonalizando?.nombre || 'Producto'}`)
   }
@@ -148,8 +153,9 @@ export default function PuntoVenta() {
         onCambiarVista={setVistaMovil}
       />
 
+      <RegistrarPedido key={usuario?.id} consulta={consultaResumen} listo={listoParaOperar}/>
       {/* Grilla Principal del POS: 8 columnas Catálogo vs 4 columnas Recibo Térmico */}
-      <div className="pos-grid">
+      <div className="pos-grid" inert={operacionBloqueada || undefined}>
         {/* Panel del Catálogo de Productos (Visible en escritorio o cuando la pestaña móvil es catálogo) */}
         <div className={`min-w-0 ${vistaMovil === 'recibo' ? 'hidden lg:block' : 'block'}`}>
           <CatalogoPos
@@ -170,12 +176,12 @@ export default function PuntoVenta() {
 
         {/* Panel del Recibo Térmico Financiero (Visible en escritorio o cuando la pestaña móvil es recibo) */}
         <div className={`min-w-0 ${vistaMovil === 'catalogo' ? 'hidden lg:block' : 'block'}`}>
-          {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} />}
+          {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} registrado={Object.keys(comercial.vinculos).length > 0} />}
         </div>
       </div>
 
       {/* Modal para Personalizar Producto al Seleccionar de la Carta */}
-      {productoPersonalizando && listoParaOperar && (
+      {productoPersonalizando && listoParaOperar && !operacionBloqueada && (
         <ModalProducto
           producto={productoPersonalizando}
           onConfirmar={agregarSeleccion}

@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 29 implementada y probada.**
-La siguiente etapa es la **fase 30: confirmación final y limpieza del carrito**.
+**Avance actual: fase 30 implementada y probada.**
+La siguiente etapa es la **fase 31: backend de cierre de caja y devoluciones**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -73,9 +73,14 @@ La siguiente etapa es la **fase 30: confirmación final y limpieza del carrito**
 - Fase 29: pantalla protegida de pagos de pedidos y modal adaptable para repartir
   el total oficial entre medios, referencias y verificación de pagos digitales,
   efectivo recibido/vuelto y canje condicionado. Prepara y revisa sin cobrar.
+- Fase 30: registro del pedido desde el POS, apertura de caja y confirmación
+  del cobro con recuperación idempotente tras desconexión o recarga. Limpieza
+  selectiva del carrito confirmado y trabajo de impresión transaccional;
+  agente local autenticado probado en simulación de 58/80 mm, sin impresión física.
 
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
+Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -86,9 +91,10 @@ El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
 Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
-El POS dispone de catálogo, recibo del borrador y revisión. El backend de pedidos
-y cobro ya existe y la interfaz permite preparar pagos. La confirmación final
-y limpieza del borrador se conectarán en la fase 30.
+El POS permite revisar y registrar pedidos; Pagos confirma el cobro con caja
+propia, versión y bloqueo vigentes. Solo la confirmación oficial permite retirar
+las líneas pagadas del borrador. Los resultados desconocidos quedan pendientes
+de recuperar, incluso tras F5, sin generar otra identidad de cobro.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta

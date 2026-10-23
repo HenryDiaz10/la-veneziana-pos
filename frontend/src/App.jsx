@@ -19,6 +19,7 @@ import Componentes from './pages/Componentes.jsx'
 
 import AdminLayout from './layouts/AdminLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
+import RecuperarOperacion from './components/RecuperarOperacion.jsx'
 import Pagos from './pages/Pagos.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
@@ -103,6 +104,7 @@ function App() {
 
     {/* Recuperar y guardar el borrador según la sesión activa. */}
     <SincronizadorCarrito />
+      <RecuperarOperacion />
     <MantenerSesion />
 
       <a

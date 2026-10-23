@@ -22,7 +22,9 @@
     "test:carta": "node --test tests/carta.test.mjs",
     "test:sesion:integracion": "node tests/sesion-integracion.mjs",
     "test:pedidos": "node --test tests/pedidos-calculo.test.mjs",
-    "test:pedidos:integracion": "node tests/pedidos-integracion.mjs"
+    "test:pedidos:integracion": "node tests/pedidos-integracion.mjs",
+    "test:impresion": "node --test tests/impresion.test.mjs",
+    "impresion:simular": "node scripts/agente-impresion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

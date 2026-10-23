@@ -1,9 +1,11 @@
+import { MesaSalon } from '../models/index.js';
+import * as impresion from '../services/impresion.service.js';
 import * as pedidos from '../services/pedidos.service.js';
 import { cobrarPedido, consultarContextoPago } from '../services/cobros.service.js';
 import { abrirCaja, consultarCaja } from '../services/caja.service.js';
 import { ErrorPedido } from '../services/pedidos-calculo.js';
 import { ErrorInventario } from '../services/inventario-calculo.js';
-import { recuperarOperacion } from '../services/operacion-comercial.js';
+import { recuperarOperacion, resolverIntento } from '../services/operacion-comercial.js';
 
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key'),
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
@@ -49,3 +51,12 @@ export const contextoPago = manejarComercial(req => consultarContextoPago(req.pa
 export const abrir = manejarComercial(req => abrirCaja(req.body, contexto(req)), 201);
 export const cajaActual = manejarComercial(req => consultarCaja(req.auth.usuario.id));
 export const recuperar = manejarComercial(req => recuperarOperacion(req.auth.usuario.id, req.params.tipo ?? 'caja.abrir', req.params.clave));
+export const resolver = manejarComercial(req => {
+  if (Object.keys(req.body ?? {}).length) throw new ErrorPedido('DATOS_INVALIDOS');
+  return resolverIntento(req.auth.usuario.id, req.params.tipo ?? 'caja.abrir', req.params.clave);
+});
+
+export const registro = manejarComercial(async () => ({ mesas: await MesaSalon.findAll({ where: { estado_actual: 'libre' }, attributes: ['id', 'codigo_mesa'], order: [['codigo_mesa', 'ASC']] }) }));
+export const colaImpresion = manejarComercial(req => impresion.pendientesImpresion(req.auth.usuario.id));
+export const estadoImpresion = manejarComercial(req => impresion.consultarImpresion(req.params.uid, req.auth.usuario.id));
+export const simularImpresion = manejarComercial(req => impresion.registrarSimulacion(req.params.uid, req.body, contexto(req)));

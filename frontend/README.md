@@ -4,6 +4,12 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Fase 30:** POS registra pedidos, Pagos abre caja y confirma cobros con
+checkout e idempotencia. Recuperación tras F5/red caída, limpieza selectiva
+solo tras confirmación y cola de impresión con agente local en simulación.
+Guía vigente: [VENTA_FINAL.md](../VENTA_FINAL.md). Las secciones por fase
+inferiores conservan su contexto de implementación.
+
 La pantalla de login está conectada al backend mediante cookies HttpOnly.
 Zustand conserva la identidad en memoria y recupera la sesión al recargar;
 no se guardan tokens ni contraseñas en localStorage.
@@ -429,5 +435,17 @@ Pruebas: `npm.cmd run test:indicaciones` y, con Vite activo,
 La opción «Pagos de pedidos» (`/pagos`) permite consultar un pedido registrado
 y preparar sus medios de pago sobre el total oficial. Incluye importe aplicado,
 efectivo recibido/vuelto, referencias verificadas y canje condicionado. La captura
-no cobra ni limpia el carrito y solo permanece en memoria. La confirmación se
-conectará en la fase 30. Contratos, archivos y pruebas en [PAGOS.md](PAGOS.md).
+no cobra ni limpia el carrito y solo permanece en memoria. La fase 30 añade
+la confirmación explícita posterior. Contratos y pruebas en [PAGOS.md](PAGOS.md).
+
+### Fase 30: confirmación final
+
+RegistrarPedido, AperturaCaja y Pagos conectan el flujo completo con sus permisos.
+RecuperarOperacion permite recuperar o resolver una operación desconocida desde
+cualquier ruta. comercial.store conserva identidades y huellas por usuario,
+sin persistir referencias bancarias. El carrito original se retira únicamente
+tras confirmar el pago; líneas nuevas o editadas permanecen.
+
+Pruebas: `test:pagos:navegador`, `test:cocina:navegador` y
+`test:comercial:navegador`; también lint, build y las pruebas unitarias existentes.
+Impresión física pendiente de adaptador validado; no se declara emisión fiscal.

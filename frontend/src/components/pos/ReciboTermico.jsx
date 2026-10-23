@@ -11,7 +11,7 @@ import ModalPersonalizarProducto from './ModalPersonalizarProducto.jsx'
 import { useCartStore } from '../../stores/useCartStore.js'
 import { useAuthStore } from '../../stores/auth.store.js'
 
-export default function ReciboTermico({ consulta }) {
+export default function ReciboTermico({ consulta, registrado = false }) {
   const lineas = useCartStore(s => s.lineas)
   const usuario = useAuthStore(s => s.usuario)
   const [edicionId, setEdicionId] = useState(null)
@@ -72,12 +72,12 @@ export default function ReciboTermico({ consulta }) {
           Pizzería La Veneziana
         </p>
         <h2 id="titulo-recibo-pos" className="font-titulo text-lg font-bold text-app-texto mt-1">
-          BORRADOR DE PEDIDO
+          {registrado ? 'BORRADOR REGISTRADO' : 'BORRADOR DE PEDIDO'}
         </h2>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-app-secundario">
           <span>Cajero: <strong>{usuario?.nombre_completo || usuario?.nombre || 'Operador'}</strong></span>
           <span>•</span>
-          <span>Borrador activo</span>
+          <span>{registrado ? 'Pendiente de cobro' : 'Borrador activo'}</span>
         </div>
 
         {/* Barra de control de líneas y actualización */}
@@ -291,7 +291,7 @@ export default function ReciboTermico({ consulta }) {
           </span>
         </div>
         <p className="text-xs text-app-secundario">
-          Borrador sin reserva de stock. No se ha registrado un pedido ni realizado un cobro.
+          {registrado ? 'Pedido registrado. Continúa su cobro desde el enlace superior.' : 'Borrador sin reserva de stock. No se ha registrado un pedido ni realizado un cobro.'}
         </p>
         <BotonSecundario className="w-full" disabled={!lineas.length || !totalDisponible} onClick={() => setMostrarRevision(true)}>
           Revisar borrador

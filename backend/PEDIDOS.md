@@ -1,5 +1,10 @@
 # Fase 28: pedidos, caja mínima y cobro separado
 
+**Actualización fase 30:** el POS y Pagos ya registran pedidos y confirman cobros.
+El cobro encola ticket y outbox en la misma transacción. Se añaden resolución
+segura de intentos desconocidos, consulta de mesas y agente autenticado de
+impresión en simulación. Contratos y pruebas: [VENTA_FINAL.md](../VENTA_FINAL.md).
+
 Implementada el 23/10/2026. Backend sobre las tablas existentes; no requiere
 migraciones ni crea tablas genéricas de ventas. El POS sigue mostrando su
 borrador: la interfaz de pagos corresponde a la fase 29 y su conexión final a la 30.

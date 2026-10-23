@@ -10,7 +10,7 @@ import { crearHashPassword } from '../src/security/password.js';
 import { crearPedido, ampliarPedido, cambiarBloqueoPago } from '../src/services/pedidos.service.js';
 import { abrirCaja } from '../src/services/caja.service.js';
 import { cobrarPedido } from '../src/services/cobros.service.js';
-import { recuperarOperacion } from '../src/services/operacion-comercial.js';
+import { resolverIntento, recuperarOperacion } from '../src/services/operacion-comercial.js';
 import { registrarMovimiento, consumirTarea } from '../src/services/inventario.service.js';
 assert.ok(env.entorno !== 'production' && ['localhost','127.0.0.1','::1'].includes(env.database.host));
 const marca = randomUUID(), usuarios=[], unidades=[], insumos=[], productos=[];
@@ -92,6 +92,23 @@ try {
   const http=await pedir('/pedidos','POST',llevar([linea(productos[1])]),cookies[0]);
   assert.equal(http.status,201,JSON.stringify(http.json));
   assert.equal((await pedir(`/pedidos/${http.json.pedido.id}`,'GET',undefined,cookies[0])).status,200);
+  // Resolver espera el commit existente o cancela una identidad que no llego.
+  const cancelada = ctx();
+  assert.equal((await resolverIntento(cancelada.usuarioId, 'pedido.crear', cancelada.clave)).cancelada, true);
+  await rechaza(() => crearPedido(llevar([linea(productos[1])]), cancelada), 'OPERACION_CANCELADA');
+  assert.equal((await resolverIntento(contexto.usuarioId, 'pedido.crear', contexto.clave)).pedido.id, pedido.id);
+  assert.equal((await pedir('/pedidos/impresion/pendientes', 'GET', undefined, cookies[2])).status, 403);
+  const carrera=ctx();
+  const [creacion,resolucion]=await Promise.allSettled([crearPedido(llevar([linea(productos[1])]),carrera),resolverIntento(carrera.usuarioId,'pedido.crear',carrera.clave)]);
+  assert.equal(resolucion.status,'fulfilled');
+  if(creacion.status==='fulfilled')assert.equal(resolucion.value.pedido.id,creacion.value.pedido.id);
+  else {assert.equal(creacion.reason.codigo,'OPERACION_CANCELADA');assert.equal(resolucion.value.cancelada,true);}
+  const ticketPrueba = await m.TrabajoImpresion.create({job_uid:randomUUID(),tipo:'ticket',destino:'caja',solicitado_por:usuarios[0].id,contenido_json:{version:1}});
+  assert.equal((await pedir(`/pedidos/impresion/${ticketPrueba.job_uid}`, 'GET', undefined, cookies[1])).status,404);
+  const sim = await pedir(`/pedidos/impresion/${ticketPrueba.job_uid}/simulacion`, 'POST', {sha256:'a'.repeat(64)}, cookies[0]);
+  assert.equal(sim.status,200,JSON.stringify(sim.json)); assert.equal(sim.json.impresion_fisica,false);
+  await pedir(`/pedidos/impresion/${ticketPrueba.job_uid}/simulacion`, 'POST', {sha256:'a'.repeat(64)}, cookies[0]);
+  await ticketPrueba.reload(); assert.equal(ticketPrueba.intentos,1); assert.equal(ticketPrueba.estado,'enviado'); assert.equal(ticketPrueba.confirmado_en,null);
   const ventasAntes=await m.VentaComprobante.count({where:{cajero_id:usuarios[0].id}});
   const operacionesAntes=await m.IdempotenciaOperacion.count({where:{usuario_id:usuarios[0].id}});
   const contextoHttp=await pedir(`/pedidos/${http.json.pedido.id}/contexto-pago`,'GET',undefined,cookies[0]);
@@ -119,6 +136,11 @@ try {
   const antes=await m.InsumoAlmacen.findByPk(insumos[1].id,{transaction:padre});
   await rechaza(()=>cobrarPedido(comercial.id,cobrar,ctx(usuarios[1].id,padre)),'SESION_CAJA_NO_DISPONIBLE');
   const operacion=ctx(usuarios[0].id,padre), cobrado=await cobrarPedido(comercial.id,cobrar,operacion);
+  const tickets = await m.TrabajoImpresion.findAll({where:{venta_id:cobrado.venta.id},transaction:padre});
+  assert.equal(tickets.length,1); assert.equal(tickets[0].job_uid,cobrado.venta.impresion.job_uid);
+  assert.equal(tickets[0].contenido_json.pagos[1].vuelto,'4.00');
+  assert.equal(JSON.stringify(tickets[0].contenido_json).includes('TEST-VERIFICADO'),false);
+  assert.equal(await m.EventoOutbox.count({where:{entidad:'trabajos_impresion',entidad_id:tickets[0].id,tipo:'impresion.pendiente'},transaction:padre}),1);
   assert.equal(cobrado.venta.total,'10.00');assert.equal(cobrado.venta.impuesto,'1.53');assert.equal(cobrado.venta.pagos[1].vuelto,'4.00');
   assert.equal((await cobrarPedido(comercial.id,cobrar,operacion)).venta.id,cobrado.venta.id);
   assert.equal(await m.VentaComprobante.count({where:{pedido_id:comercial.id},transaction:padre}),1);
@@ -145,6 +167,12 @@ try {
   assert.equal(c.venta.fidelizacion.puntos_ganados,8);
   assert.equal((await m.Cliente.findByPk(cliente.id,{transaction:padre})).puntos_vip_actuales,98);
   assert.equal(await m.CrmMovimientoPuntos.count({where:{cliente_id:cliente.id},transaction:padre}),3);
+  // Fallo al encolar impresion revierte tambien venta, pagos e idempotencia.
+  const falloTicket = `ticket-${marca}`;
+  m.TrabajoImpresion.addHook('beforeCreate',falloTicket,()=>{throw new Error('fallo ticket controlado');});
+  try { await assert.rejects(()=>cobrarPedido(fallido.id,{...cobrar,version:fallido.version},ctx(usuarios[0].id,padre)),/fallo ticket controlado/); }
+  finally {m.TrabajoImpresion.removeHook('beforeCreate',falloTicket);}
+  assert.equal(await m.VentaComprobante.count({where:{pedido_id:fallido.id},transaction:padre}),0);
   await padre.rollback();padre=null;
   // Dos usuarios compiten por el último disponible: solo uno puede reservar.
   const competencia=await Promise.allSettled([crearPedido(llevar([linea(productos[1],10)]),ctx()),crearPedido(llevar([linea(productos[1],10)]),ctx(usuarios[1].id))]);
@@ -156,11 +184,16 @@ try {
   await consumirTarea(tarea.id,{usuarioId:usuarios[0].id});
   assert.equal((await saldo(0)).stock_fisico,'19.0000');
   assert.equal(await m.InventarioKardex.count({where:{referencia_documento:`tarea:${tarea.id}`}}),1);
-  console.log('OK fase 28: HTTP/CSRF/permisos, recetas/notas, reserva atómica, idempotencia concurrente, versiones, bloqueo, caja única, pagos separados, fiscal pendiente, puntos, rollback tardío y consumo independiente.');
+  console.log('OK fases 28-30: HTTP/CSRF/permisos, recetas/notas, reserva atómica, idempotencia concurrente, versiones, bloqueo, caja única, pagos separados, fiscal pendiente, puntos, rollback tardío y consumo independiente.');
 } finally {
   if(padre&&!padre.finished)await padre.rollback();
   if(servidor)await new Promise(resolve=>servidor.close(resolve));
   const uids=usuarios.map(u=>u.id), pids=productos.map(p=>p.id), iids=insumos.map(i=>i.id);
+  if(uids.length) {
+    const jobs=await m.TrabajoImpresion.findAll({where:{solicitado_por:uids},attributes:['id']});
+    if(jobs.length)await m.EventoOutbox.destroy({where:{entidad:'trabajos_impresion',entidad_id:jobs.map(j=>j.id)}});
+    await m.TrabajoImpresion.destroy({where:{solicitado_por:uids}});
+  }
   const pedidos=await m.PedidoMaster.findAll({where:{usuario_creador_id:uids.length?uids:[0]},attributes:['id']});
   const ids=pedidos.map(p=>p.id), items=ids.length?await m.PedidoItemKds.findAll({where:{pedido_id:ids},attributes:['id']}):[], itemIds=items.map(i=>i.id);
   if(itemIds.length){const tareas=await m.KdsTarea.findAll({where:{pedido_item_id:itemIds},attributes:['id']});const tids=tareas.map(t=>t.id);

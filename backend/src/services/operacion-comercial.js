@@ -22,6 +22,7 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
         exigir(actor?.estado === 'activo', 'USUARIO_NO_DISPONIBLE');
         const anterior = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave }, transaction: tx, lock: tx.LOCK.UPDATE });
         if (anterior) {
+          exigir(!anterior.respuesta_json?.cancelada, 'OPERACION_CANCELADA');
           exigir(anterior.request_hash === hash && anterior.estado === 'confirmada', 'IDEMPOTENCIA_EN_CONFLICTO');
           return { ...anterior.respuesta_json, repetida: true };
         }
@@ -37,6 +38,25 @@ export async function operacionComercial({ usuarioId, clave, tipo, cuerpo, trans
     }
   }
 }
+// Un resultado 404 de recuperación no demuestra que el POST no siga en vuelo.
+// Cancelar usa la misma barrera por actor: espera al commit y recupera su
+// resultado, o deja una lápida que impide ejecutar más tarde esa identidad.
+export function resolverIntento(usuarioId, tipo, clave) {
+  exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir'].includes(tipo) &&
+    typeof clave === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(clave));
+  return sequelize.transaction(async tx => {
+    const actor = await Usuario.findByPk(usuarioId, { transaction: tx, lock: tx.LOCK.UPDATE });
+    exigir(actor?.estado === 'activo', 'USUARIO_NO_DISPONIBLE');
+    const anterior = await IdempotenciaOperacion.findOne({ where: { usuario_id: usuarioId, tipo_operacion: tipo, clave }, transaction: tx, lock: tx.LOCK.UPDATE });
+    if (anterior) {
+      exigir(anterior.estado === 'confirmada', 'OPERACION_EN_CONFLICTO');
+      return { ...anterior.respuesta_json, repetida: true };
+    }
+    await IdempotenciaOperacion.create({ usuario_id: usuarioId, tipo_operacion: tipo, clave,
+      request_hash: '0'.repeat(64), estado: 'confirmada', http_status: 409, respuesta_json: { cancelada: true } }, { transaction: tx });
+    return { cancelada: true };
+  });
+}
 // Recuperar exclusivamente una operación propia ante pérdida de la respuesta.
 export async function recuperarOperacion(usuarioId, tipo, clave) {
   exigir(idEntero(usuarioId) && ['pedido.crear', 'pedido.ampliar', 'pedido.bloquear_pago', 'pedido.liberar_pago', 'pedido.cobrar', 'caja.abrir'].includes(tipo) &&
@@ -48,4 +68,4 @@ export async function recuperarOperacion(usuarioId, tipo, clave) {
 export const auditoriaComercial = (usuarioId, entidad, id, datos, tx) => AuditLog.create({ usuario_id: usuarioId,
   entidad_afectada: entidad, entidad_id: id, tipo_evento: 'UPDATE', datos_nuevos: datos, descripcion: 'Operación comercial transaccional, fase 28.' }, { transaction: tx });
 export const eventoComercial = (tipo, entidad, id, version, payload, tx) => EventoOutbox.create({ event_uid: randomUUID(), tipo, entidad,
-  entidad_id: id, version, sala_destino: tipo === 'pedido.cocina' ? 'kds' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });
+  entidad_id: id, version, sala_destino: tipo === 'pedido.cocina' ? 'kds' : tipo.startsWith('impresion.') ? 'impresion' : tipo.startsWith('pedido') ? 'pedidos' : 'caja', payload_json: payload }, { transaction: tx });
