@@ -6,7 +6,8 @@ const CAMPOS_PERMITIDOS = [
   'productoId',
   'varianteId',
   'modificadoresIds',
-  'cantidad'
+  'cantidad',
+  'indicaciones'
 ]
 
 function idValido(valor) {
@@ -39,7 +40,8 @@ export function normalizarLineaCarrito(datos) {
     productoId,
     varianteId = null,
     modificadoresIds = [],
-    cantidad = 1
+    cantidad = 1,
+    indicaciones = ''
   } = datos
 
   if (!idValido(productoId)) {
@@ -67,11 +69,23 @@ export function normalizarLineaCarrito(datos) {
     throw new Error('La cantidad debe estar entre 1 y 10000.')
   }
 
+  // Las indicaciones pertenecen a esta preparación, no a la descripción del
+  // catálogo. Admitir borradores antiguos sin el campo y limitar texto libre.
+  if (typeof indicaciones !== 'string' || [...indicaciones].some(caracter => {
+    const codigo = caracter.codePointAt(0)
+    return codigo === 127 || (codigo < 32 && ![9, 10, 13].includes(codigo))
+  })) {
+    throw new Error('Las indicaciones para cocina no son válidas.')
+  }
+  const nota = indicaciones.normalize('NFC').trim().replace(/\s+/gu, ' ')
+  if ([...nota].length > 250) throw new Error('Las indicaciones admiten hasta 250 caracteres.')
+
   return {
     productoId,
     varianteId,
     modificadoresIds: [...modificadoresIds].sort((a, b) => a - b),
-    cantidad
+    cantidad,
+    ...(nota ? { indicaciones: nota } : {})
   }
 }
 
@@ -140,6 +154,7 @@ export const useCartStore = create(set => ({
         varianteId: actual.varianteId,
         modificadoresIds: actual.modificadoresIds,
         cantidad: actual.cantidad,
+        indicaciones: actual.indicaciones,
         ...cambios
       })
 

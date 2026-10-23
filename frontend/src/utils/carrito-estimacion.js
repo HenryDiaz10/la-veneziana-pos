@@ -102,11 +102,13 @@ export function estimarSeleccionCarrito({
   // El almacenamiento local sigue conservando solo la selección.
   return {
     productoNombre: producto.nombre,
-    varianteNombre: variante?.nombre_variante ?? 'Presentación base',
+    varianteNombre: variante?.nombre_variante ??
+      variantes.find(elemento => elemento.precio_adicional === '0.00')?.nombre_variante ?? 'Presentación base',
     modificadoresNombres: opcionesElegidas.map(
       opcion => opcion.nombre_modificador
     ),
     cantidad: linea.cantidad,
+    ...(linea.indicaciones ? { indicaciones: linea.indicaciones } : {}),
     ...importes
   }
 }
@@ -140,7 +142,7 @@ export function estimarBorrador(lineas, catalogo) {
         ...datos,
         seleccion: {
           productoId: linea.productoId, varianteId: linea.varianteId,
-          modificadoresIds: linea.modificadoresIds, cantidad: linea.cantidad
+          modificadoresIds: linea.modificadoresIds, cantidad: linea.cantidad, indicaciones: linea.indicaciones
         }
       })
       return { id: linea.id, ...estimacion }
@@ -169,7 +171,7 @@ export function construirComandoCarrito(lineas) {
   return {
     lineas: lineas.map(linea => normalizarLineaCarrito({
       productoId: linea.productoId, varianteId: linea.varianteId,
-      modificadoresIds: linea.modificadoresIds, cantidad: linea.cantidad
+      modificadoresIds: linea.modificadoresIds, cantidad: linea.cantidad, indicaciones: linea.indicaciones
     }))
   }
 }

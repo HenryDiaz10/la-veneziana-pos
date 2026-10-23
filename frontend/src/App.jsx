@@ -26,6 +26,7 @@ import Recetas from './pages/Recetas.jsx'
 import Inventario from './pages/Inventario.jsx'
 import Compras from './pages/Compras.jsx'
 import SincronizadorCarrito from './components/SincronizadorCarrito.jsx'
+import MantenerSesion from './components/MantenerSesion.jsx'
 import PruebasCarrito from './pages/PruebasCarrito.jsx'
 
 
@@ -101,6 +102,7 @@ function App() {
 
     {/* Recuperar y guardar el borrador según la sesión activa. */}
     <SincronizadorCarrito />
+    <MantenerSesion />
 
       <a
         href="#contenido-principal"

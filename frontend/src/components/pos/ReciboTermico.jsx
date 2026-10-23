@@ -1,44 +1,27 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Modal from '../ui/Modal.jsx'
 import BotonBase from '../ui/BotonBase.jsx'
 import BotonSecundario from '../ui/BotonSecundario.jsx'
 import BotonPeligro from '../ui/BotonPeligro.jsx'
 import Badge from '../ui/Badge.jsx'
 import Icono from '../ui/Icono.jsx'
+import ModalBebidaPos from './ModalBebidaPos.jsx'
+import { obtenerFamiliaBebida } from '../../utils/bebidas-pos.js'
 import ModalPersonalizarProducto from './ModalPersonalizarProducto.jsx'
-import useConsultaRemota from '../../hooks/useConsultaRemota.js'
-import { consultarDatosBorradorPos } from '../../services/pos.service.js'
-import { estimarBorrador } from '../../utils/carrito-estimacion.js'
 import { useCartStore } from '../../stores/useCartStore.js'
 import { useAuthStore } from '../../stores/auth.store.js'
 
-export default function ReciboTermico() {
+export default function ReciboTermico({ consulta }) {
   const lineas = useCartStore(s => s.lineas)
   const usuario = useAuthStore(s => s.usuario)
-  const [revision, setRevision] = useState(0)
   const [edicionId, setEdicionId] = useState(null)
   const [confirmarVaciado, setConfirmarVaciado] = useState(false)
-  const [modalCobroFase28, setModalCobroFase28] = useState(false)
+  const [mostrarRevision, setMostrarRevision] = useState(false)
   const [errorAccion, setErrorAccion] = useState('')
-  const [metodoPagoAuditado, setMetodoPagoAuditado] = useState('EFECTIVO')
 
-  // Obtener IDs de productos únicos de las líneas del borrador
-  const claveIds = useMemo(() => {
-    return [...new Set(lineas.map(l => l.productoId))].sort((a, b) => a - b).join(',')
-  }, [lineas])
-
-  const solicitud = useMemo(() => ({
-    ids: claveIds ? claveIds.split(',').map(Number) : [],
-    revision
-  }), [claveIds, revision])
-
-  // Consultar precios y configuraciones con las rutas operativas protegidas por ventas/cobrar
-  const { datos, error, pendiente, reintentar } = useConsultaRemota(
-    consultarDatosBorradorPos,
-    solicitud
-  )
-
-  const resumen = datos ? estimarBorrador(lineas, datos) : null
+  // La misma estimación alimenta el resumen móvil y este recibo.
+  const { datos, error, pendiente, reintentar, resumen } = consulta
+  const totalDisponible = !pendiente && !error && resumen?.total != null && !resumen.errorTotal
   const lineaEditada = lineas.find(l => l.id === edicionId)
   const configuracionEditada = lineaEditada ? datos?.[lineaEditada.productoId] : null
 
@@ -64,15 +47,20 @@ export default function ReciboTermico() {
     }
   }
 
-  function guardarEdicion(seleccion) {
+  function guardarEdicion(seleccion, productoDestino = null) {
     comprobarPropietario()
-    if (!lineaEditada || seleccion.productoId !== lineaEditada.productoId) {
+    const origen = obtenerFamiliaBebida(configuracionEditada?.producto)
+    const destino = obtenerFamiliaBebida(productoDestino)
+    const cambioDeEnvase = origen && destino?.clave === origen.clave && productoDestino.id === seleccion.productoId
+    if (!lineaEditada || (seleccion.productoId !== lineaEditada.productoId && !cambioDeEnvase)) {
       throw new Error('La línea que intentas modificar ya no está disponible.')
     }
     useCartStore.getState().actualizarLinea(lineaEditada.id, seleccion)
     setEdicionId(null)
-    setRevision(r => r + 1)
+    reintentar()
   }
+
+  const ModalEdicion = obtenerFamiliaBebida(configuracionEditada?.producto) ? ModalBebidaPos : ModalPersonalizarProducto
 
   const cantidadTotalArticulos = lineas.reduce((total, l) => total + l.cantidad, 0)
 
@@ -84,7 +72,7 @@ export default function ReciboTermico() {
           Pizzería La Veneziana
         </p>
         <h2 id="titulo-recibo-pos" className="font-titulo text-lg font-bold text-app-texto mt-1">
-          TICKET DE PEDIDO
+          BORRADOR DE PEDIDO
         </h2>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-app-secundario">
           <span>Cajero: <strong>{usuario?.nombre_completo || usuario?.nombre || 'Operador'}</strong></span>
@@ -102,12 +90,10 @@ export default function ReciboTermico() {
             <button
               type="button"
               disabled={pendiente || lineas.length === 0}
-              onClick={() => {
-                setRevision(r => r + 1)
-                reintentar?.()
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-app-borde text-xs font-semibold text-app-texto hover:bg-app-hover disabled:opacity-40 transition-colors"
+              onClick={reintentar}
+              className="min-h-11 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-app-borde text-xs font-semibold text-app-texto hover:bg-app-hover disabled:opacity-40 transition-colors"
               title="Consultar precios actuales"
+              aria-label="Actualizar"
             >
               <Icono nombre="actualizar" className={`size-3.5 ${pendiente ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Actualizar</span>
@@ -117,8 +103,9 @@ export default function ReciboTermico() {
               <button
                 type="button"
                 onClick={() => setConfirmarVaciado(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-500/30 text-xs font-semibold text-app-error hover:bg-red-500/10 transition-colors"
+                className="min-h-11 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-500/30 text-xs font-semibold text-app-error hover:bg-red-500/10 transition-colors"
                 title="Vaciar todo el borrador"
+                aria-label="Vaciar"
               >
                 <Icono nombre="eliminar" className="size-3.5" />
                 <span className="hidden sm:inline">Vaciar</span>
@@ -188,13 +175,15 @@ export default function ReciboTermico() {
                           {resultado.modificadoresNombres.map((modNombre, mIdx) => (
                             <span
                               key={mIdx}
-                              className="inline-block text-[11px] px-2 py-0.5 rounded bg-app-elevada border border-app-borde text-app-secundario"
+                              className="inline-block max-w-full break-words text-[11px] px-2 py-0.5 rounded bg-app-elevada border border-app-borde text-app-secundario"
                             >
                               + {modNombre}
                             </span>
                           ))}
                         </div>
                       )}
+
+                      {linea.indicaciones && <p className="mt-2 break-words rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-xs"><strong>Cocina:</strong> {linea.indicaciones}</p>}
 
                       {/* Aviso de error en la línea */}
                       {tieneError && (
@@ -205,9 +194,9 @@ export default function ReciboTermico() {
                     </div>
 
                     {/* Precios de la línea */}
-                    <div className="text-right shrink-0">
+                    <div className="text-right min-w-0 max-w-[48%] break-all">
                       <span className="font-mono font-bold text-sm text-app-texto block">
-                        {resultado?.total ? `S/ ${resultado.total}` : 'S/ --.--'}
+                        {resultado?.total != null ? `S/ ${resultado.total}` : 'Pendiente'}
                       </span>
                       {resultado?.precioUnitario && (
                         <span className="text-[11px] font-mono text-app-secundario block">
@@ -232,7 +221,7 @@ export default function ReciboTermico() {
                             })
                           )
                         }
-                        className="size-7 rounded flex items-center justify-center font-bold text-sm text-app-texto hover:bg-app-hover disabled:opacity-30"
+                        className="size-11 rounded flex items-center justify-center font-bold text-sm text-app-texto hover:bg-app-hover disabled:opacity-30"
                       >
                         −
                       </button>
@@ -250,7 +239,7 @@ export default function ReciboTermico() {
                             })
                           )
                         }
-                        className="size-7 rounded flex items-center justify-center font-bold text-sm text-app-texto hover:bg-app-hover disabled:opacity-30"
+                        className="size-11 rounded flex items-center justify-center font-bold text-sm text-app-texto hover:bg-app-hover disabled:opacity-30"
                       >
                         +
                       </button>
@@ -263,7 +252,7 @@ export default function ReciboTermico() {
                         aria-label={`Editar línea ${index + 1}`}
                         disabled={!productoInfo || pendiente}
                         onClick={() => setEdicionId(linea.id)}
-                        className="px-2.5 py-1 rounded-lg border border-app-borde text-xs font-semibold text-app-texto hover:bg-app-hover disabled:opacity-40"
+                        className="min-h-11 px-2.5 py-1 rounded-lg border border-app-borde text-xs font-semibold text-app-texto hover:bg-app-hover disabled:opacity-40"
                       >
                         Editar
                       </button>
@@ -273,7 +262,7 @@ export default function ReciboTermico() {
                         onClick={() =>
                           ejecutar(() => useCartStore.getState().quitarLinea(linea.id))
                         }
-                        className="px-2.5 py-1 rounded-lg border border-red-500/20 text-xs font-semibold text-app-error hover:bg-red-500/10"
+                        className="min-h-11 px-2.5 py-1 rounded-lg border border-red-500/20 text-xs font-semibold text-app-error hover:bg-red-500/10"
                       >
                         Quitar
                       </button>
@@ -295,83 +284,25 @@ export default function ReciboTermico() {
           </p>
         )}
 
-        {/* Subtotales y Total Estimado */}
-        <div className="space-y-1.5 text-xs text-app-secundario">
-          <div className="flex justify-between">
-            <span>Subtotal estimado:</span>
-            <span className="font-mono font-semibold text-app-texto">
-              {resumen?.total !== null && resumen?.total !== undefined
-                ? `S/ ${resumen.total}`
-                : 'S/ --.--'}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>IGV estimado (18% incluido):</span>
-            <span className="font-mono font-semibold text-app-texto">
-              {resumen?.total !== null && resumen?.total !== undefined
-                ? `S/ ${(Number(resumen.total) * 0.18 / 1.18).toFixed(2)}`
-                : 'S/ 0.00'}
-            </span>
-          </div>
-
-          <div className="flex items-baseline justify-between pt-2 border-t border-app-borde">
-            <span className="font-titulo text-sm font-bold text-app-texto">
-              TOTAL ESTIMADO:
-            </span>
-            <span
-              className="font-mono text-2xl font-black text-marca-dorado tracking-tight"
-              aria-live="polite"
-            >
-              {resumen?.total !== null && resumen?.total !== undefined
-                ? `S/ ${resumen.total}`
-                : 'S/ 0.00'}
-            </span>
-          </div>
-        </div>
-
-        {/* Cuadrícula de Métodos de Pago Auditados (Preparación de referencia para Fase 28/29) */}
-        <div>
-          <span className="text-[11px] uppercase tracking-wider font-bold text-app-secundario block mb-1.5">
-            Método de cobro (auditoría):
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-app-borde pt-2">
+          <span className="font-bold text-sm">TOTAL ESTIMADO:</span>
+          <span className="min-w-0 break-all font-mono text-2xl font-black text-app-acento-texto" aria-live="polite">
+            {totalDisponible ? `S/ ${resumen.total}` : pendiente ? 'Verificando…' : 'No disponible'}
           </span>
-          <div className="grid grid-cols-4 gap-1.5">
-            {['EFECTIVO', 'TARJETA', 'YAPE', 'PLIN'].map(metodo => (
-              <button
-                key={metodo}
-                type="button"
-                onClick={() => setMetodoPagoAuditado(metodo)}
-                className={`pos-payment-pill ${metodoPagoAuditado === metodo ? 'is-active' : ''}`}
-              >
-                {metodo}
-              </button>
-            ))}
-          </div>
         </div>
-
-        {/* Nota informativa de límites entre fases */}
-        <p className="text-[11px] text-app-secundario leading-relaxed">
-          Los precios son estimados y no reservan stock. El cobro transaccional, comprobante fiscal y registro del pedido corresponden a la Fase 28.
+        <p className="text-xs text-app-secundario">
+          Borrador sin reserva de stock. No se ha registrado un pedido ni realizado un cobro.
         </p>
-
-        {/* Botón Maestro de Cobro (Límite Fase 27 / Fase 28) */}
-        <button
-          type="button"
-          disabled={lineas.length === 0 || Boolean(resumen?.errorTotal)}
-          onClick={() => setModalCobroFase28(true)}
-          className="w-full min-h-12 py-3.5 px-4 rounded-xl font-titulo font-bold text-sm tracking-wide bg-marca-dorado text-texto hover:bg-amber-400 active:scale-[0.99] transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          <Icono nombre="compras" className="size-5" />
-          <span>Continuar al cobro · S/ {resumen?.total || '0.00'}</span>
-        </button>
+        <BotonSecundario className="w-full" disabled={!lineas.length || !totalDisponible} onClick={() => setMostrarRevision(true)}>
+          Revisar borrador
+        </BotonSecundario>
       </footer>
 
       {/* Modal de Edición de Línea */}
       {lineaEditada && configuracionEditada?.producto && (
-        <ModalPersonalizarProducto
+        <ModalEdicion
           key={lineaEditada.id}
           producto={configuracionEditada.producto}
-          configuracionPrevia={configuracionEditada.configuracion}
           seleccionInicial={lineaEditada}
           onConfirmar={guardarEdicion}
           onCerrar={() => setEdicionId(null)}
@@ -405,34 +336,31 @@ export default function ReciboTermico() {
         </Modal>
       )}
 
-      {/* Modal Informativo del Límite de Fase 27 / Fase 28 */}
-      {modalCobroFase28 && (
-        <Modal titulo="Revisión de Pedido (Fase 27)" onCerrar={() => setModalCobroFase28(false)}>
+      {/* Revisión informativa: todavía no crea pedidos ni registra pagos. */}
+      {mostrarRevision && (
+        <Modal titulo="Revisión del borrador" onCerrar={() => setMostrarRevision(false)}>
           <div className="space-y-4">
-            <div className="rounded-xl border border-marca-dorado/30 bg-amber-500/10 p-4">
-              <h4 className="font-titulo text-sm font-bold text-app-acento-texto flex items-center gap-2">
-                <Icono nombre="estado" className="size-4" />
-                Interfaz operativa del POS lista
-              </h4>
-              <p className="mt-2 text-xs text-app-texto leading-relaxed">
-                Has configurado exitosamente un pedido de <strong>{lineas.length} líneas</strong> con un importe total estimado de <strong>S/ {resumen?.total}</strong> y método auditado <strong>{metodoPagoAuditado}</strong>.
-              </p>
-            </div>
-
-            <p className="text-xs text-app-secundario leading-relaxed">
-              De acuerdo con la arquitectura del sistema:
+            <p>{lineas.length} líneas · {cantidadTotalArticulos} artículos</p>
+            {/* Revisar cada preparación antes de la futura confirmación del pedido. */}
+            <ol className="space-y-3" aria-label="Preparaciones del borrador">
+              {lineas.map(linea => {
+                const detalle = resumen?.resultados.find(r => r.id === linea.id)
+                return <li key={linea.id} className="break-words rounded-xl border border-app-borde p-3 text-sm">
+                  <p className="font-bold">{linea.cantidad} × {datos?.[linea.productoId]?.producto.nombre ?? `Producto #${linea.productoId}`}</p>
+                  {detalle?.varianteNombre && <p>{detalle.varianteNombre}</p>}
+                  {detalle?.modificadoresNombres?.length > 0 && <p>{detalle.modificadoresNombres.join(' · ')}</p>}
+                  {linea.indicaciones && <p className="mt-2"><strong>Cocina:</strong> {linea.indicaciones}</p>}
+                  {detalle?.error && <p className="text-app-error">{detalle.error}</p>}
+                </li>
+              })}
+            </ol>
+            <p className="break-all font-bold" role="status">
+              Total estimado: {totalDisponible ? `S/ ${resumen.total}` : 'No disponible'}
             </p>
-            <ul className="text-xs text-app-secundario list-disc pl-5 space-y-1">
-              <li><strong>Fase 27 (Actual):</strong> Diseño arquitectónico del POS, catálogo operativo, selección de variantes y modificadores, recibo térmico, estimación y persistencia local del borrador.</li>
-              <li><strong>Fase 28 (Siguiente):</strong> Creación transaccional del pedido (`pedidos_master`), envío a cocina KDS, apertura de caja y cobro formal.</li>
-              <li><strong>Fase 29 y 30:</strong> Pagos mixtos divididos, vuelto e impresión térmica de tickets con agente ESC/POS.</li>
-            </ul>
-
-            <div className="flex justify-end pt-3 border-t border-app-borde">
-              <BotonBase onClick={() => setModalCobroFase28(false)}>
-                Entendido, continuar operando
-              </BotonBase>
-            </div>
+            <p className="text-sm text-app-secundario">
+              No se ha registrado un pedido ni realizado un cobro. Puedes volver al borrador para revisar sus selecciones.
+            </p>
+            <BotonBase onClick={() => setMostrarRevision(false)}>Volver al borrador</BotonBase>
           </div>
         </Modal>
       )}

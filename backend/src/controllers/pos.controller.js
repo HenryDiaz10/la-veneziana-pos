@@ -33,7 +33,7 @@ export async function listarCatalogoPos(req, res, next) {
 
     let busqueda = '';
     if (req.query.busqueda !== undefined) {
-      if (typeof req.query.busqueda !== 'string' || req.query.busqueda.length > 150) {
+      if (typeof req.query.busqueda !== 'string' || req.query.busqueda.length > 150 || /[\u0000-\u001f\u007f]/u.test(req.query.busqueda)) {
         return res.status(400).json({
           mensaje: 'La búsqueda debe ser texto de hasta 150 caracteres.'
         });

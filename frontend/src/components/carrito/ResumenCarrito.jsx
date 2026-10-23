@@ -73,6 +73,7 @@ export default function ResumenCarrito() {
             <li key={linea.id} className="space-y-3 border-b border-app-borde pb-4">
               <div className="min-w-0 space-y-1 break-words">
                 <h3 className="font-semibold">{indice + 1}. {producto?.nombre ?? `Producto #${linea.productoId}`}</h3>
+                {linea.indicaciones && <p className="break-words text-sm"><strong>Cocina:</strong> {linea.indicaciones}</p>}
                 {resultado?.error ? <p role="alert">{resultado.error}</p> : resultado && (
                   <>
                     <p>{resultado.varianteNombre}</p>

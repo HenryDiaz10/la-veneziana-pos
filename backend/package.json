@@ -16,7 +16,11 @@
     "test:inventario:monitor": "node tests/inventario-monitor-integracion.js",
     "test:compras": "node --test tests/compras-calculo.test.js",
     "test:compras:integracion": "node tests/compras-integracion.js",
-    "test:pos:integracion": "node tests/pos-integracion.js"
+    "test:pos:integracion": "node tests/pos-integracion.js",
+    "carta:validar": "node scripts/importar-carta.mjs",
+    "carta:importar": "node scripts/importar-carta.mjs --aplicar",
+    "test:carta": "node --test tests/carta.test.mjs",
+    "test:sesion:integracion": "node tests/sesion-integracion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

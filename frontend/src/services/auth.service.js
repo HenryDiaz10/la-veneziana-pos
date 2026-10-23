@@ -19,8 +19,10 @@ export async function iniciarSesion({ email, password }) {
 
 // Consultar la identidad y los permisos de la sesión vigente.
 // También se utilizará al recargar la página.
-export async function obtenerSesion() {
-  const respuesta = await solicitarApi('/auth/session')
+export async function obtenerSesion({ signal } = {}) {
+  const respuesta = await solicitarApi('/auth/session', {
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000)
+  })
 
   return respuesta.usuario
 }

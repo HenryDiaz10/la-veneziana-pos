@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import Icono from '../components/ui/Icono.jsx'
 import CatalogoPos from '../components/pos/CatalogoPos.jsx'
 import ReciboTermico from '../components/pos/ReciboTermico.jsx'
+import ModalBebidaPos from '../components/pos/ModalBebidaPos.jsx'
+import { agruparBebidasPos } from '../utils/bebidas-pos.js'
 import ModalPersonalizarProducto from '../components/pos/ModalPersonalizarProducto.jsx'
 import BarraMovilPedido from '../components/pos/BarraMovilPedido.jsx'
+import useResumenPos from '../hooks/useResumenPos.js'
 import useConsultaRemota from '../hooks/useConsultaRemota.js'
 import { consultarCatalogoPos } from '../services/pos.service.js'
 import { useCartStore } from '../stores/useCartStore.js'
@@ -23,12 +26,14 @@ export default function PuntoVenta() {
   const [vistaMovil, setVistaMovil] = useState('catalogo')
   const [mensajeNotificacion, setMensajeNotificacion] = useState('')
 
-  // En desarrollo, exponer referencia para comprobación automatizada de navegador
+  const [campoEnEdicion, setCampoEnEdicion] = useState(false)
+
+  // Limpiar el temporizador también al salir de la pantalla.
   useEffect(() => {
-    if (import.meta.env.DEV && typeof window !== 'undefined') {
-      window.__useCartStore = useCartStore
-    }
-  }, [])
+    if (!mensajeNotificacion) return
+    const temporizador = setTimeout(() => setMensajeNotificacion(''), 3000)
+    return () => clearTimeout(temporizador)
+  }, [mensajeNotificacion])
 
   // Solicitud estable para el hook de consulta remota
   const solicitudCatalogo = useMemo(() => ({
@@ -42,14 +47,17 @@ export default function PuntoVenta() {
 
   const { datos, error, pendiente, reintentar } = useConsultaRemota(
     cargarCatalogo,
-    solicitudCatalogo
+    solicitudCatalogo,
+    { conservarDatos: true }
   )
 
   const categorias = datos?.categorias ?? []
-  const productos = datos?.productos ?? []
+  const productos = agruparBebidasPos(datos?.productos ?? [])
+  const ModalProducto = productoPersonalizando?.esGrupoBebida ? ModalBebidaPos : ModalPersonalizarProducto
 
   // Confirmar que el borrador pertenece al cajero autenticado
-  const listoParaOperar = carritoPreparado && usuarioCarritoId === usuario?.id
+  const listoParaOperar = Boolean(usuario) && carritoPreparado && usuarioCarritoId === usuario.id
+  const consultaResumen = useResumenPos(lineas, usuario?.id, listoParaOperar)
 
   function agregarSeleccion(seleccion) {
     const sesion = useAuthStore.getState()
@@ -65,9 +73,6 @@ export default function PuntoVenta() {
 
     carrito.agregarLinea(seleccion)
     setMensajeNotificacion(`Añadido: ${productoPersonalizando?.nombre || 'Producto'}`)
-    setTimeout(() => {
-      setMensajeNotificacion('')
-    }, 3000)
   }
 
   // Métricas para la barra móvil
@@ -76,7 +81,10 @@ export default function PuntoVenta() {
   }, [lineas])
 
   return (
-    <section aria-labelledby="titulo-pos" className="vz-page pos-container pb-20 lg:pb-8">
+    <section aria-labelledby="titulo-pos" className="vz-page pos-container pb-20 lg:pb-8"
+      onFocusCapture={evento => setCampoEnEdicion(evento.target.matches('input, textarea, select'))}
+      onBlurCapture={evento => setCampoEnEdicion(Boolean(evento.relatedTarget?.matches('input, textarea, select')))}
+    >
       {/* Encabezado de la Página POS */}
       <header className="vz-page-header">
         <div>
@@ -132,9 +140,10 @@ export default function PuntoVenta() {
 
       {/* Navegación y Barra Móvil para pantallas < 1024px */}
       <BarraMovilPedido
-        lineasCount={lineas.length}
-        articulosCount={articulosCount}
-        totalEstimado="--"
+        lineasCount={listoParaOperar ? lineas.length : 0}
+        articulosCount={listoParaOperar ? articulosCount : 0}
+        totalEstimado={consultaResumen.resumen?.total ?? null}
+        ocultarBarra={campoEnEdicion || Boolean(productoPersonalizando)}
         vistaActiva={vistaMovil}
         onCambiarVista={setVistaMovil}
       />
@@ -161,13 +170,13 @@ export default function PuntoVenta() {
 
         {/* Panel del Recibo Térmico Financiero (Visible en escritorio o cuando la pestaña móvil es recibo) */}
         <div className={`min-w-0 ${vistaMovil === 'catalogo' ? 'hidden lg:block' : 'block'}`}>
-          <ReciboTermico />
+          {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} />}
         </div>
       </div>
 
       {/* Modal para Personalizar Producto al Seleccionar de la Carta */}
-      {productoPersonalizando && (
-        <ModalPersonalizarProducto
+      {productoPersonalizando && listoParaOperar && (
+        <ModalProducto
           producto={productoPersonalizando}
           onConfirmar={agregarSeleccion}
           onCerrar={() => setProductoPersonalizando(null)}

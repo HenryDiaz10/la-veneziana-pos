@@ -177,6 +177,7 @@ function Componentes() {
               columnas={columnasEjemplo}
               filas={estadoTabla === 'datos' ? filasEjemplo : []}
               cargando={estadoTabla === 'cargando'}
+              conservarFilasDuranteCarga={false}
               error={
                 estadoTabla === 'error'
                   ? 'Error simulado: no se pudieron consultar los registros.'

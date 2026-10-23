@@ -49,7 +49,8 @@ export function sesionActual(req, res) {
   res.set('Cache-Control', 'no-store');
 
   return res.status(200).json({
-    usuario: req.auth.usuario
+    usuario: req.auth.usuario,
+    expiraEn: req.auth.sesion.expiraEn
   });
 }
 

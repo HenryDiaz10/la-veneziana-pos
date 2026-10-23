@@ -36,7 +36,7 @@ const columnas = [
     titulo: 'Producto',
     // Agrupar foto y nombre para evitar una columna de imagen demasiado amplia.
     renderizar: producto => (
-      <div className="flex min-w-52 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <ImagenProducto
           url={producto.imagen_url}
           descripcion={`Imagen de ${producto.nombre}`}
@@ -52,7 +52,7 @@ const columnas = [
   {
     clave: 'sku',
     titulo: 'SKU',
-    renderizar: producto => <span className="whitespace-nowrap">{producto.sku || '—'}</span>
+    renderizar: producto => <span className="[overflow-wrap:anywhere]">{producto.sku || '—'}</span>
   },
   {
     clave: 'precio_venta_base',
@@ -269,12 +269,12 @@ function Catalogo() {
       {/* Resúmenes derivados de consultas reales, con su ámbito explícito. */}
       <div className="vz-stats">
         <TarjetaResumen titulo={solicitud.busqueda ? 'Productos encontrados' : 'Productos en catálogo'}
-          valor={paginacion?.total ?? 0} pendiente={cargando || Boolean(error)}
+          valor={paginacion?.total ?? 0} pendiente={(cargando && !paginacion) || Boolean(error)}
           detalle={solicitud.busqueda ? 'Coincidencias en todo el catálogo' : 'Productos registrados en el sistema'} icono="pizza"/>
         <TarjetaResumen titulo="Activos en esta página"
           valor={consulta.productos.filter(p => p.estado === 'activo').length}
-          pendiente={cargando || Boolean(error)} tono="lima" icono="estado"
-          detalle={`De los ${cargando ? '—' : consulta.productos.length} productos de esta página`}/>
+          pendiente={(cargando && !paginacion) || Boolean(error)} tono="lima" icono="estado"
+          detalle={`De los ${!paginacion ? '—' : consulta.productos.length} productos de esta página`}/>
         <TarjetaResumen titulo="Categorías registradas" valor={resumenCategorias?.total ?? 0}
           pendiente={resumenCategorias === null} detalle="La organización de tu carta" icono="categorias" tono="rojo"/>
       </div>
@@ -408,9 +408,11 @@ function Catalogo() {
       {/* DataTable presenta la página recibida del backend. */}
       <DataTable
         titulo="Productos registrados"
+        claseTabla="vz-catalog-table"
         alineacionVertical="centro"
         columnas={columnasConAcciones}
-        filas={cargando ? [] : consulta.productos}
+        filas={consulta.productos}
+        conservarFilasDuranteCarga
         cargando={cargando}
         error={error}
         mensajeVacio={solicitud.busqueda
@@ -418,13 +420,13 @@ function Catalogo() {
           : 'Todavía no hay productos en esta página.'}
       />
 
-      {!cargando && !error && paginacion && (
+      {!error && paginacion && (
         <nav
           aria-label="Paginación de productos"
           className="mt-5 flex flex-wrap items-center justify-between gap-4"
         >
           <p role="status" className="text-sm text-app-secundario">
-            Página {solicitud.pagina} de{' '}
+            Página {consulta.solicitud.pagina} de{' '}
             {Math.max(1, paginacion.totalPaginas)}
             {' · '}
             {paginacion.total} productos
@@ -432,7 +434,7 @@ function Catalogo() {
 
           <div className="flex flex-wrap gap-3">
             <BotonBase
-              disabled={solicitud.pagina <= 1}
+              disabled={cargando || solicitud.pagina <= 1}
               onClick={() => {
                 setSolicitud(actual => ({
                   ...actual,
@@ -447,6 +449,7 @@ function Catalogo() {
 
             <BotonBase
               disabled={
+                cargando ||
                 solicitud.pagina >= paginacion.totalPaginas ||
                 solicitud.pagina >= 10000
               }

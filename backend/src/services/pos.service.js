@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, fn, col, where } from 'sequelize';
 
 import {
   ProductoVenta,
@@ -61,22 +61,20 @@ export async function obtenerCatalogoPos({ categoriaId = null, busqueda = '' } =
   });
 
   const condicionesProducto = {
-    estado: 'activo'
+    estado: 'activo',
+    // Desactivar una categoría también retira sus productos de la venta.
+    categoria_id: { [Op.in]: categorias.map(c => c.id) }
   };
 
   if (categoriaId !== null && esIdValido(categoriaId)) {
-    condicionesProducto.categoria_id = categoriaId;
+    condicionesProducto.categoria_id = { [Op.in]: categorias.filter(c => c.id === categoriaId).map(c => c.id) };
   }
 
   const busquedaNormalizada = typeof busqueda === 'string' ? busqueda.trim() : '';
   if (busquedaNormalizada.length > 0) {
-    const termino = `%${busquedaNormalizada}%`;
-    condicionesProducto[Op.or] = [
-      { nombre: { [Op.like]: termino } },
-      { descripcion: { [Op.like]: termino } },
-      { sku: { [Op.like]: termino } },
-      { codigo_barras: { [Op.like]: termino } }
-    ];
+    // LOCATE trata % y _ como texto, sin convertirlos en comodines SQL.
+    condicionesProducto[Op.or] = ['nombre', 'descripcion', 'sku', 'codigo_barras']
+      .map(campo => where(fn('LOCATE', busquedaNormalizada, col(campo)), { [Op.gt]: 0 }));
   }
 
   const productos = await ProductoVenta.findAll({
@@ -114,7 +112,7 @@ export async function obtenerCatalogoPos({ categoriaId = null, busqueda = '' } =
 }
 
 // Consultar un producto activo y su configuración completa para la venta
-// (variantes activas y grupos de modificadores con sus opciones).
+// (variantes y grupos de modificadores con sus opciones).
 // Devuelve null si el producto no existe o está inactivo.
 export async function obtenerProductoPos(productoId) {
   if (!esIdValido(productoId)) {
@@ -133,7 +131,12 @@ export async function obtenerProductoPos(productoId) {
     return null;
   }
 
-  // Variantes activas pertenecientes al producto.
+  const categoria = await CategoriaVenta.findOne({
+    where: { id: producto.categoria_id, activa: true }, attributes: ['id']
+  });
+  if (!categoria) return null;
+
+  // Variantes pertenecientes al producto (el modelo no tiene estado independiente).
   const variantes = await VarianteProducto.findAll({
     where: { producto_id: productoId },
     attributes: CAMPOS_VARIANTE_POS,

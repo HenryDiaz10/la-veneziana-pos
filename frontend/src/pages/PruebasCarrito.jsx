@@ -21,7 +21,7 @@ export default function PruebasCarrito() {
   const [repetirSeleccion, setRepetirSeleccion] = useState(false)
   const [solicitud, setSolicitud] = useState({ pagina: 1, limite: 20 })
   const [busqueda, setBusqueda] = useState('')
-  const { datos, error, pendiente } = useConsultaRemota(cargarProductos, solicitud)
+  const { datos, error, pendiente } = useConsultaRemota(cargarProductos, solicitud, { conservarDatos: true })
   const productos = datos?.productos ?? []
   const listo = preparado && propietarioId === usuarioId
   const seleccionado = productos.find(producto => producto.id === Number(productoId) && producto.estado === 'activo')
@@ -79,7 +79,7 @@ export default function PruebasCarrito() {
         </label>
         <div className="flex flex-wrap items-center gap-3">
           <BotonBase disabled={pendiente || solicitud.pagina === 1} onClick={() => cambiarPagina(-1)}>Anterior</BotonBase>
-          <span>Página {solicitud.pagina}</span>
+          <span>Página {pendiente ? datos?.paginacion?.pagina ?? solicitud.pagina : solicitud.pagina}</span>
           <BotonBase disabled={pendiente || Boolean(error) || solicitud.pagina >= (datos?.paginacion?.totalPaginas ?? 1)}
             onClick={() => cambiarPagina(1)}>Siguiente</BotonBase>
           <BotonBase disabled={pendiente} onClick={() => setSolicitud(actual => ({ ...actual }))}>Reintentar consulta</BotonBase>

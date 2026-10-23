@@ -13,7 +13,7 @@ export default function SelectorRecursoReceta({ tipo, excluidos = [], onElegir, 
   const id = useId()
   const [texto, setTexto] = useState('')
   const [solicitud, setSolicitud] = useState({ pagina: 1, busqueda: '' })
-  const { datos, pendiente, error } = useConsultaRemota(producto ? buscarProductosReceta : consultarInsumosReceta, solicitud)
+  const { datos, pendiente, error } = useConsultaRemota(producto ? buscarProductosReceta : consultarInsumosReceta, solicitud, { conservarDatos: true })
   const filas = (producto ? datos?.productos : datos?.insumos) ?? []
   function buscar(evento) { evento.preventDefault(); setSolicitud({ pagina: 1, busqueda: texto.trim() }) }
   return <Modal titulo={producto ? 'Seleccionar producto' : 'Añadir ingrediente'} descripcion={producto ? 'Elige un plato preparado para construir su receta.' : 'Cada insumo conserva la unidad base definida en almacén.'} onCerrar={onCerrar}>
@@ -24,8 +24,9 @@ export default function SelectorRecursoReceta({ tipo, excluidos = [], onElegir, 
         {texto && <BotonBase onClick={() => { setTexto(''); setSolicitud({ pagina: 1, busqueda: '' }) }} className="border border-app-borde">Limpiar</BotonBase>}
       </div>
     </form>
-    {pendiente ? <p role="status" className="py-8 text-center text-sm text-app-secundario">Consultando {producto ? 'productos' : 'insumos'}…</p> : error ? <div role="alert"><p className="mb-3 text-sm text-app-error">{error}</p><BotonBase onClick={() => setSolicitud(s => ({ ...s }))}>Reintentar</BotonBase></div> : filas.length ?
-      <ul className="vz-recipe-picker">{filas.map(fila => {
+    {pendiente && datos && <p role="status" className="sr-only">Actualizando resultados…</p>}
+    {pendiente && !datos ? <p role="status" className="py-8 text-center text-sm text-app-secundario">Consultando {producto ? 'productos' : 'insumos'}…</p> : error ? <div role="alert"><p className="mb-3 text-sm text-app-error">{error}</p><BotonBase onClick={() => setSolicitud(s => ({ ...s }))}>Reintentar</BotonBase></div> : filas.length ?
+      <ul aria-busy={pendiente} inert={pendiente || undefined} className="vz-recipe-picker">{filas.map(fila => {
         const agregado = excluidos.includes(fila.id)
         const apto = producto ? fila.tipo_producto === 'plato_preparado' : fila.activo === true && unidadesInsumo(fila).length > 0
         const detalle = producto ? (apto ? fila.sku || 'Plato preparado' : 'Venta directa o combo: no utiliza esta receta') : `${fila.unidad?.nombre ?? 'Unidad no disponible'} · ${fila.unidad?.abreviatura ?? ''}`
@@ -36,7 +37,7 @@ export default function SelectorRecursoReceta({ tipo, excluidos = [], onElegir, 
         </button></li>
       })}</ul> : <div className="py-8 text-center"><span className="vz-empty-icon"><Icono nombre={producto ? 'pizza' : 'ingrediente'}/></span><p className="text-sm font-semibold">{solicitud.busqueda ? 'No hay coincidencias para esta búsqueda.' : producto ? 'Todavía no hay productos registrados.' : 'Todavía no hay insumos registrados.'}</p><p className="mt-3 text-xs text-app-secundario">{producto ? 'Registra tus productos en Catálogo para preparar sus recetas.' : 'Necesitas insumos de almacén para añadir ingredientes a la receta.'}</p></div>}
     {datos?.paginacion && <nav aria-label={`Paginación de ${producto ? 'productos' : 'insumos'}`} className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-app-borde pt-4">
-      <p className="text-xs text-app-secundario">Página {solicitud.pagina} de {Math.max(1, datos.paginacion.totalPaginas)} · {datos.paginacion.total} registros</p>
+      <p className="text-xs text-app-secundario">Página {datos.paginacion.pagina ?? solicitud.pagina} de {Math.max(1, datos.paginacion.totalPaginas)} · {datos.paginacion.total} registros</p>
       <div className="flex gap-2"><BotonBase disabled={pendiente || solicitud.pagina <= 1} className="border border-app-borde" onClick={() => setSolicitud(s => ({ ...s, pagina: s.pagina - 1 }))}>Anterior</BotonBase><BotonBase disabled={pendiente || solicitud.pagina >= datos.paginacion.totalPaginas || solicitud.pagina >= 10000} className="border border-app-borde" onClick={() => setSolicitud(s => ({ ...s, pagina: s.pagina + 1 }))}>Siguiente</BotonBase></div>
     </nav>}
   </Modal>

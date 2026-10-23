@@ -14,7 +14,7 @@ export default function CatalogoPos({
   onReintentar
 }) {
   return (
-    <section aria-labelledby="titulo-catalogo-pos" className="vz-panel space-y-5 p-4 sm:p-6">
+    <section aria-labelledby="titulo-catalogo-pos" aria-busy={cargando} className="vz-panel space-y-5 p-4 sm:p-6">
       {/* Encabezado y Barra de Búsqueda */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -26,6 +26,16 @@ export default function CatalogoPos({
           </h2>
           <p className="vz-page-description">
             Selecciona una pizza, bebida o acompañamiento para agregar al pedido.
+          </p>
+          <p className="mt-2 text-xs text-app-secundario">
+            Fotografías referenciales.{' '}
+            <a className="underline" href="/creditos-imagenes-carta.html" target="_blank" rel="noreferrer">
+              Fuentes y créditos de imágenes
+            </a>
+            {' · '}
+            <a className="underline" href="/tarifas-delivery-carta.html" target="_blank" rel="noreferrer">
+              Tarifas de delivery
+            </a>
           </p>
         </div>
 
@@ -95,7 +105,7 @@ export default function CatalogoPos({
 
       {/* Estados de Carga, Error y Vacío */}
       {cargando && (
-        <div className="py-16 text-center" role="status">
+        <div className={productos.length ? 'sr-only' : 'py-16 text-center'} role="status">
           <span className="vz-empty-icon inline-flex animate-spin">
             <Icono nombre="actualizar" />
           </span>
@@ -139,8 +149,8 @@ export default function CatalogoPos({
       )}
 
       {/* Grilla de Productos */}
-      {!cargando && !error && productos.length > 0 && (
-        <div className="pos-products-grid">
+      {!error && productos.length > 0 && (
+        <div className="pos-products-grid" inert={cargando || undefined}>
           {productos.map(producto => (
             <article
               key={producto.id}
@@ -148,11 +158,11 @@ export default function CatalogoPos({
               aria-labelledby={`producto-nombre-${producto.id}`}
             >
               {/* Imagen o Fallback */}
-              <div className="pos-product-thumb">
+              <div className={`pos-product-thumb ${producto.tipo_producto === 'producto_directo' ? 'pos-product-envase' : ''}`}>
                 {producto.imagen_url ? (
                   <img
                     src={producto.imagen_url}
-                    alt={producto.nombre}
+                    alt={`Imagen referencial de ${producto.nombre}`}
                     loading="lazy"
                     onError={e => {
                       e.currentTarget.style.display = 'none'

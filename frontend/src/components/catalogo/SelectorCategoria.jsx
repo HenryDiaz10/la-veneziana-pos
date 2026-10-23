@@ -31,7 +31,7 @@ function SelectorCategoria({
 
   const cargando = consulta.solicitud !== solicitud
   const errorConsulta = cargando ? '' : consulta.error
-  const categorias = cargando ? [] : consulta.categorias
+  const categorias = consulta.categorias
   const seleccionVisible = categorias.some(
     categoria => String(categoria.id) === valor
   )
@@ -170,10 +170,10 @@ function SelectorCategoria({
         </div>
       )}
 
-      {!cargando && consulta.paginacion && (
+      {consulta.paginacion && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <BotonBase
-            disabled={disabled || solicitud.pagina <= 1}
+            disabled={disabled || cargando || solicitud.pagina <= 1}
             onClick={() => {
               setSolicitud(actual => ({
                 ...actual,
@@ -188,6 +188,7 @@ function SelectorCategoria({
           <BotonBase
             disabled={
               disabled ||
+              cargando ||
               solicitud.pagina >= consulta.paginacion.totalPaginas ||
               solicitud.pagina >= 10000
             }
@@ -203,7 +204,7 @@ function SelectorCategoria({
           </BotonBase>
 
           <span className="text-sm text-app-secundario">
-            Página {solicitud.pagina} de{' '}
+            Página {consulta.solicitud.pagina} de{' '}
             {Math.max(1, consulta.paginacion.totalPaginas)}
           </span>
         </div>

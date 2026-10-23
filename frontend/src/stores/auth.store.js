@@ -10,6 +10,9 @@ import { ErrorApi } from '../services/api.js'
 
 // Compartir la consulta inicial, incluso con StrictMode de React.
 let consultaEnCurso = null
+let controladorConsulta = null
+// Una respuesta anterior nunca debe restaurar identidad después de logout/login.
+let versionIdentidad = 0
 
 function obtenerMensajeError(error) {
   return error instanceof ErrorApi
@@ -39,15 +42,18 @@ export const useAuthStore = create((set, get) => ({
       return Promise.resolve()
     }
 
-    set({
-      usuario: null,
-      estado: 'comprobando',
-      error: ''
-    })
+    const teniaIdentidad = get().estado === 'autenticado' && Boolean(get().usuario)
+    const versionConsulta = versionIdentidad
+    controladorConsulta = new AbortController()
+    const signal = controladorConsulta.signal
+    // Revalidar en segundo plano conserva formularios y borradores montados.
+    if (!teniaIdentidad) set({ usuario: null, estado: 'comprobando', error: '' })
 
     consultaEnCurso = (async () => {
       try {
-        const usuario = await obtenerSesion()
+        const usuario = await obtenerSesion({ signal })
+
+        if (versionConsulta !== versionIdentidad || get().operacion !== null) return
 
         set({
           usuario,
@@ -55,23 +61,25 @@ export const useAuthStore = create((set, get) => ({
           error: ''
         })
       } catch (error) {
+        if (versionConsulta !== versionIdentidad || get().operacion !== null) return
         if (esSesionAusente(error)) {
           // No tener una sesión al abrir la página es normal.
           set({
             usuario: null,
             estado: 'sin_sesion',
-            error: ''
+            error: teniaIdentidad ? 'La sesión venció o dejó de estar disponible. Vuelve a ingresar.' : ''
           })
         } else {
           // Un fallo de conexión no equivale a credenciales inválidas.
-          set({
-            usuario: null,
-            estado: 'error',
-            error: obtenerMensajeError(error)
+          // Mantener la pantalla al fallar la red; el backend sigue autorizando
+          // cada operación. Solo un 401 confirmado retira una sesión existente.
+          set(teniaIdentidad ? { error: obtenerMensajeError(error) } : {
+            usuario: null, estado: 'error', error: obtenerMensajeError(error)
           })
         }
       } finally {
         consultaEnCurso = null
+        controladorConsulta = null
       }
     })()
 
@@ -87,6 +95,8 @@ export const useAuthStore = create((set, get) => ({
       return false
     }
 
+    versionIdentidad++
+    controladorConsulta?.abort()
     set({
       operacion: 'login',
       error: ''
@@ -124,6 +134,9 @@ export const useAuthStore = create((set, get) => ({
       return false
     }
 
+    versionIdentidad++
+    // Cancelar antes del logout evita recibir luego una cookie renovada vieja.
+    controladorConsulta?.abort()
     set({
       operacion: 'logout',
       error: ''

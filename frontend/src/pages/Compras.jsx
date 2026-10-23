@@ -13,7 +13,7 @@ import DetalleCompra from '../components/compras/DetalleCompra.jsx'
 export default function Compras() {
   const[solicitud,setSolicitud]=useState({vista:'compras',pagina:1,busqueda:'',estado:'todos',revision:0}),[texto,setTexto]=useState('')
   const[formulario,setFormulario]=useState(null),[detalle,setDetalle]=useState(null),[mensaje,setMensaje]=useState('')
-  const{datos,error,pendiente}=useConsultaRemota(listarCompras,solicitud),esCompra=solicitud.vista==='compras'
+  const{datos,error,pendiente}=useConsultaRemota(listarCompras,solicitud,{conservarDatos:true,claveDatos:solicitud.vista}),esCompra=solicitud.vista==='compras'
   useEffect(()=>{const t=setTimeout(()=>setSolicitud(s=>s.busqueda===texto.trim()?s:{...s,busqueda:texto.trim(),pagina:1}),300);return()=>clearTimeout(t)},[texto])
   const actualizar=()=>setSolicitud(s=>({...s,revision:s.revision+1}))
   function guardado(r){setFormulario(null);setMensaje(r.compra?'Borrador guardado. Revisa el documento antes de confirmar.':r.proveedor?'Proveedor guardado.':'Insumo registrado con saldo cero. Ya puedes añadirlo a una compra.');actualizar();if(r.compra)setDetalle(r.compra.id)}

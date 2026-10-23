@@ -88,6 +88,14 @@ try {
   });
   productos.push(prodInactivo);
 
+  // Un producto activo tampoco se vende si su categoría está desactivada.
+  const prodCategoriaInactiva = await ProductoVenta.create({
+    nombre: `Oculto ${codigo}`, categoria_id: categoriaInactiva.id,
+    sku: `SKU-${codigo}-3`, precio_venta_base: '10.00',
+    tipo_producto: 'plato_preparado', estado: 'activo'
+  });
+  productos.push(prodCategoriaInactiva);
+
   // Variante para prodActivo
   variante = await VarianteProducto.create({
     producto_id: prodActivo.id,
@@ -174,6 +182,14 @@ try {
   const idsProductos = rCajeroCatalogo.json.productos.map(p => p.id);
   assert.ok(idsProductos.includes(prodActivo.id), 'Producto activo debe estar en POS');
   assert.ok(!idsProductos.includes(prodInactivo.id), 'Producto inactivo no debe estar en POS');
+
+  assert.ok(!idsProductos.includes(prodCategoriaInactiva.id));
+  const ocultos = await pedir(`/pos/catalogo?categoriaId=${categoriaInactiva.id}`, cookies.cajero);
+  assert.equal(ocultos.json.productos.length, 0);
+  const ocultoDetalle = await pedir(`/pos/productos/${prodCategoriaInactiva.id}`, cookies.cajero);
+  assert.equal(ocultoDetalle.status, 404);
+  const literal = await pedir(`/pos/catalogo?busqueda=${encodeURIComponent(codigo + '%')}`, cookies.cajero);
+  assert.equal(literal.json.productos.length, 0, 'El porcentaje se busca literalmente');
 
   // 5. Filtro por categoría en catálogo POS
   const rFiltroCat = await pedir(`/pos/catalogo?categoriaId=${categoriaActiva.id}`, cookies.cajero);

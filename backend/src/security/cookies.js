@@ -19,7 +19,7 @@ const OPCIONES_COOKIE_SESION = Object.freeze({
 // Guardar el JWT en una cookie que JavaScript no puede leer.
 export function establecerCookieSesion(res, token) {
   // Usar el vencimiento real del token.
-  // La cookie no renueva ni extiende la sesión.
+  // El servidor determina el plazo, también al renovar una sesión activa.
   const datosToken = verificarTokenAcceso(token);
 
   res.cookie(NOMBRE_COOKIE_SESION, token, {

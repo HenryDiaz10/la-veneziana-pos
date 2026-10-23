@@ -23,10 +23,11 @@ export default function DetalleInventario({ seleccion, onCerrar }) {
   const [pagina, setPagina] = useState(1)
   const [revision, setRevision] = useState(0)
   const solicitud = useMemo(() => ({ ...seleccion, pagina, revision }), [seleccion, pagina, revision])
-  const { datos, pendiente, error } = useConsultaRemota(consultarDetalleInventario, solicitud)
+  const { datos, pendiente, error } = useConsultaRemota(consultarDetalleInventario, solicitud, { conservarDatos: true, claveDatos: `${seleccion.tipo}-${seleccion.id}` })
   const i = datos?.insumo, c = datos?.conciliacion, alerta = ALERTAS[i?.alerta]
   return <Modal titulo={i?.nombre ?? 'Detalle de inventario'} descripcion="Saldos y movimientos en la unidad base de almacén." onCerrar={onCerrar}>
-    {pendiente ? <p role="status" className="text-sm text-app-secundario">Consultando saldos e historial…</p> : error ? <div role="alert"><p className="mb-4 text-sm text-app-error">{error}</p><BotonBase onClick={() => setRevision(r => r + 1)} className="border border-app-borde">Reintentar detalle</BotonBase></div> : datos && <>
+    {pendiente && datos && <p role="status" className="sr-only">Actualizando saldos e historial…</p>}
+    {pendiente && !datos ? <p role="status" className="text-sm text-app-secundario">Consultando saldos e historial…</p> : error ? <div role="alert"><p className="mb-4 text-sm text-app-error">{error}</p><BotonBase onClick={() => setRevision(r => r + 1)} className="border border-app-borde">Reintentar detalle</BotonBase></div> : datos && <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap items-center gap-2"><Badge variante={alerta?.variante}>{alerta?.texto}</Badge>{!i.activo && i.alerta !== 'inactivo' && <Badge>Inactivo</Badge>}<span className="text-xs text-app-secundario">{i.codigo || 'Sin código'} · {i.unidad}</span></div><BotonBase onClick={() => setRevision(r => r + 1)} aria-label="Actualizar detalle de inventario" className="border border-app-borde"><Icono nombre="actualizar"/></BotonBase></div>
       {datos.producto && <p className="mb-4 rounded-xl bg-app-hover p-4 text-sm"><strong>{datos.producto.nombre}</strong> comparte estos saldos con su insumo vinculado.</p>}
       <dl className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2"><Valor titulo="Stock físico" valor={i.stock_fisico} unidad={i.unidad}/><Valor titulo="Reservado" valor={i.stock_reservado} unidad={i.unidad}/><Valor titulo="Disponible" valor={i.disponible} unidad={i.unidad}/><Valor titulo="Mínimo de alerta" valor={i.stock_minimo_alerta} unidad={i.unidad}/></dl>
@@ -41,7 +42,7 @@ export default function DetalleInventario({ seleccion, onCerrar }) {
         <p className="mt-3 text-xs leading-relaxed text-app-secundario">{c.supuesto} Las diferencias se informan para revisión; esta consulta no modifica saldos.</p>
       </section>
       {i.productos_directos > 0 && <section className="mb-6"><h3 className="font-titulo font-bold">Productos directos vinculados</h3><ul className="mt-3 space-y-2 text-sm text-app-secundario">{datos.productos_directos.map(p => <li key={p.id} className="break-words">{p.nombre}{p.sku ? ` · ${p.sku}` : ''}</li>)}</ul><p className="mt-2 text-xs text-app-secundario">Mostrando {datos.productos_directos.length} de {i.productos_directos}. Comparten el saldo del insumo.</p></section>}
-      <DataTable titulo={`Historial de movimientos · ${i.unidad}`} columnas={columnas} filas={datos.movimientos} mensajeVacio="Este insumo todavía no tiene movimientos registrados."/>
+      <DataTable titulo={`Historial de movimientos · ${i.unidad}`} columnas={columnas} filas={datos.movimientos} cargando={pendiente} mensajeVacio="Este insumo todavía no tiene movimientos registrados."/>
       <PaginacionClientes nombre="Páginas del historial de inventario" datos={datos.paginacion} pagina={pagina} pendiente={pendiente} onPagina={setPagina}/>
       <p className="mt-4 text-xs text-app-secundario">Consulta: {fecha(datos.consultado_en)}. Actualiza para ver cambios posteriores.</p>
     </>}

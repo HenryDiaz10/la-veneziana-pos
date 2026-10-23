@@ -58,7 +58,8 @@ function prepararLineas(lineas) {
       productoId: linea.productoId,
       varianteId: linea.varianteId,
       modificadoresIds: linea.modificadoresIds,
-      cantidad: linea.cantidad
+      cantidad: linea.cantidad,
+      indicaciones: linea.indicaciones
     })
 
     // Construimos una lista explícita de campos permitidos.

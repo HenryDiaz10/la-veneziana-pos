@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import BotonBase from '../ui/BotonBase.jsx'
+import IndicacionesProducto from './IndicacionesProducto.jsx'
 import useConsultaRemota from '../../hooks/useConsultaRemota.js'
 import {
   consultarConfiguracionCarrito
@@ -32,6 +33,7 @@ export default function SelectorProductoCarrito({
     () => [...(seleccionInicial?.modificadoresIds ?? [])]
   )
   const [mensaje, setMensaje] = useState('')
+  const [indicaciones, setIndicaciones] = useState(seleccionInicial?.indicaciones ?? '')
 
   const { datos, error, pendiente } = useConsultaRemota(
     cargarConfiguracion,
@@ -50,7 +52,8 @@ export default function SelectorProductoCarrito({
     productoId: producto.id,
     varianteId: varianteId === '' ? null : Number(varianteId),
     modificadoresIds: selecciones,
-    cantidad: seleccionInicial?.cantidad ?? 1
+    cantidad: seleccionInicial?.cantidad ?? 1,
+    indicaciones
   }
 
   let estimacion = null
@@ -222,6 +225,7 @@ export default function SelectorProductoCarrito({
             ))}
           </fieldset>
 
+          <IndicacionesProducto valor={indicaciones} onChange={setIndicaciones} disabled={deshabilitado}/>
           {errorPrecio && <p role="alert">{errorPrecio}</p>}
 
           {estimacion && (

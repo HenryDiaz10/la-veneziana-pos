@@ -49,6 +49,32 @@
   .vz-header-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; padding: 10px 12px; border: 1px solid var(--app-borde); background: var(--app-elevada); color: var(--app-texto); }
   .vz-table-frame { overflow: hidden; border: 1px solid var(--app-borde); border-radius: 14px; background: var(--app-superficie); box-shadow: 0 3px 18px rgb(15 23 42 / 3%); }
   .vz-table-scroll { overflow-x: auto; }
+  /* Ajustar el catálogo al espacio real disponible, incluyendo el menú lateral
+     y el zoom del navegador. La distribución no depende de los registros. */
+  .vz-table-frame:has(.vz-catalog-table) { container-type: inline-size; }
+  .vz-catalog-table { table-layout: fixed; }
+  .vz-catalog-table th:nth-child(2) { width: 22%; }
+  .vz-catalog-table th:nth-child(3) { width: 7rem; }
+  .vz-catalog-table th:nth-child(4) { width: 9rem; }
+  .vz-catalog-table th:nth-child(5) { width: 27rem; }
+  .vz-catalog-table .vz-row-actions { flex-wrap: nowrap; }
+  .vz-catalog-table .vz-row-actions .vz-button { flex-shrink: 0; white-space: nowrap; }
+  /* En laptops, dos columnas de acciones iguales en todas las filas evitan
+     recortes y mantienen los textos y las áreas táctiles de los botones. */
+  @container (max-width: 76rem) {
+    .vz-catalog-table th:nth-child(5) { width: 14rem; }
+    .vz-catalog-table :is(th, td) { padding-left: 12px; padding-right: 12px; }
+    .vz-catalog-table .vz-row-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .vz-catalog-table .vz-row-actions .vz-button { padding-left: 6px; padding-right: 6px; justify-content: center; }
+  }
+  @container (max-width: 52rem) {
+    .vz-catalog-table th:nth-child(2) { width: 18%; }
+    .vz-catalog-table :is(th:nth-child(3), th:nth-child(4)) { width: 6.5rem; }
+    .vz-catalog-table :is(th, td) { padding-left: 8px; padding-right: 8px; }
+  }
+  @media (max-width: 767px) {
+    .vz-catalog-table { min-width: 52rem; }
+  }
   .vz-table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--app-texto); }
   .vz-table caption { padding: 20px 22px; background: var(--app-superficie); text-align: left; font-family: var(--font-titulo); font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--app-borde); }
   .vz-table th { padding: 12px 20px; background: var(--app-elevada); font-size: 11px; text-transform: uppercase; letter-spacing: .9px; font-weight: 750; color: var(--app-secundario); border-bottom: 1px solid var(--app-borde); white-space: nowrap; }
@@ -141,3 +167,7 @@
 
 .vz-modal-heading { border-top: 4px solid #f59e0b; }
 .vz-row-actions .vz-button { padding: 8px 10px; font-size: 12px; gap: 6px; box-shadow: none; }
+/* Respetar el espaciado compacto frente a la base compartida sin capa. */
+@container (max-width: 76rem) {
+  .vz-catalog-table .vz-row-actions .vz-button { padding-inline: 6px; }
+}

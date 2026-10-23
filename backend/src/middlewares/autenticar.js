@@ -9,16 +9,15 @@ import {
 } from '../models/index.js';
 
 import { verificarTokenAcceso } from '../security/token.js';
+import { limiteAbsolutoSesion } from '../security/sesion.js';
 
 import {
-  NOMBRE_COOKIE_SESION,
-  borrarCookieSesion
+  NOMBRE_COOKIE_SESION
 } from '../security/cookies.js';
 
-// Retirar una cookie ausente, inválida, vencida o revocada.
+// Rechazar acceso sin borrar una cookie más nueva que pudiera haber llegado
+// mientras esta petición estaba en curso. Logout sí la elimina explícitamente.
 function rechazarAcceso(res) {
-  borrarCookieSesion(res);
-
   return res.status(401).json({
     mensaje: 'Autenticación requerida.'
   });
@@ -53,7 +52,8 @@ export async function autenticar(req, res, next) {
         'id',
         'session_uid',
         'usuario_id',
-        'expira_en'
+        'expira_en',
+        'creado_en'
       ],
 
       include: [{
@@ -86,7 +86,8 @@ export async function autenticar(req, res, next) {
     const usuario = sesion?.usuario;
     const rol = usuario?.rol;
 
-    if (!sesion || usuario?.estado !== 'activo' || !rol) {
+    if (!sesion || usuario?.estado !== 'activo' || !rol ||
+        limiteAbsolutoSesion(sesion.creado_en).getTime() <= Date.now()) {
       return rechazarAcceso(res);
     }
 
@@ -112,7 +113,9 @@ export async function autenticar(req, res, next) {
       sesion: {
         id: sesion.id,
         uid: sesion.session_uid,
-        expiraEn: sesion.expira_en
+        expiraEn: sesion.expira_en,
+        expiraTokenEn: datosToken.expiraEn,
+        creadoEn: sesion.creado_en
       }
     };
 

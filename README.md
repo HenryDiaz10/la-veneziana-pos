@@ -64,6 +64,13 @@ La siguiente etapa es la **fase 28: creación de pedidos y cobro separado**.
 - Fase 27: interfaz operativa del punto de venta, pantalla dividida
   con catálogo y recibo térmico, navegación adaptable para móviles,
   consultas operativas con ventas/cobrar y estimación en tiempo real.
+  Incluye elección de presa para caldo de gallina e indicaciones por preparación,
+  conservadas en el borrador y su revisión; envío real a cocina pendiente.
+
+**Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
+sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
+formularios ni equivalen a logout. Implementación y pruebas:
+[backend/SESIONES.md](backend/SESIONES.md).
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
@@ -1635,39 +1642,47 @@ real sin sesión devuelve 401. Detalles: [frontend/CARRITO.md](frontend/CARRITO.
 
 ## Fase 27: interfaz operativa del punto de venta
 
-Ruta /pos, permiso entas/cobrar. Pantalla dividida con grilla de 12 columnas
-en escritorio (8 catálogo / 4 recibo térmico financiero) y vista adaptable con
-pestañas y barra flotante en tabletas y celulares (< 1024px, 390px, 320px) para
-evitar carritos laterales estrechos o ilegibles.
+`/pos` requiere sesión y `ventas/cobrar`. Combina catálogo con fotos, categorías
+activas y búsqueda en vivo con un borrador editable. En escritorio hay dos
+paneles; en móvil se alternan catálogo y pedido, con total flotante compartido.
+La personalización consulta los precios actuales y valida presentaciones,
+extras obligatorios y cantidades enteras de 1 a 10000. Los cálculos usan céntimos
+BigInt; una línea inválida impide mostrar un total parcial como completo.
 
-El catálogo operativo presenta selector horizontal de categorías activas,
-búsqueda en tiempo real por nombre/SKU/código, cuadrícula de tarjetas con fotos
-o alternativa visual de respaldo, precios base destacados y botones de adición
-directa. El modal accesible de personalización permite elegir variantes
-(presentación base o adicionales) y grupos de modificadores obligatorios u
-opcionales (extras, bordes, exclusiones) con control de cantidad (1 a 10000) y
-cálculo en vivo de importes estimados con céntimos BigInt.
+Revisión del 17/10/2026: se corrigieron reintentos, total móvil, selección de la
+presentación base al editar, cantidades inválidas, precios desactualizados y
+productos de categorías desactivadas. Se retiraron el IGV fijo y los métodos
+supuestamente auditados: esta fase prepara un borrador y permite revisarlo;
+no registra pedidos, pagos ni movimientos de stock.
 
-El recibo térmico financiero soporta 30 líneas, nombres largos sin desborde,
-hasta 10 modificadores por ítem, modificación incremental de cantidades, edición
-conservando cantidad, eliminación de líneas, actualización de precios en el servidor,
-vaciado con confirmación, desglose de subtotal e IGV informativo (18%) y métodos
-de pago auditados (Efectivo, Tarjeta, Yape, Plin). El botón maestro de cobro
-delimita la operación hacia la fase 28 mediante un modal explicativo.
+Validación: 15 pruebas de carrito/POS, ESLint y build; integración HTTP/MySQL
+con sesión, permisos, filtros y categorías inactivas; navegador Edge con API
+simulada: reintentos tras error, F5, aislamiento por empleado, 30 líneas, diez
+extras, importes grandes, anchos 320/390/768/1280, rotación y ambos temas.
+El teclado virtual nativo queda pendiente de comprobación en un teléfono real;
+se comprobó foco de entrada y diálogo con altura reducida en navegador.
+Archivos, comandos y límites: [frontend/POS.md](frontend/POS.md).
 
-El backend incorpora /api/pos/catalogo y /api/pos/productos/:id bajo el
-permiso operativo entas/cobrar, sin conceder catalogo/gestionar al cajero ni
-exponer costos, insumos directos ni configuraciones de almacén. Los productos y
-categorías inactivos quedan excluidos del POS y devuelven 404 al consultar su detalle.
+## Carta del negocio cargada
 
-Pasaron siete pruebas unitarias nuevas (
-pm.cmd run test:pos), 21 pruebas
-unitarias frontend en total, lint/build y escenario de navegador Playwright en Edge
-headless (
-ode tests/pos-navegador.mjs): cajero sin permisos de catálogo,
-búsqueda, variantes, extras, F5, 30 líneas, responsividad (1280, 768, 390, 320 px),
-rotación de pantalla en pedido activo, modos claro/oscuro y cero errores de consola.
-En backend pasaron pruebas de integración HTTP/MySQL (
-pm.cmd run test:pos:integracion):
-401 sin sesión, 403 cocinero, 403 cajero en ruta administrativa y 200 en rutas
-operativas de POS. Detalles: [frontend/POS.md](frontend/POS.md).
+Se registró la carta de `DOCUMENTACION/CARTA/VENEZIANA CARTA.pdf`: **97 productos,
+11 categorías y 109 presentaciones**, con adicionales y elecciones de cocina.
+Cecina familiar S/41 según confirmación del propietario. Incluye 56 imágenes
+referenciales con créditos visibles en el POS (Commons y fuentes de marca/distribuidor).
+
+La carga es transaccional e idempotente. Catorce artículos envasados tienen
+insumo directo con saldo cero; no se inventaron existencias ni recetas.
+Las quince tarifas de delivery se muestran como referencia, sin cobro automático.
+
+Desde backend: `npm.cmd run carta:validar`, `npm.cmd run carta:importar` y
+`npm.cmd run test:carta`. Precios revisables en `backend/data/carta-precios.csv`.
+Detalle de archivos, fuentes, decisiones y pruebas: [backend/CARTA.md](backend/CARTA.md).
+
+### Presentaciones de bebidas en el POS
+
+La carta conserva 97 artículos independientes y el POS muestra 87 tarjetas:
+Coca-Cola, Inca Kola y Agua San Luis se agrupan visualmente por marca, con un
+selector de tamaños y precios completos. Gordita solo está en Inca Kola;
+San Luis ofrece 625 ml S/3 y un litro S/5. Cada selección conserva el ID real
+del envase y su stock/historial. La edición permite cambiar tamaño conservando
+cantidad. Pruebas y archivos: [frontend/POS.md](frontend/POS.md).

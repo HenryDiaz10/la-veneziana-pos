@@ -8,6 +8,7 @@ import {
 
 import { limitarLogin } from '../middlewares/loginLimiter.js';
 import { autenticar } from '../middlewares/autenticar.js';
+import { renovarSesionActiva } from '../middlewares/renovarSesion.js';
 
 const authRouter = Router();
 
@@ -15,7 +16,7 @@ const authRouter = Router();
 authRouter.post('/login', limitarLogin, login);
 
 // Consultar la identidad y los permisos de la sesión vigente.
-authRouter.get('/session', autenticar, sesionActual);
+authRouter.get('/session', autenticar, renovarSesionActiva, sesionActual);
 
 // Revocar exclusivamente la sesión del token presentado.
 authRouter.post('/logout', autenticar, logout);

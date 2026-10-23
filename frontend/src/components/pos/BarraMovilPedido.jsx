@@ -4,7 +4,8 @@ import Badge from '../ui/Badge.jsx'
 export default function BarraMovilPedido({
   lineasCount = 0,
   articulosCount = 0,
-  totalEstimado = '0.00',
+  totalEstimado = null,
+  ocultarBarra = false,
   vistaActiva = 'catalogo',
   onCambiarVista
 }) {
@@ -14,6 +15,7 @@ export default function BarraMovilPedido({
       <div className="flex lg:hidden rounded-xl border border-app-borde bg-app-superficie p-1 gap-1 mb-4">
         <button
           type="button"
+          aria-pressed={vistaActiva === 'catalogo'}
           onClick={() => onCambiarVista('catalogo')}
           className={`flex-1 py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all ${
             vistaActiva === 'catalogo'
@@ -27,6 +29,7 @@ export default function BarraMovilPedido({
 
         <button
           type="button"
+          aria-pressed={vistaActiva === 'recibo'}
           onClick={() => onCambiarVista('recibo')}
           className={`flex-1 py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all ${
             vistaActiva === 'recibo'
@@ -45,14 +48,14 @@ export default function BarraMovilPedido({
       </div>
 
       {/* Barra flotante inferior para dispositivos móviles (< 1024px) cuando se navega el catálogo */}
-      {vistaActiva === 'catalogo' && lineasCount > 0 && (
+      {!ocultarBarra && vistaActiva === 'catalogo' && lineasCount > 0 && (
         <div className="pos-mobile-bar flex lg:hidden items-center justify-between gap-3 animate-fade-in">
           <div className="min-w-0">
             <span className="text-[11px] font-semibold text-app-secundario block truncate">
               {lineasCount} {lineasCount === 1 ? 'línea' : 'líneas'} · {articulosCount} art.
             </span>
-            <span className="font-mono text-lg font-extrabold text-app-texto">
-              Total: S/ {totalEstimado}
+            <span className="break-all font-mono text-lg font-extrabold text-app-texto">
+              {totalEstimado != null ? `Total: S/ ${totalEstimado}` : 'Total pendiente'}
             </span>
           </div>
 

@@ -22,7 +22,7 @@ export default function Inventario() {
   const seleccion = useMemo(() => !invalida && (producto || insumo) ? { tipo: producto ? 'producto' : 'insumo', id: Number(producto || insumo) } : null, [producto, insumo, invalida])
   const [texto, setTexto] = useState('')
   const [solicitud, setSolicitud] = useState({ pagina: 1, busqueda: '', alerta: 'todos', revision: 0 })
-  const { datos, error, pendiente } = useConsultaRemota(consultarInventario, solicitud)
+  const { datos, error, pendiente } = useConsultaRemota(consultarInventario, solicitud, { conservarDatos: true })
   useEffect(() => {
     const temporizador = setTimeout(() => setSolicitud(s => s.busqueda === texto.trim() ? s : { ...s, pagina: 1, busqueda: texto.trim() }), 300)
     return () => clearTimeout(temporizador)
@@ -41,7 +41,7 @@ export default function Inventario() {
       ['Stock bajo', 'bajos', 'balanza', 'dorado', 'Disponible en el mínimo o por debajo'],
       ['Sin disponible', 'agotados', 'alerta', 'rojo', 'Insumos activos sin cantidad libre'],
       ['Quiebres declarados', 'quiebres', 'estado', 'rojo', 'Revisar antes de confirmar pedidos']
-    ].map(([titulo, clave, icono, tono, detalle]) => <TarjetaResumen key={clave} titulo={titulo} valor={datos?.resumen?.[clave] ?? '—'} pendiente={pendiente} icono={icono} tono={tono} detalle={detalle}/>)}</div>
+    ].map(([titulo, clave, icono, tono, detalle]) => <TarjetaResumen key={clave} titulo={titulo} valor={datos?.resumen?.[clave] ?? '—'} pendiente={pendiente && !datos} icono={icono} tono={tono} detalle={detalle}/>)}</div>
     <form className="vz-panel mb-6 vz-inventory-search-panel" role="search" onSubmit={e => { e.preventDefault(); actualizar() }}>
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_15rem]"><div><label htmlFor="buscar-inventario" className="mb-2 block text-sm font-semibold">Buscar en almacén</label><div className="vz-inventory-search"><Icono nombre="buscar"/><input id="buscar-inventario" type="search" value={texto} onChange={e => setTexto(e.target.value)} maxLength={150} className="field-input" placeholder="Insumo, código o producto directo"/></div></div><div><label htmlFor="alerta-inventario" className="mb-2 block text-sm font-semibold">Filtrar por alerta</label><select id="alerta-inventario" className="field-input" value={solicitud.alerta} onChange={e => setSolicitud(s => ({ ...s, alerta: e.target.value, pagina: 1 }))}><option value="todos">Todos los insumos</option><option value="bajo">Stock bajo</option><option value="agotado">Sin disponible</option><option value="quiebre">Quiebre declarado</option></select></div></div>
       <p className="mt-3 text-xs text-app-secundario">Disponible = físico - reservado. Las cantidades se muestran en la unidad base de cada insumo.</p>

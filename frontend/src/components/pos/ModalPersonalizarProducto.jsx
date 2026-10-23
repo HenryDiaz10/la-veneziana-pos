@@ -6,7 +6,9 @@ import Badge from '../ui/Badge.jsx'
 import Icono from '../ui/Icono.jsx'
 import useConsultaRemota from '../../hooks/useConsultaRemota.js'
 import { consultarProductoPos } from '../../services/pos.service.js'
+import { obtenerFamiliaBebida } from '../../utils/bebidas-pos.js'
 import { estimarSeleccionCarrito } from '../../utils/carrito-estimacion.js'
+import IndicacionesProducto from '../carrito/IndicacionesProducto.jsx'
 
 function cargarConfiguracion(productoId, signal) {
   return consultarProductoPos(productoId, { signal })
@@ -14,7 +16,9 @@ function cargarConfiguracion(productoId, signal) {
 
 export default function ModalPersonalizarProducto({
   producto,
-  configuracionPrevia = null,
+  nombreGrupo = null,
+  presentaciones = null,
+  onCambiarPresentacion = null,
   seleccionInicial = null,
   onConfirmar,
   onCerrar,
@@ -27,19 +31,23 @@ export default function ModalPersonalizarProducto({
     () => [...(seleccionInicial?.modificadoresIds ?? [])]
   )
   const [cantidad, setCantidad] = useState(
-    () => seleccionInicial?.cantidad ?? 1
+    () => String(seleccionInicial?.cantidad ?? 1)
   )
   const [mensajeError, setMensajeError] = useState('')
+  const [indicaciones, setIndicaciones] = useState(seleccionInicial?.indicaciones ?? '')
 
-  // Cargar configuración si no se proporcionó previamente
+  // Consultar precios y opciones actuales, incluso al editar una línea guardada.
   const { datos, error, pendiente, reintentar } = useConsultaRemota(
     cargarConfiguracion,
     producto.id
   )
 
-  const configuracion = configuracionPrevia || datos?.configuracion
+  const configuracion = datos?.configuracion
+  const productoActual = datos?.producto ?? producto
   const variantes = configuracion?.variantes ?? []
   const grupos = configuracion?.grupos ?? []
+  const varianteBase = variantes.find(v => v.precio_adicional === '0.00')
+  const esBase = varianteId === '' || varianteId === String(varianteBase?.id)
 
   const opcionesDisponibles = new Set(
     grupos.flatMap(grupo => grupo.opciones.map(opcion => opcion.id))
@@ -50,7 +58,8 @@ export default function ModalPersonalizarProducto({
     productoId: producto.id,
     varianteId: varianteId === '' ? null : Number(varianteId),
     modificadoresIds: selecciones,
-    cantidad: Math.max(1, Math.min(10000, Number(cantidad) || 1))
+    cantidad: /^\d+$/.test(cantidad) ? Number(cantidad) : NaN,
+    indicaciones
   }
 
   let estimacion = null
@@ -59,7 +68,7 @@ export default function ModalPersonalizarProducto({
   if (configuracion) {
     try {
       estimacion = estimarSeleccionCarrito({
-        producto,
+        producto: productoActual,
         configuracion,
         seleccion: seleccionActual
       })
@@ -86,7 +95,7 @@ export default function ModalPersonalizarProducto({
   function modificarCantidad(delta) {
     setCantidad(actual => {
       const nueva = (Number(actual) || 1) + delta
-      return Math.max(1, Math.min(10000, nueva))
+      return String(Math.max(1, Math.min(10000, Math.trunc(nueva))))
     })
   }
 
@@ -99,7 +108,7 @@ export default function ModalPersonalizarProducto({
     try {
       // Revalidar inmediatamente antes de entregar la selección
       estimarSeleccionCarrito({
-        producto,
+        producto: productoActual,
         configuracion,
         seleccion: seleccionActual
       })
@@ -113,8 +122,8 @@ export default function ModalPersonalizarProducto({
 
   const esEdicion = Boolean(seleccionInicial)
   const tituloModal = esEdicion
-    ? `Editar: ${producto.nombre}`
-    : `Personalizar: ${producto.nombre}`
+    ? `Editar: ${nombreGrupo ?? producto.nombre}`
+    : `Personalizar: ${nombreGrupo ?? producto.nombre}`
 
   return (
     <Modal titulo={tituloModal} onCerrar={onCerrar}>
@@ -126,7 +135,7 @@ export default function ModalPersonalizarProducto({
               <img
                 src={producto.imagen_url}
                 alt={producto.nombre}
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${producto.tipo_producto === 'producto_directo' ? 'object-contain bg-white' : 'object-cover'}`}
                 onError={e => {
                   e.currentTarget.style.display = 'none'
                 }}
@@ -147,7 +156,7 @@ export default function ModalPersonalizarProducto({
               </p>
             )}
             <p className="mt-2 text-sm font-semibold text-app-acento-texto">
-              Precio base: S/ {producto.precio_venta_base}
+              {presentaciones ? 'Precio de presentación' : 'Precio base'}: S/ {productoActual.precio_venta_base}
             </p>
           </div>
         </div>
@@ -171,6 +180,33 @@ export default function ModalPersonalizarProducto({
           </div>
         )}
 
+        {/* Cada tamaño de bebida mantiene el ID real de su producto/insumo. */}
+        {presentaciones && (
+          <fieldset className="space-y-3">
+            <legend className="flex flex-wrap items-center gap-2 font-titulo text-sm font-bold">
+              Presentación / Tamaño <Badge>Requerido</Badge>
+            </legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {presentaciones.map(opcion => {
+                const activa = opcion.id === producto.id
+                const etiqueta = obtenerFamiliaBebida(opcion)?.presentacion ?? opcion.nombre
+                return (
+                  <label key={opcion.id} className={`flex min-h-14 min-w-0 cursor-pointer flex-wrap items-center justify-between gap-2 rounded-xl border p-3 ${activa ? 'border-marca-dorado bg-amber-500/10' : 'border-app-borde hover:bg-app-hover'}`}>
+                    <span className="flex min-w-0 items-center gap-2 break-words text-sm font-semibold">
+                      <input type="radio" name="presentacion-bebida" value={opcion.id}
+                        checked={activa} onChange={() => onCambiarPresentacion(opcion.id)} className="accent-marca-dorado" />
+                      {etiqueta}
+                    </span>
+                    <span className="break-all font-mono text-sm font-bold text-app-acento-texto">
+                      S/ {activa && datos ? productoActual.precio_venta_base : opcion.precio_venta_base}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
+        )}
+
         {configuracion && (
           <div className="space-y-6">
             {/* Opciones retiradas (caso de borrador rehidratado con extras eliminados) */}
@@ -189,8 +225,8 @@ export default function ModalPersonalizarProducto({
               </div>
             )}
 
-            {/* Selector de Presentación / Variantes */}
-            <fieldset className="space-y-3">
+            {/* Los envases ya expresan el tamaño; evitar una opción base duplicada. */}
+            {(!presentaciones || variantes.length > 0) && <fieldset className="space-y-3">
               <legend className="font-titulo text-sm font-bold text-app-texto flex items-center gap-2">
                 <span>Presentación / Tamaño</span>
                 <Badge variante="neutro">Requerido</Badge>
@@ -200,27 +236,30 @@ export default function ModalPersonalizarProducto({
                 {/* Opción base */}
                 <label
                   className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                    varianteId === ''
+                    esBase
                       ? 'border-marca-dorado bg-amber-500/10 font-semibold'
                       : 'border-app-borde bg-app-superficie hover:bg-app-hover'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex items-center gap-2">
                     <input
                       type="radio"
                       name="variante-pos"
                       value=""
-                      checked={varianteId === ''}
-                      onChange={() => setVarianteId('')}
+                      checked={esBase}
+                      onChange={() => setVarianteId(varianteBase ? String(varianteBase.id) : '')}
                       className="accent-marca-dorado"
                     />
-                    <span className="text-sm">Presentación base</span>
+                    <span className="text-sm">
+                      {varianteBase?.nombre_variante ?? 'Presentación base'}
+                      {' (precio base)'}
+                    </span>
                   </div>
                   <span className="text-xs text-app-secundario">+ S/ 0.00</span>
                 </label>
 
                 {/* Variantes del producto */}
-                {variantes.map(v => {
+                {variantes.filter(v => v.id !== varianteBase?.id).map(v => {
                   const activa = varianteId === String(v.id)
                   return (
                     <label
@@ -240,7 +279,7 @@ export default function ModalPersonalizarProducto({
                           onChange={() => setVarianteId(String(v.id))}
                           className="accent-marca-dorado"
                         />
-                        <span className="text-sm truncate">{v.nombre_variante}</span>
+                        <span className="text-sm break-words min-w-0">{v.nombre_variante}</span>
                       </div>
                       <span className="text-xs font-semibold text-app-acento-texto shrink-0 ml-2">
                         + S/ {v.precio_adicional}
@@ -249,7 +288,7 @@ export default function ModalPersonalizarProducto({
                   )
                 })}
               </div>
-            </fieldset>
+            </fieldset>}
 
             {/* Grupos de Modificadores (Extras, Bordes, Exclusiones, etc.) */}
             {grupos.map(grupo => {
@@ -261,8 +300,8 @@ export default function ModalPersonalizarProducto({
 
               return (
                 <fieldset key={grupo.id} className="space-y-3 border-t border-app-borde pt-4">
-                  <legend className="w-full flex items-center justify-between font-titulo text-sm font-bold text-app-texto">
-                    <span className="flex items-center gap-2">
+                  <legend className="w-full flex flex-wrap gap-2 items-center justify-between font-titulo text-sm font-bold text-app-texto">
+                    <span className="min-w-0 break-words flex flex-wrap items-center gap-2">
                       {grupo.nombre_grupo}
                       <Badge variante={esObligatorio ? (cumplido ? 'exito' : 'advertencia') : 'neutro'}>
                         {esObligatorio ? 'Obligatorio' : 'Opcional'}
@@ -290,12 +329,13 @@ export default function ModalPersonalizarProducto({
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <input
-                                type="checkbox"
+                                type={esObligatorio && !esMultiple ? 'radio' : 'checkbox'}
+                                name={`grupo-pos-${grupo.id}`}
                                 checked={seleccionada}
                                 onChange={e => cambiarOpcion(grupo, opcion.id, e.target.checked)}
                                 className="size-4 rounded accent-marca-dorado"
                               />
-                              <span className="text-sm truncate">
+                              <span className="text-sm break-words min-w-0">
                                 {opcion.nombre_modificador}
                                 {opcion.es_exclusion && (
                                   <span className="ml-1 text-xs text-app-error font-normal">(Exclusión)</span>
@@ -316,6 +356,8 @@ export default function ModalPersonalizarProducto({
               )
             })}
 
+            <IndicacionesProducto valor={indicaciones} onChange={setIndicaciones} disabled={deshabilitado}/>
+
             {/* Selector de Cantidad */}
             <div className="border-t border-app-borde pt-4 flex flex-wrap items-center justify-between gap-4">
               <label htmlFor="cantidad-producto-pos" className="font-titulo text-sm font-bold text-app-texto">
@@ -333,14 +375,11 @@ export default function ModalPersonalizarProducto({
                 </button>
                 <input
                   id="cantidad-producto-pos"
-                  type="number"
-                  min="1"
-                  max="10000"
+                  type="text"
+                  inputMode="numeric"
+                  aria-invalid={Boolean(errorRegla)}
                   value={cantidad}
-                  onChange={e => {
-                    const val = Number(e.target.value)
-                    setCantidad(Number.isSafeInteger(val) ? Math.max(1, Math.min(10000, val)) : 1)
-                  }}
+                  onChange={e => setCantidad(e.target.value)}
                   className="w-16 h-10 text-center font-bold font-mono rounded-xl border border-app-borde bg-app-superficie text-app-texto"
                 />
                 <button
@@ -369,9 +408,9 @@ export default function ModalPersonalizarProducto({
                   <span>Unitario estimado:</span>
                   <span className="font-mono font-bold text-app-texto">S/ {estimacion.precioUnitario}</span>
                 </div>
-                <div className="flex justify-between text-base font-bold text-app-texto pt-1 border-t border-app-borde">
-                  <span>Subtotal estimado ({cantidad} {cantidad === 1 ? 'unidad' : 'unidades'}):</span>
-                  <span className="font-mono text-marca-dorado text-lg">S/ {estimacion.total}</span>
+                <div className="flex flex-wrap gap-2 justify-between text-base font-bold text-app-texto pt-1 border-t border-app-borde">
+                  <span>Subtotal estimado ({cantidad} {Number(cantidad) === 1 ? 'unidad' : 'unidades'}):</span>
+                  <span className="min-w-0 break-all font-mono text-app-acento-texto text-lg">S/ {estimacion.total}</span>
                 </div>
                 <p className="text-[11px] text-app-secundario mt-1">
                   Importe estimado. El precio final y la disponibilidad se validan en el servidor al registrar el pedido.

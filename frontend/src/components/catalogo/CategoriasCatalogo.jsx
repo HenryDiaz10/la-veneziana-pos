@@ -60,10 +60,11 @@ function CategoriasCatalogo({ revision = 0, onResumen }) {
         </BotonBase>
       </div>
       {mensaje && <p role="status" className="vz-notice"><Icono nombre="estado"/>{mensaje}</p>}
-      {cargando ? <p role="status" className="vz-panel text-sm text-app-secundario">Consultando categorías…</p>
-        : consulta.error ? <p role="alert" className="vz-panel text-sm text-app-error">{consulta.error}</p>
+      {cargando && <p role="status" className={consulta.paginacion ? 'sr-only' : 'vz-panel text-sm text-app-secundario'}>Consultando categorías…</p>}
+      {cargando && !consulta.paginacion ? null
+        : !cargando && consulta.error ? <p role="alert" className="vz-panel text-sm text-app-error">{consulta.error}</p>
           : consulta.categorias.length === 0 ? <div className="vz-panel text-center text-sm text-app-secundario"><span className="vz-empty-icon"><Icono nombre="categorias"/></span>No hay categorías en esta página.</div>
-            : <ul className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">{consulta.categorias.map(categoria => (
+            : <ul aria-busy={cargando} inert={cargando || undefined} className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">{consulta.categorias.map(categoria => (
               <li key={categoria.id} className="vz-role-card">
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <span className="vz-section-symbol"><Icono nombre={categoria.es_para_kds ? 'pizza' : 'categorias'}/></span>
@@ -81,13 +82,13 @@ function CategoriasCatalogo({ revision = 0, onResumen }) {
                 </div>
               </li>
             ))}</ul>}
-      {!cargando && !consulta.error && consulta.paginacion && (
+      {(cargando || !consulta.error) && consulta.paginacion && (
         <nav aria-label="Paginación de categorías" className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-app-secundario">Página {solicitud.pagina} de {Math.max(1, consulta.paginacion.totalPaginas)}</p>
+          <p className="text-sm text-app-secundario">Página {consulta.solicitud.pagina} de {Math.max(1, consulta.paginacion.totalPaginas)}</p>
           <div className="flex gap-3">
-            <BotonBase disabled={solicitud.pagina <= 1} className={claseBoton}
+            <BotonBase disabled={cargando || solicitud.pagina <= 1} className={claseBoton}
               onClick={() => setSolicitud(actual => ({ ...actual, pagina: actual.pagina - 1 }))}>Anterior</BotonBase>
-            <BotonBase disabled={solicitud.pagina >= consulta.paginacion.totalPaginas || solicitud.pagina >= 10000} className={claseBoton}
+            <BotonBase disabled={cargando || solicitud.pagina >= consulta.paginacion.totalPaginas || solicitud.pagina >= 10000} className={claseBoton}
               onClick={() => setSolicitud(actual => ({ ...actual, pagina: actual.pagina + 1 }))}>Siguiente</BotonBase>
           </div>
         </nav>

@@ -335,18 +335,91 @@ se detallan en [CARRITO.md](CARRITO.md).
 
 ## Fase 27: interfaz operativa del punto de venta
 
-Ruta `/pos`, permiso `ventas/cobrar`. Interfaz de caja de alta productividad construida
-con pantalla dividida (Catálogo con grilla de fotos vs Recibo térmico financiero).
-En escritorio adopta una grilla de 12 columnas (8 catálogo / 4 recibo). En tablet
-y móviles (< 1024px, 390px, 320px) incorpora pestañas y barra flotante con acceso
-directo al pedido completo, evitando columnas laterales estrechas o ilegibles.
+La ruta `/pos`, protegida por `ventas/cobrar`, reúne catálogo, personalización,
+borrador editable y navegación adaptable para móvil. Comparte componentes UI,
+tokens de tema y el store del carrito por empleado de la fase 26.
 
-- `pages/PuntoVenta.jsx`: controlador del POS, sincronización con useCartStore y validación de titularidad de sesión.
-- `components/pos/CatalogoPos.jsx`: categorías activas, búsqueda en tiempo real, cuadrícula de tarjetas, imágenes con fallback y botón de adición.
-- `components/pos/ModalPersonalizarProducto.jsx`: configuración accesible de variantes, grupos obligatorios y opcionales, cantidades y cálculo en vivo.
-- `components/pos/ReciboTermico.jsx`: panel térmico financiero con soporte para 30 líneas, nombres largos, 10 modificadores, edición, cantidades, subtotal e IGV estimado (18%), métodos auditados y confirmación de vaciado.
-- `components/pos/BarraMovilPedido.jsx`: navegación táctil para móviles y tabletas con alternancia de vistas y total visible.
-- `services/pos.service.js`: endpoints `/api/pos/catalogo` y `/api/pos/productos/:id` protegidos por `ventas/cobrar`.
-- `styles/pos.css`: reglas de layout, tarjetas, recibo térmico y adaptación claro/oscuro.
+- `pages/PuntoVenta.jsx`: coordina catálogo, titularidad, aviso y vistas móviles.
+- `hooks/useResumenPos.js`: una consulta de precios alimenta recibo y total móvil.
+- `hooks/useConsultaRemota.js`: carga cancelable, descarte de respuestas anteriores y reintento real.
+- `components/pos/CatalogoPos.jsx`: búsqueda, categorías y tarjetas con fotos alternativas.
+- `components/pos/ModalPersonalizarProducto.jsx`: precios actuales, variantes, extras y cantidades válidas.
+- `components/pos/ReciboTermico.jsx`: líneas, edición, cantidades, vaciado confirmado y revisión del borrador.
+- `components/pos/BarraMovilPedido.jsx`: alternancia de vistas y total compartido; oculta la barra durante la escritura.
+- `services/pos.service.js`: consultas operativas sin permisos administrativos.
+- `styles/pos.css`: paneles, ajuste de textos y estilos para ambos temas.
 
-Comprobaciones: `npm.cmd run test:pos` (7 pruebas unitarias de 30 líneas, 10 extras, importes grandes, cantidades y validaciones) y `node tests/pos-navegador.mjs` (escenario Playwright: catálogo, personalización, F5, 30 líneas, responsividad 1280/768/390/320 px, rotación 844x390, claro/oscuro y 0 errores). La integración real con MySQL se valida con `npm.cmd run test:pos:integracion` en backend. Detalles en [POS.md](POS.md).
+No se registran pedidos ni cobros y no se calculan impuestos fiscales en esta fase.
+Revisión y evidencias del 17/10/2026: [POS.md](POS.md). Incluye pruebas unitarias,
+integración real con MySQL y navegador con API simulada. El teclado virtual nativo
+requiere una última comprobación en teléfono físico.
+
+## Carta real de La Veneziana
+
+El Catálogo/POS obtiene 97 productos en once categorías desde MySQL, con
+109 variantes de presentación. El precio base se identifica por su nombre
+(personal, copa, medio litro, etc.). Las imágenes son referenciales y se enlazan
+sus créditos públicos y las quince tarifas de delivery desde el POS.
+No se añaden automáticamente cargos de delivery ni se generan existencias.
+
+La carga y las pruebas están documentadas en [../backend/CARTA.md](../backend/CARTA.md).
+Para reproducir la comprobación de navegador contra backend/MySQL local:
+`node tests/carta-web.mjs <ruta-al-index.mjs-de-playwright> [carpeta-evidencia]`
+desde backend, con frontend en localhost:5173. Crea y retira su propio cajero temporal.
+
+### Selector de tamaños de bebidas en el POS
+
+Coca-Cola, Inca Kola y Agua San Luis se muestran como tres tarjetas; cada tamaño
+conserva su producto e insumo real. `utils/bebidas-pos.js` agrupa por SKU y
+`components/pos/ModalBebidaPos.jsx` recupera las presentaciones activas, con precio
+completo, cantidad y validación del producto elegido. También permite cambiar
+el tamaño al editar el pedido, conservando cantidad y recuperándolo tras F5.
+Ejecutar `npm.cmd run test:bebidas` para las regresiones de agrupación y carrito.
+
+### Sesión de ocho horas aunque no haya interacción
+
+La sesión tiene ocho horas de duración fija desde el login, sin depender de
+pulsaciones ni de los temporizadores del navegador. `MantenerSesion.jsx` comprueba
+vigencia y permisos periódicamente, también en segundo plano. El store conserva
+formularios ante revalidaciones o errores de red y cancela consultas pendientes
+al ingresar/salir. El servidor mantiene revocación y límite absoluto de ocho horas.
+
+Pruebas: `npm.cmd run test:sesion:navegador` verifica interacción, veinte minutos
+sin actividad en segundo plano, fallo de conexión, corte al llegar a ocho horas
+y logout concurrente. Las pruebas backend comprueban además seis horas sin
+renovaciones. Detalle: [../backend/SESIONES.md](../backend/SESIONES.md).
+
+### Listados sin destellos al consultar
+
+Catálogo, categorías, clientes, inventario, compras, proveedores y sus selectores
+conservan los resultados visibles al paginar o actualizar. El catálogo POS también
+conserva las tarjetas al filtrar. Los controles sobre resultados anteriores quedan
+inactivos mientras llega la respuesta, sin sustituir el contenido por una pantalla
+de carga ni retirar la paginación. Los errores siguen mostrando su mensaje real.
+
+Los hooks permiten `conservarDatos` solo en las consultas que lo necesitan y usan
+`claveDatos` para separar recursos (por ejemplo, compras y proveedores o distintos
+clientes). Los detalles de productos y cálculos del carrito mantienen la invalidación
+de sus datos para volver a comprobar precios y configuración.
+
+Con Vite en `http://localhost:5173`, ejecutar `npm.cmd run test:listados:navegador`.
+La prueba usa Edge y una API simulada, demora las respuestas y verifica altura,
+desplazamiento, bloqueo de controles y tratamiento de errores sin modificar la BD.
+
+### Presas e indicaciones por preparación
+
+El caldo de gallina incluye una elección obligatoria y exclusiva de pecho
+(pechuga) o pierna, sin recargo, mediante un grupo de modificadores del catálogo.
+El POS muestra radios para los grupos obligatorios de selección única.
+
+Cada línea admite indicaciones opcionales de hasta 250 caracteres, distintas de
+la descripción del producto. Se muestran en el recibo del borrador y su revisión,
+se conservan al editar, cambiar cantidades y recargar, y viajan en el comando
+preparado para registrar el pedido. Preparaciones distintas quedan en líneas
+separadas. Los borradores antiguos sin indicaciones siguen siendo compatibles.
+El campo es texto, no modifica precios ni reemplaza las opciones obligatorias.
+
+Esta fase todavía no registra ni envía comandas a cocina. Cuando se incorpore
+ese envío, el servidor deberá validar y persistir también las indicaciones.
+Pruebas: `npm.cmd run test:indicaciones` y, con Vite activo,
+`npm.cmd run test:cocina:navegador`.

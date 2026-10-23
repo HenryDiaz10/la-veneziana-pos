@@ -35,15 +35,16 @@ function DireccionesCliente({ id, busqueda, gestionar, onAviso }) {
   const [editor, setEditor] = useState(null)
   const encabezado = useRef(null)
   const solicitud = useMemo(() => ({ id, busqueda, pagina, revision }), [id, busqueda, pagina, revision])
-  const { datos, error, pendiente } = useConsultaClientes(consultarDirecciones, solicitud)
+  const { datos, error, pendiente } = useConsultaClientes(consultarDirecciones, solicitud, { conservarDatos: true, claveDatos: id })
   const recargar = () => setRevision(r => r + 1)
   return <section aria-labelledby="titulo-direcciones" className="mt-6">
     <div className="vz-section-head">
       <div><h3 id="titulo-direcciones" tabIndex={-1} ref={encabezado} className="vz-section-title"><span className="vz-section-symbol"><Icono nombre="ubicacion"/></span>Direcciones de entrega</h3><p className="mt-2 text-xs text-app-secundario">La dirección principal aparece primero.</p></div>
       {gestionar && <BotonSecundario onClick={() => setEditor({ registro: null })}><Icono nombre="mas"/>Nueva dirección</BotonSecundario>}
     </div>
-    {error ? <ErrorConsulta error={error} onReintentar={recargar}/> : pendiente ? <p role="status" className="vz-panel text-sm text-app-secundario">Cargando direcciones…</p> : datos?.direcciones.length ?
-      <ul className="grid gap-4 xl:grid-cols-2">{datos.direcciones.map(d => <li key={d.id} className="vz-role-card">
+    {pendiente && datos && <p role="status" className="sr-only">Actualizando direcciones…</p>}
+    {error ? <ErrorConsulta error={error} onReintentar={recargar}/> : pendiente && !datos ? <p role="status" className="vz-panel text-sm text-app-secundario">Cargando direcciones…</p> : datos?.direcciones.length ?
+      <ul aria-busy={pendiente} inert={pendiente || undefined} className="grid gap-4 xl:grid-cols-2">{datos.direcciones.map(d => <li key={d.id} className="vz-role-card">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><span className="vz-section-symbol"><Icono nombre="ubicacion"/></span>{d.es_predeterminada && <Badge variante="exito">Principal</Badge>}</div>
         <h4 className="font-titulo text-base font-bold">{d.alias || 'Dirección de entrega'}</h4>
         <p className="mt-3 break-words text-sm leading-relaxed">{d.direccion_completa}</p>
@@ -61,7 +62,7 @@ function HistorialPuntos({ id, busqueda }) {
   const [pagina, setPagina] = useState(1)
   const [revision, setRevision] = useState(0)
   const solicitud = useMemo(() => ({ id, busqueda, pagina, revision }), [id, busqueda, pagina, revision])
-  const { datos, error, pendiente } = useConsultaClientes(consultarPuntos, solicitud)
+  const { datos, error, pendiente } = useConsultaClientes(consultarPuntos, solicitud, { conservarDatos: true, claveDatos: id })
   return <section className="mt-6" aria-label="Historial de puntos del cliente">
     <p className="mb-5 text-xs leading-relaxed text-app-secundario">Movimientos registrados por el sistema. Esta vista no modifica puntos ni recalcula el saldo del cliente.</p>
     <DataTable titulo="Movimientos de Puntos Veneziana" columnas={COLUMNAS_PUNTOS} filas={datos?.movimientos ?? []} cargando={pendiente} error={error} mensajeVacio="Este cliente todavía no tiene movimientos de puntos."/>

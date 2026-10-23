@@ -25,7 +25,7 @@ export default function Clientes() {
   const [aviso, setAviso] = useState('')
   const [revisionPerfil, setRevisionPerfil] = useState(0)
   const buscador = useRef(null)
-  const { datos, pendiente, error } = useConsultaClientes(buscarClientes, solicitud)
+  const { datos, pendiente, error } = useConsultaClientes(buscarClientes, solicitud, { conservarDatos: true })
 
   function buscar(evento) {
     evento.preventDefault()
