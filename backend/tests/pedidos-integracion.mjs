@@ -92,6 +92,15 @@ try {
   const http=await pedir('/pedidos','POST',llevar([linea(productos[1])]),cookies[0]);
   assert.equal(http.status,201,JSON.stringify(http.json));
   assert.equal((await pedir(`/pedidos/${http.json.pedido.id}`,'GET',undefined,cookies[0])).status,200);
+  const ventasAntes=await m.VentaComprobante.count({where:{cajero_id:usuarios[0].id}});
+  const operacionesAntes=await m.IdempotenciaOperacion.count({where:{usuario_id:usuarios[0].id}});
+  const contextoHttp=await pedir(`/pedidos/${http.json.pedido.id}/contexto-pago`,'GET',undefined,cookies[0]);
+  assert.equal(contextoHttp.status,200);assert.equal(contextoHttp.json.pedido.total,'10.00');
+  assert.equal(contextoHttp.json.sesion_caja.id,sesion.id);
+  assert.equal(typeof contextoHttp.json.finanzas_habilitadas,'boolean');
+  assert.equal((await pedir(`/pedidos/${http.json.pedido.id}/contexto-pago`,'GET',undefined,cookies[2])).status,403);
+  assert.equal(await m.VentaComprobante.count({where:{cajero_id:usuarios[0].id}}),ventasAntes);
+  assert.equal(await m.IdempotenciaOperacion.count({where:{usuario_id:usuarios[0].id}}),operacionesAntes);
   const temporal=(await cambiarBloqueoPago(pedido.id,{version:pedido.version},ctx())).pedido;
   await m.PedidoMaster.update({bloqueo_hasta:new Date(Date.now()-1000)},{where:{id:pedido.id}});
   const desbloqueado=await pedir(`/pedidos/${pedido.id}`,'GET',undefined,cookies[0]);

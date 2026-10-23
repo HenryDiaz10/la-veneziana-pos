@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 28 implementada y probada en backend.**
-La siguiente etapa es la **fase 29: interfaz de pagos mixtos**.
+**Avance actual: fase 29 implementada y probada.**
+La siguiente etapa es la **fase 30: confirmación final y limpieza del carrito**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -70,8 +70,12 @@ La siguiente etapa es la **fase 29: interfaz de pagos mixtos**.
   bloquear checkout, abrir caja y cobrar por separado. Snapshots comerciales,
   pagos mixtos, puntos, idempotencia y eventos durables. La integración visual
   de pagos y confirmación continúa en las fases 29 y 30.
+- Fase 29: pantalla protegida de pagos de pedidos y modal adaptable para repartir
+  el total oficial entre medios, referencias y verificación de pagos digitales,
+  efectivo recibido/vuelto y canje condicionado. Prepara y revisa sin cobrar.
 
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
+Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -83,7 +87,8 @@ administrar Catálogo y Clientes según permisos y consultar los roles en Seguri
 Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS dispone de catálogo, recibo del borrador y revisión. El backend de pedidos
-y cobro ya existe; la interfaz de pagos y su conexión se completan en fases 29 y 30.
+y cobro ya existe y la interfaz permite preparar pagos. La confirmación final
+y limpieza del borrador se conectarán en la fase 30.
 El constructor de recetas está conectado a la API y requiere catalogo/gestionar.
 La cookie es HttpOnly; no se guarda el JWT en Zustand ni en localStorage.
 El backend ya se conecta
@@ -93,7 +98,7 @@ con sus modelos y asociaciones disponibles desde src/models/index.js.
 El backend dispone de autenticación, gestión de empleados y roles, catálogo,
 clientes, direcciones, recetas, pedidos y cobros separados, con rutas protegidas
 por permisos. Ya hay borrador de carrito y apertura mínima de caja. Siguen
-pendientes la interfaz de pagos, KDS en vivo, cierres y devoluciones, entre
+pendientes la confirmación visual del cobro, KDS en vivo, cierres y devoluciones, entre
 otros módulos de las fases siguientes. Las autorizaciones sensibles se
 integrarán en ajustes y devoluciones cuando se implementen esos módulos.
 

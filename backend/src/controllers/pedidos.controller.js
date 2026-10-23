@@ -1,5 +1,5 @@
 import * as pedidos from '../services/pedidos.service.js';
-import { cobrarPedido } from '../services/cobros.service.js';
+import { cobrarPedido, consultarContextoPago } from '../services/cobros.service.js';
 import { abrirCaja, consultarCaja } from '../services/caja.service.js';
 import { ErrorPedido } from '../services/pedidos-calculo.js';
 import { ErrorInventario } from '../services/inventario-calculo.js';
@@ -45,6 +45,7 @@ export const consultar = manejarComercial(req => pedidos.consultarPedido(req.par
 export const bloquear = manejarComercial(req => pedidos.cambiarBloqueoPago(req.params.id, req.body, contexto(req)));
 export const liberar = manejarComercial(req => pedidos.cambiarBloqueoPago(req.params.id, req.body, contexto(req), true));
 export const cobrar = manejarComercial(req => cobrarPedido(req.params.id, req.body, contexto(req)), 201);
+export const contextoPago = manejarComercial(req => consultarContextoPago(req.params.id, req.auth.usuario.id, contexto(req).puedeCanjear));
 export const abrir = manejarComercial(req => abrirCaja(req.body, contexto(req)), 201);
 export const cajaActual = manejarComercial(req => consultarCaja(req.auth.usuario.id));
 export const recuperar = manejarComercial(req => recuperarOperacion(req.auth.usuario.id, req.params.tipo ?? 'caja.abrir', req.params.clave));

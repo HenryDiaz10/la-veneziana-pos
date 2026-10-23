@@ -1,8 +1,39 @@
-import { VentaComprobante, VentaPagoSplit, VentaDetalleSnapshot, PedidoItemKds, SesionCajaZ,
+import { VentaComprobante, VentaPagoSplit, VentaDetalleSnapshot, PedidoMaster, PedidoItemKds, SesionCajaZ,
   CajaFisica, Cliente, CrmMovimientoPuntos, ConfiguracionGlobal, MesaSalon } from '../models/index.js';
 import { operacionComercial, auditoriaComercial, eventoComercial } from './operacion-comercial.js';
 import { bloquearPedido, comprobarVersion } from './pedidos.service.js';
+import { sequelize } from '../config/database.js';
+import { ErrorPedido } from './pedidos-calculo.js';
 import { campos, idEntero, idGrande, exigirPedido as exigir, centimos, dinero, politicaFinanciera, desglosarImpuesto, validarPagos } from './pedidos-calculo.js';
+
+// Consulta coherente para la interfaz de pagos. No abre caja, adquiere checkout,
+// registra pagos, altera puntos ni limpia un bloqueo: solo informa su estado.
+export function consultarContextoPago(id, usuarioId, puedeCanjear) {
+  id = idGrande(id);
+  return sequelize.transaction(async tx => {
+    const pedido = await PedidoMaster.findByPk(id, { transaction: tx });
+    exigir(pedido, 'PEDIDO_INEXISTENTE');
+    const sesion = await SesionCajaZ.findOne({ where: { cajero_id: usuarioId, estado_sesion: 'abierta' }, transaction: tx });
+    const caja = sesion && await CajaFisica.findByPk(sesion.caja_fisica_id, { transaction: tx });
+    const cliente = pedido.cliente_id && await Cliente.findByPk(pedido.cliente_id, { transaction: tx });
+    const config = await ConfiguracionGlobal.findByPk('FINANZAS', { transaction: tx });
+    let politica = null;
+    try { politica = politicaFinanciera(config?.valor_json); }
+    catch (e) { if (!(e instanceof ErrorPedido)) throw e; }
+    let valorPunto = null;
+    try { if (politica?.valorPunto && centimos(politica.valorPunto) > 0n) valorPunto = dinero(centimos(politica.valorPunto)); }
+    catch (e) { if (!(e instanceof ErrorPedido)) throw e; }
+    const vencido = pedido.estado_cuenta === 'bloqueada_en_pago' && pedido.bloqueo_hasta <= new Date();
+    return { pedido: { id: String(pedido.id), codigo_pedido: pedido.codigo_pedido, version: pedido.version,
+      total: pedido.total_preliminar, estado_cuenta: pedido.estado_cuenta, bloqueo_vencido: vencido,
+      bloqueo_propio: pedido.bloqueo_usuario_id === usuarioId, bloqueo_hasta: pedido.bloqueo_hasta },
+      sesion_caja: caja?.estado === 'activa' ? { id: sesion.id, nombre_caja: caja.nombre_terminal } : null,
+      finanzas_habilitadas: Boolean(politica),
+      canje: { disponible: Boolean(politica && puedeCanjear && cliente?.estado === 'activo' && valorPunto),
+        saldo_puntos: puedeCanjear && cliente?.estado === 'activo' ? cliente.puntos_vip_actuales ?? 0 : 0,
+        valor_punto_pen: valorPunto } };
+  });
+}
 
 export function cobrarPedido(id, datos, contexto) {
   id = idGrande(id);

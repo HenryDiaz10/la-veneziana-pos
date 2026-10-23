@@ -20,6 +20,7 @@ reutilizar la clave con otro cuerpo produce 409. El ámbito incluye usuario y ti
 | POST /pedidos/:id/bloqueo-pago | ventas/cobrar | Bloquear checkout a nombre del cajero durante cinco minutos. |
 | POST /pedidos/:id/liberar-pago | ventas/cobrar | Liberar únicamente el bloqueo propio, validando versión. |
 | POST /pedidos/:id/cobro | ventas/cobrar | Cobrar un pedido ya existente; nunca recrea sus ítems. |
+| GET /pedidos/:id/contexto-pago | ventas/cobrar | Consulta de fase 29: total oficial, versión/bloqueo, sesión propia y disponibilidad de canje, sin escrituras. |
 | GET /pedidos/operaciones/:tipo/:clave | Según operación | Recuperar solo una operación propia confirmada. |
 | GET /caja/sesion | caja/gestionar | Consultar sesión propia abierta y cajas habilitadas, sin IP del terminal. |
 | POST /caja/sesiones | caja/gestionar | Abrir una sesión, sin registrar venta. |

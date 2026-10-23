@@ -11,6 +11,7 @@ router.get('/operaciones/:tipo/:clave', (req, res, next) => {
 }, c.recuperar);
 router.post('/', exigirPermiso('pedidos', 'crear'), c.crear);
 router.post('/:id/lineas', exigirPermiso('pedidos', 'crear'), c.ampliar);
+router.get('/:id/contexto-pago', exigirPermiso('ventas', 'cobrar'), c.contextoPago);
 // Meseros y cajeros pueden consultar lo necesario para su flujo operativo.
 router.get('/:id', (req, res, next) => req.auth.usuario.permisos.some(p =>
   (p.modulo === 'pedidos' && p.accion === 'crear') || (p.modulo === 'ventas' && p.accion === 'cobrar'))

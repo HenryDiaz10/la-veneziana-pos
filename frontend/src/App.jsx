@@ -19,6 +19,7 @@ import Componentes from './pages/Componentes.jsx'
 
 import AdminLayout from './layouts/AdminLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
+import Pagos from './pages/Pagos.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
@@ -254,6 +255,7 @@ function App() {
                 path="/pos"
                 element={<PuntoVenta />}
               />
+              <Route path="/pagos" element={<Pagos />} />
             </Route>
           </Route>
 

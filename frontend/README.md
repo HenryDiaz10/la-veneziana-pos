@@ -423,3 +423,11 @@ Esta fase todavía no registra ni envía comandas a cocina. Cuando se incorpore
 ese envío, el servidor deberá validar y persistir también las indicaciones.
 Pruebas: `npm.cmd run test:indicaciones` y, con Vite activo,
 `npm.cmd run test:cocina:navegador`.
+
+### Fase 29: pagos mixtos
+
+La opción «Pagos de pedidos» (`/pagos`) permite consultar un pedido registrado
+y preparar sus medios de pago sobre el total oficial. Incluye importe aplicado,
+efectivo recibido/vuelto, referencias verificadas y canje condicionado. La captura
+no cobra ni limpia el carrito y solo permanece en memoria. La confirmación se
+conectará en la fase 30. Contratos, archivos y pruebas en [PAGOS.md](PAGOS.md).
