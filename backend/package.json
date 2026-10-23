@@ -26,7 +26,8 @@
     "test:impresion": "node --test tests/impresion.test.mjs",
     "impresion:simular": "node scripts/agente-impresion.mjs",
     "test:caja": "node --test tests/caja-calculo.test.mjs",
-    "test:caja:integracion": "node tests/caja-integracion.mjs"
+    "test:caja:integracion": "node tests/caja-integracion.mjs",
+    "test:salon:integracion": "node tests/salon-integracion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

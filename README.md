@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 32 implementada y probada.**
-La siguiente etapa es la **fase 33: interfaz de salón y mesas**.
+**Avance actual: fase 33 implementada y probada.**
+La siguiente etapa es la **fase 34: backend de mesas y pedidos abiertos**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -87,11 +87,17 @@ La siguiente etapa es la **fase 33: interfaz de salón y mesas**.
   Consulta del corte guardado y copias numeradas; agente de cierre probado
   en simulación de 58/80 mm, sin confirmación de impresión física.
 
+- Fase 33: mapa protegido de salón con zonas, estados exactos del SQL,
+  capacidad, coordenadas y mesero asignado; filtros y vista adaptable sin
+  superposiciones. Consulta coherente de solo lectura, pruebas HTTP/MySQL
+  y navegador. Las transiciones operativas continúan en fase 34.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
 Cierres y devoluciones: [backend/CAJA.md](backend/CAJA.md).
 Interfaz de arqueo: [frontend/ARQUEO.md](frontend/ARQUEO.md).
+Mapa de mesas: [frontend/SALON.md](frontend/SALON.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -100,7 +106,7 @@ formularios ni equivalen a logout. Implementación y pruebas:
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja, /salon y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS permite revisar y registrar pedidos; Pagos confirma el cobro con caja
 propia, versión y bloqueo vigentes. Solo la confirmación oficial permite retirar

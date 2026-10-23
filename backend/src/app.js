@@ -20,6 +20,7 @@ import { sequelize } from './config/database.js';
 import authRouter from './routes/auth.routes.js';
 import pedidosRouter from './routes/pedidos.routes.js';
 import cajaRouter from './routes/caja.routes.js';
+import salonRouter from './routes/salon.routes.js';
 import devolucionesRouter from './routes/devoluciones.routes.js';
 
 import usuariosRouter from './routes/usuarios.routes.js';
@@ -199,6 +200,7 @@ app.use('/api/compras', comprasRouter);
 app.use('/api/pos', posRouter);
 app.use('/api/pedidos', pedidosRouter);
 app.use('/api/caja', cajaRouter);
+app.use('/api/salon', salonRouter);
 app.use('/api/ventas', devolucionesRouter);
 
 app.use((req, res) => {

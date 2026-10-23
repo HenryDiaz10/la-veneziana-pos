@@ -1,4 +1,5 @@
 const DIBUJOS = {
+  mesas: <><rect x="5" y="6" width="14" height="12" rx="3"/><path d="M8 3h2m4 0h2M8 21h2m4 0h2M2 9v2m0 2v2m20-6v2m0 2v2"/></>,
   billete: <><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></>,
   compras: <><path d="M6 3h12l3 5v13H3V8Zm-3 5h18M9 3v5m6-5v5M8 13h8m-8 4h5"/></>,
   inventario: <><path d="m3 7 9-4 9 4v13H3Zm0 0 9 4 9-4M12 11v9M8 5l9 4"/></>,

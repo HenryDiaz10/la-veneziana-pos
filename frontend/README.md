@@ -4,11 +4,17 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Fase 33:** mapa de salón en `/salon`, con zonas, búsqueda y filtros de mesas,
+croquis por coordenadas o cuadrícula cuando faltan posiciones o espacio.
+Detalle de estado, capacidad y empleado asignado; permiso `mesas/gestionar`.
+Guía y contrato de consulta: [SALON.md](SALON.md).
+Siguiente: fase 34, backend de mesas y pedidos abiertos.
+
 **Fase 32:** arqueo responsive en `/caja`, conteo directo o por denominaciones,
 movimientos autorizados, confirmación del cierre y recuperación tras F5.
 Consulta del snapshot oficial y copias de cierre con agente en simulación.
 Guía: [ARQUEO.md](ARQUEO.md). Contratos: [CAJA.md](../backend/CAJA.md).
-Siguiente: fase 33, interfaz de salón y mesas.
+La fase 33 incorpora la consulta de salón descrita arriba.
 
 **Fase 30:** POS registra pedidos, Pagos abre caja y confirma cobros con
 checkout e idempotencia. Recuperación tras F5/red caída, limpieza selectiva
