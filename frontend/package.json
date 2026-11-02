@@ -26,8 +26,9 @@
     "test:salon:navegador": "node tests/salon-navegador.mjs",
     "test:modificadores": "node --test tests/modificadores.test.mjs",
     "test:modificadores:navegador": "node tests/modificadores-navegador.mjs",
-    "test:kds": "node --test tests/kds.test.mjs",
-    "test:kds:navegador": "node tests/kds-navegador.mjs"
+    "test:kds": "node --test tests/kds.test.mjs tests/kds-tiempo.test.mjs",
+    "test:kds:navegador": "node tests/kds-navegador.mjs",
+    "test:kds:avisos": "node tests/kds-avisos-navegador.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",

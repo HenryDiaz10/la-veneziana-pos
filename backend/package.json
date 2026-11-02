@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "admin:recuperar": "node scripts/recuperar-admin.js",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
     "crm:habilitar": "node scripts/habilitar-clientes.js",

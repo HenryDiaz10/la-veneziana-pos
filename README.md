@@ -1,7 +1,15 @@
 ## Estado del proyecto
 
-**Avance actual: fase 37 implementada y probada.**
-La siguiente etapa es la **fase 38: audio y cronómetros del tablero KDS**.
+Para recuperar la contraseña olvidada del administrador en desarrollo local,
+ejecutar desde `backend`: `npm.cmd run admin:recuperar`. Solicita correo y nueva
+contraseña dos veces, con entrada oculta (mínimo 12 caracteres, máximo 72 bytes
+UTF-8). No recibe contraseñas por argumentos ni las guarda en archivos. Conserva
+cuenta/rol/estado, reinicia bloqueo por intentos, revoca sesiones y registra
+auditoría sin secretos. Requiere un administrador activo y BD local; no es un
+endpoint público ni un mecanismo de recuperación en producción.
+
+**Avance actual: fase 38 implementada y probada.**
+La siguiente etapa es la **fase 39: consultas gerenciales del backend**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -113,6 +121,12 @@ La siguiente etapa es la **fase 38: audio y cronómetros del tablero KDS**.
   con versión e identidad recuperable tras F5, consumo único al preparar o
   despachar, cancelación tardía autorizada e historial/outbox transaccional.
   Reconexión por snapshot y avisos deduplicados; listo y entregado separados.
+
+- Fase 38: sonido de nuevas preparaciones activado por gesto, prueba/volumen,
+  silencio temporal y alternativa visual; sin alarmar pendientes al reconectar.
+  Reloj compartido anclado al servidor, tiempo por etapa/horno y total, umbrales
+  locales configurables, texto/icono estáticos y pruebas de audio/reloj/responsive.
+  Los recordatorios no determinan por sí solos el estado físico del producto.
 
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).

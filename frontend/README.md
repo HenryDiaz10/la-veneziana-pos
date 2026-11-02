@@ -483,4 +483,17 @@ Tablero `/cocina` con `kds/operar`, etapas, notas, exclusiones, destino y cantid
 Controles táctiles/teclado, confirmación REST con versión e identidad recuperable,
 WebSocket y reconexión por colección completa. Consumo al preparar/despachar y
 cancelación tardía autorizada. Contratos, archivos y pruebas en [KDS.md](KDS.md).
-La fase 38 añadirá audio y cronómetros configurables.
+La fase 38 añade audio y cronómetros configurables.
+
+### Fase 38: avisos y tiempos KDS
+
+En `/cocina`, «Avisos y tiempos de cocina» permite activar/probar sonido,
+ajustar volumen, silenciar cinco minutos y configurar recordatorios por etapa.
+La primera carga y reconexión no hacen sonar el historial. Un reloj compartido
+usa timestamps del servidor y tiempo monotónico, con inicio de horno separado.
+Avisos visuales con texto/icono sin parpadeos; no se deduce un producto quemado.
+Preferencias por empleado en este navegador, sin credenciales y sin habilitar
+audio automáticamente tras F5. Guía y límites en [KDS.md](KDS.md).
+
+Pruebas: `test:kds`, `test:kds:navegador`, `test:kds:avisos`, lint y build.
+Resumen fuera de Git: `DOCUMENTACION/FASES/FASE_38.pdf`.

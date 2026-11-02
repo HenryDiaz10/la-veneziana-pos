@@ -103,8 +103,12 @@ try {
   assert.equal(await tarjeta('1').count(), 1); assert.ok(await tarjeta('1').getByRole('button').first().isDisabled())
   assert.equal(new URL(page.url()).pathname, '/cocina')
   fallar = false; await actualizar().click(); await tarjeta('1').getByRole('button').first().waitFor()
-  permitido = false; const antes = consultas; await page.reload()
-  await page.getByRole('heading', { name: 'No tienes acceso a esta sección' }).waitFor(); assert.equal(consultas, antes)
+  permitido = false; await page.reload()
+  await page.getByRole('heading', { name: 'No tienes acceso a esta sección' }).waitFor()
+  // Esperar al destino protegido: una consulta anterior ya en vuelo puede
+  // terminar durante la navegación, pero la página denegada no debe consultar.
+  const antes = consultas; await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await page.waitForTimeout(100); assert.equal(consultas, antes)
   assert.deepEqual(errores, [])
   console.log('OK F37 navegador: páginas, permisos, controles confirmados, notas, filtros, reintento con F5, eventos/reconexión, error sin logout, 320/390/768/1366/1920 claro y oscuro sin overflow.')
 } finally { await browser.close() }

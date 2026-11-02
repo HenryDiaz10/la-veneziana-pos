@@ -42,3 +42,25 @@
 .vz-kds-columnas.es-etapa-unica .vz-kds-tickets { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
 @media (min-width: 1600px) { .vz-kds-columnas { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 750px) { .vz-kds-columnas, .vz-kds-filtros { grid-template-columns: minmax(0, 1fr); } .vz-kds-cabecera { align-items: start; } }
+
+/* Avisos accesibles: umbral con texto e icono estáticos, sin parpadeos. */
+.vz-kds-ajustes { margin-bottom: 1rem; border: 1px solid var(--app-borde); border-radius: 1rem; background: var(--app-superficie); }
+.vz-kds-ajustes summary { cursor: pointer; padding: 1rem; font-weight: 800; min-height: 44px; }
+.vz-kds-ajustes summary:focus-visible { outline: 3px solid var(--app-foco); outline-offset: 3px; }
+.vz-kds-ajustes-contenido { padding: 0 1rem 1rem; }
+.vz-kds-audio-controles { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+.vz-kds-audio-controles label { flex: 1 1 150px; font-size: .85rem; }
+.vz-kds-audio-controles input[type=range] { padding: 0; border: 0; accent-color: #f59e0b; }
+.vz-kds-ayuda-audio { color: var(--app-secundario); font-size: .8rem; margin-top: .7rem; }
+.vz-kds-ultimo-aviso { border-left: 4px solid #f59e0b; padding: .6rem .8rem; margin-top: 1rem; font-weight: 650; font-size: .85rem; }
+.vz-kds-umbrales { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; min-width: 0; }
+.vz-kds-umbrales legend { margin-bottom: .6rem; font-size: .85rem; font-weight: 700; }
+.vz-kds-umbrales label { font-size: .8rem; }
+.vz-kds-tiempos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-top: .75rem; background: var(--app-superficie); border: 1px solid var(--app-borde); border-radius: .6rem; padding: .65rem; }
+.vz-kds-tiempos > div { display: grid; gap: .2rem; }
+.vz-kds-tiempos span { font-size: .7rem; color: var(--app-secundario); }
+.vz-kds-tiempos strong { font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+.vz-kds-tiempos.es-recordatorio { border-color: #f59e0b; background: color-mix(in srgb, #f59e0b 12%, var(--app-superficie)); }
+.vz-kds-umbral { grid-column: 1/-1; font-size: .75rem; font-weight: 650; }
+@media (max-width: 750px) { .vz-kds-umbrales { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vz-kds-audio-controles button { flex: 1 1 140px; } }
+@media (prefers-reduced-motion: reduce) { .vz-kds-tiempos, .vz-kds-ultimo-aviso { animation: none; transition: none; } }
