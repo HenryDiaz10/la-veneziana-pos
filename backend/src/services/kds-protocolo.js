@@ -1,6 +1,6 @@
 import { campos, exigirPedido as exigir, idGrande, idEntero } from './pedidos-calculo.js';
 
-export const TIPOS_EVENTO_KDS = Object.freeze(['pedido.cocina', 'pedido.despacho']);
+export const TIPOS_EVENTO_KDS = Object.freeze(['pedido.cocina', 'pedido.despacho', 'kds.actualizada']);
 export const ESTADOS_ACTIVOS_KDS = Object.freeze(['espera', 'preparando', 'horno', 'listo_para_entrega']);
 export function consultaKds(query) {
   campos(query, ['canal', 'desde', 'hasta', 'limite']);
@@ -17,8 +17,10 @@ export function notificacionKds(evento) {
   exigir(p && typeof p === 'object' && Array.isArray(p.tareas) && p.tareas.length > 0 && p.tareas.length <= 100, 'EVENTO_KDS_INVALIDO');
   const tareas = p.tareas.map(idGrande);
   exigir(new Set(tareas).size === tareas.length && Number.isSafeInteger(evento.version) && evento.version > 0, 'EVENTO_KDS_INVALIDO');
+  const canal = evento.tipo === 'kds.actualizada' ? p.canal : evento.tipo === 'pedido.cocina' ? 'cocina' : 'despacho';
+  exigir(['cocina', 'despacho'].includes(canal), 'EVENTO_KDS_INVALIDO');
   return { protocolo: 1, tipo: evento.tipo, event_uid: evento.event_uid, pedido_id: idGrande(p.pedido_id), version: evento.version,
-    canal: evento.tipo === 'pedido.cocina' ? 'cocina' : 'despacho', tareas, servidor_en: new Date().toISOString() };
+    canal, tareas, servidor_en: new Date().toISOString() };
 }
 export function demoraReintentoKds(intento) {
   exigir(Number.isInteger(intento) && intento > 0);

@@ -1,0 +1,44 @@
+.vz-kds { min-width: 0; max-width: 1900px; margin: auto; }
+.vz-kds-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.vz-kds h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; margin: .4rem 0; }
+.vz-kds-eyebrow { color: var(--color-marca-dorado, #f5a300); font-weight: 800; font-size: .72rem; letter-spacing: .15em; }
+.vz-kds-conexion { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.vz-kds-conexion span { border: 1px solid var(--app-borde); border-radius: 2rem; padding: .5rem .8rem; font-size: .8rem; }
+.vz-kds button { min-height: 44px; border-radius: .75rem; border: 1px solid var(--app-borde); padding: .6rem .8rem; background: var(--app-superficie); font-weight: 700; cursor: pointer; }
+.vz-kds button:disabled { opacity: .5; cursor: default; }
+.vz-kds button:focus-visible, .vz-kds input:focus-visible, .vz-kds select:focus-visible, .vz-kds textarea:focus-visible { outline: 3px solid #f5a300; outline-offset: 3px; }
+.vz-kds-filtros { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1rem; padding: 1rem; border: 1px solid var(--app-borde); border-radius: 1rem; margin-bottom: 1.5rem; background: var(--app-superficie); }
+.vz-kds label { display: grid; gap: .5rem; font-weight: 600; min-width: 0; }
+.vz-kds input, .vz-kds select, .vz-kds textarea { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--app-borde); background: var(--app-fondo); color: inherit; border-radius: .6rem; padding: .6rem; }
+.vz-kds-columnas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.vz-kds-columna { min-width: 0; border: 1px solid var(--app-borde); border-radius: 1rem; background: var(--app-superficie); overflow: hidden; border-top: 4px solid #f5a300; }
+.vz-kds-columna.etapa-preparando { border-top-color: #3b82f6; }
+.vz-kds-columna.etapa-horno { border-top-color: #f97316; }
+.vz-kds-columna.etapa-listo_para_entrega { border-top-color: #65a30d; }
+.vz-kds-columna > header { display: flex; justify-content: space-between; gap: .6rem; padding: 1rem; border-bottom: 1px solid var(--app-borde); align-items: center; }
+.vz-kds-columna h2 { font-weight: 800; }
+.vz-kds-columna > header span { border-radius: 50%; min-width: 1.7rem; text-align: center; background: #f5a300; color: #171717; font-weight: 800; }
+.vz-kds-tickets { padding: .75rem; display: grid; gap: .8rem; }
+.vz-kds-ticket { border: 1px solid var(--app-borde); border-radius: .8rem; padding: 1rem; background: var(--app-fondo); overflow-wrap: anywhere; }
+.vz-kds-ticket-top { display: flex; justify-content: space-between; align-items: start; gap: .5rem; font-size: .8rem; }
+.vz-kds-ticket-top span { color: var(--app-secundario); }
+.vz-kds-destino { font-weight: 800; margin: .6rem 0; }
+.vz-kds-ticket h3 { font-size: 1.1rem; font-weight: 750; line-height: 1.5; }
+.vz-kds-cantidad { background: #f5a300; color: #171717; border-radius: .3rem; padding: .1rem .3rem; }
+.vz-kds-referencia, .vz-kds-fecha { color: var(--app-secundario); font-size: .75rem; margin: .5rem 0; }
+.vz-kds-opciones { display: grid; gap: .4rem; font-size: .9rem; margin: .75rem 0; }
+.vz-kds-opciones li { border-left: 3px solid #3b82f6; padding-left: .5rem; }
+.vz-kds-opciones li.es-exclusion { border-left-color: #f97316; }
+.vz-kds-nota { background: color-mix(in srgb, #f5a300 12%, var(--app-superficie)); border: 1px solid color-mix(in srgb, #f5a300 45%, transparent); border-radius: .5rem; padding: .75rem; font-size: .9rem; white-space: pre-wrap; }
+.vz-kds-acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.vz-kds-acciones button { flex: 1 1 130px; font-size: .8rem; background: #f5a300; color: #171717; }
+.vz-kds-acciones button.es-cancelar { background: transparent; color: var(--app-error); }
+.vz-kds-aviso { padding: 1rem; border: 1px solid #f5a300; border-radius: .75rem; margin-bottom: 1rem; }
+.vz-kds-vacio { padding: 1rem; font-size: .85rem; color: var(--app-secundario); }
+.vz-kds-pie { margin-top: 1.5rem; color: var(--app-secundario); font-size: .8rem; }
+.vz-kds-form { display: grid; gap: 1rem; }
+.vz-kds-form small { font-weight: 400; }
+.vz-kds-columnas.es-etapa-unica { grid-template-columns: minmax(0, 1fr); }
+.vz-kds-columnas.es-etapa-unica .vz-kds-tickets { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+@media (min-width: 1600px) { .vz-kds-columnas { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 750px) { .vz-kds-columnas, .vz-kds-filtros { grid-template-columns: minmax(0, 1fr); } .vz-kds-cabecera { align-items: start; } }

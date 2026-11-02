@@ -31,7 +31,8 @@
     "test:mesas": "node --test tests/mesas-reglas.test.mjs",
     "test:mesas:integracion": "node tests/mesas-integracion.mjs",
     "test:modificadores:integracion": "node tests/modificadores-pedido-integracion.mjs",
-    "test:kds": "node --test tests/kds-protocolo.test.mjs",
+    "test:kds": "node --test tests/kds-protocolo.test.mjs tests/kds-reglas.test.mjs",
+    "test:kds:comandos": "node tests/kds-comandos-integracion.mjs",
     "test:kds:integracion": "node tests/kds-integracion.mjs"
   },
   "dependencies": {

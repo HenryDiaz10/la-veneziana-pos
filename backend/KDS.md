@@ -1,10 +1,10 @@
-# Fase 36 - Eventos KDS después del commit
+# Fases 36 y 37 - Eventos y operación KDS
 
 El servicio registra tareas, reservas y eventos de cocina/despacho en la misma
 transacción del pedido. Un worker lee eventos confirmados del outbox y publica
 notificaciones mediante WebSocket. No se usan hooks de UPDATE SQL como supuesto
-disparador de red. Esta fase prepara la API y el protocolo; el tablero y sus
-comandos de transición corresponden a fase 37.
+disparador de red. La fase 36 prepara la API y el protocolo; la fase 37 añade
+el tablero y los comandos documentados al final de este archivo.
 
 ## Arranque y alcance
 
@@ -138,8 +138,8 @@ distintos; consultar/publicar no crea otra venta ni duplica ingresos.
    acumulados durante la carga. Repetir consulta completa al recuperar visibilidad
    o ante incertidumbre; las notificaciones son invalidaciones, no la base de datos.
 
-El tablero y las transiciones de preparación/despacho aún no se implementan aquí.
 La fase 36 no consume inventario por recibir/publicar un aviso ni marca entregas.
+La fase 37 incorpora las transiciones descritas abajo.
 
 ## Archivos y funciones
 
@@ -184,4 +184,62 @@ hay publicación o autenticación en curso. Sin tablero aún no se prueba UX KDS
 
 Desde frontend: `npm.cmd run lint` y `npm.cmd run build`.
 Resumen PDF fuera de Git: `DOCUMENTACION/FASES/FASE_36.pdf`.
-Siguiente: fase 37, tablero KDS y comandos operativos.
+Tablero disponible desde fase 37; siguiente: fase 38, audio y cronómetros.
+
+## Fase 37 - Comandos operativos
+
+`POST /api/kds/tareas/:id/transiciones`, sesión y `kds/operar`, Origin/CSRF,
+cabecera `Idempotency-Key` (8-64 caracteres), cuerpo `{version, estado}`.
+Cancelar añade `motivo` (3-500 caracteres) y, si ya comenzó, `autorizacion_id`.
+No aceptar usuario, precio, recetas, consumos ni fechas enviados por navegador.
+Respuesta: `{tarea, servidor_en, repetida}`. El detalle se proyecta dentro de la
+misma transacción. 400 datos, 401/403 acceso, 404 tarea, 409 versión/estado/stock/
+autorización. Misma clave/cuerpo devuelve la respuesta original; otro cuerpo con
+esa clave se rechaza. Ante respuesta perdida, reenviar la misma operación.
+
+### Transiciones e inventario
+
+| Canal / origen | Destinos permitidos |
+| --- | --- |
+| Cocina / espera | preparando, cancelado |
+| Cocina / preparando | horno, listo_para_entrega, cancelado |
+| Cocina / horno | listo_para_entrega, cancelado |
+| Cocina / listo_para_entrega | entregado, cancelado |
+| Despacho / espera | entregado, cancelado |
+| Entregado o cancelado | Ninguno |
+
+Preparar cocina y entregar despacho convierten reserva en consumo en la misma
+transacción. Las otras etapas no consumen de nuevo. Cada transición incrementa
+versión y registra fecha de su etapa, `kds_historial`, auditoría y `kds.actualizada`
+con canal congelado e ID de tarea. Worker/protocolo ahora admiten este tercer tipo.
+En ese aviso `version` es de tarea; los avisos pedido.cocina/despacho conservan
+versión de pedido. El cliente nunca compara versiones de entidades distintas.
+
+Bloqueos: barrera de actor/idempotencia, línea y tarea, luego inventario por IDs
+ordenados; cancelación toma antes la barrera de seguridad. Nunca bloquear pedido
+después de la tarea. La línea coordina los componentes y actualiza su resumen
+`estado_kanban` con la etapa más temprana de los no cancelados, o null si todos
+se cancelaron; conserva la marca listo al alcanzarla. `estado_item` y total de
+cuenta no se anulan: cancelar tarea solo detiene esa preparación. No cobra,
+descuenta ni devuelve; la rectificación comercial requiere su flujo propio.
+
+Cancelar en espera libera reserva sin entrada ficticia de Kardex. Cancelar tras
+inicio conserva reserva consumida/costo/Kardex y exige aprobación de un solo uso
+para `kds/cancelar`, entidad `kds_tareas`, ID exacto de tarea y actor de sesión.
+Crear con la API existente de autorizaciones (`POST /api/autorizaciones`, ver
+su router), aprobador con seguridad/gestionar y kds/operar; actor con kds/operar.
+No basta conocer un ID ajeno/vencido/consumido. Una falla revierte el consumo
+de la autorización junto con estado, historial y evento. Terminales no retroceden.
+
+Archivos nuevos: `services/kds-reglas.js` valida cuerpo y máquina de estados;
+`services/kds-comandos.service.js` orquesta transacción/consumo/liberación/historial;
+`tests/kds-reglas.test.mjs` y `tests/kds-comandos-integracion.mjs` verifican reglas,
+HTTP/MySQL/WS, concurrencia, identidad, stock, aprobación y rollback tardío.
+Se amplían router, servicio de consultas (transacción compartida), políticas,
+mensajes de error, outbox y protocolo sin migraciones ni dependencias nuevas.
+
+Pruebas: `npm.cmd run test:kds` y `npm.cmd run test:kds:comandos`; regresión
+`npm.cmd run test:kds:integracion`. Solo fixtures locales propias, retiradas al
+terminar; no cambiar FINANZAS. No ejecutar otro worker sobre la misma BD durante
+integración. Tablero y recuperación de pestaña: [frontend/KDS.md](../frontend/KDS.md).
+PDF resumido: `DOCUMENTACION/FASES/FASE_37.pdf`, fuera de Git.

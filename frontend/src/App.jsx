@@ -23,6 +23,7 @@ import RecuperarOperacion from './components/RecuperarOperacion.jsx'
 import Pagos from './pages/Pagos.jsx'
 import ArqueoCaja from './pages/ArqueoCaja.jsx'
 import Salon from './pages/Salon.jsx'
+import TableroKds from './pages/TableroKds.jsx'
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
@@ -241,6 +242,11 @@ function App() {
           <Route element={<ProtectedRoute modulo="caja" accion="gestionar" />}>
             <Route element={<AdminLayout />}>
               <Route path="/caja" element={<ArqueoCaja />} />
+            </Route>
+          </Route>
+          <Route element={<ProtectedRoute modulo="kds" accion="operar" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/cocina" element={<TableroKds />} />
             </Route>
           </Route>
           <Route element={<ProtectedRoute modulo="mesas" accion="gestionar" />}>

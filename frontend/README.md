@@ -476,3 +476,11 @@ tras confirmar el pago; líneas nuevas o editadas permanecen.
 Pruebas: `test:pagos:navegador`, `test:cocina:navegador` y
 `test:comercial:navegador`; también lint, build y las pruebas unitarias existentes.
 Impresión física pendiente de adaptador validado; no se declara emisión fiscal.
+
+### Fase 37: cocina y despacho
+
+Tablero `/cocina` con `kds/operar`, etapas, notas, exclusiones, destino y cantidades.
+Controles táctiles/teclado, confirmación REST con versión e identidad recuperable,
+WebSocket y reconexión por colección completa. Consumo al preparar/despachar y
+cancelación tardía autorizada. Contratos, archivos y pruebas en [KDS.md](KDS.md).
+La fase 38 añadirá audio y cronómetros configurables.

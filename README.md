@@ -1,7 +1,7 @@
 ## Estado del proyecto
 
-**Avance actual: fase 36 implementada y probada.**
-La siguiente etapa es la **fase 37: tablero KDS de cocina y despacho**.
+**Avance actual: fase 37 implementada y probada.**
+La siguiente etapa es la **fase 38: audio y cronómetros del tablero KDS**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -108,6 +108,12 @@ La siguiente etapa es la **fase 37: tablero KDS de cocina y despacho**.
   estable, consulta paginada para recuperación y revisión continua de acceso.
   Transacciones y canales reales probados; el tablero visual continúa en fase 37.
 
+- Fase 37: tablero protegido de cocina/despacho con etapas, cantidades, destino,
+  opciones, exclusiones y notas; filtros y controles adaptables. Comandos REST
+  con versión e identidad recuperable tras F5, consumo único al preparar o
+  despachar, cancelación tardía autorizada e historial/outbox transaccional.
+  Reconexión por snapshot y avisos deduplicados; listo y entregado separados.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
@@ -117,6 +123,7 @@ Mapa de mesas: [frontend/SALON.md](frontend/SALON.md).
 Operaciones de mesas: [backend/MESAS.md](backend/MESAS.md).
 Modificadores y notas: [MODIFICADORES_NOTAS.md](MODIFICADORES_NOTAS.md).
 Eventos y protocolo KDS: [backend/KDS.md](backend/KDS.md).
+Tablero de cocina y despacho: [frontend/KDS.md](frontend/KDS.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -125,7 +132,7 @@ formularios ni equivalen a logout. Implementación y pruebas:
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja, /salon y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja, /salon, /cocina y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS permite revisar y registrar pedidos; Pagos confirma el cobro con caja
 propia, versión y bloqueo vigentes. Solo la confirmación oficial permite retirar

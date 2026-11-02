@@ -27,12 +27,13 @@ export function consultarTareasKds(query) {
     return { tareas: await presentar(filas, transaction), paginacion: { limite: q.limite, hasta, siguiente: hayMas ? String(filas.at(-1).id) : null }, servidor_en: new Date().toISOString() };
   });
 }
-export function consultarTareaKds(id) {
+export function consultarTareaKds(id, padre) {
   id = idGrande(id);
-  return sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ }, async transaction => {
+  const leer = async transaction => {
     // Incluir estados finales permite quitar tareas entregadas/canceladas tras un aviso.
     const t = await KdsTarea.findByPk(id, { attributes: camposTarea, transaction, raw: true });
     exigir(t && ['cocina', 'despacho'].includes(t.snapshot_json?.canal), 'TAREA_KDS_INEXISTENTE');
     return { tarea: (await presentar([t], transaction))[0], servidor_en: new Date().toISOString() };
-  });
+  };
+  return padre ? leer(padre) : sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ }, leer);
 }

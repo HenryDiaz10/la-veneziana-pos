@@ -11,6 +11,8 @@ const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idemp
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
 const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE']);
 const mensajes = {
+  TAREA_KDS_DESACTUALIZADA: 'La preparación cambió en otra pantalla. Actualiza y revisa antes de continuar.',
+  TRANSICION_KDS_NO_VALIDA: 'Esta preparación no admite la etapa elegida.',
   MESA_INEXISTENTE: 'La mesa no existe.',
   MESA_DESACTUALIZADA: 'La mesa o su cuenta cambiaron. Consulta nuevamente antes de confirmar.',
   MESA_CON_CUENTA_ACTIVA: 'La mesa tiene una cuenta abierta o en pago. Continúa sobre ese pedido.',

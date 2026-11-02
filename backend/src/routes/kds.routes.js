@@ -3,6 +3,7 @@ import { autenticar } from '../middlewares/autenticar.js';
 import { exigirPermiso } from '../middlewares/exigirPermiso.js';
 import { consultarTareasKds, consultarTareaKds } from '../services/kds.service.js';
 import { manejarComercial } from '../controllers/pedidos.controller.js';
+import { cambiarTareaKds } from '../services/kds-comandos.service.js';
 const router = Router();
 router.use(autenticar, exigirPermiso('kds', 'operar'));
 // La consulta de colección valida sus propios parámetros de paginación.
@@ -15,4 +16,6 @@ router.get('/tareas', async (req, res, next) => {
   }
 });
 router.get('/tareas/:id', manejarComercial(req => consultarTareaKds(req.params.id)));
+router.post('/tareas/:id/transiciones', manejarComercial(req => cambiarTareaKds(req.params.id, req.body,
+  { usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key') })));
 export default router;
