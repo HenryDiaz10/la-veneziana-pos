@@ -9,8 +9,12 @@ import { recuperarOperacion, resolverIntento } from '../services/operacion-comer
 
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key'),
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
-const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE']);
+const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE', 'CATEGORIA_GASTO_INEXISTENTE']);
 const mensajes = {
+  CATEGORIA_GASTO_INEXISTENTE: 'La categoría de gasto no existe.',
+  CATEGORIA_GASTO_DUPLICADA: 'Ya existe una categoría con ese nombre.',
+  MOVIMIENTO_GASTO_NO_VALIDO: 'Vincula un egreso autorizado por el importe completo del gasto.',
+  MOVIMIENTO_YA_VINCULADO: 'Ese movimiento de caja ya está vinculado a un gasto.',
   TAREA_KDS_DESACTUALIZADA: 'La preparación cambió en otra pantalla. Actualiza y revisa antes de continuar.',
   TRANSICION_KDS_NO_VALIDA: 'Esta preparación no admite la etapa elegida.',
   MESA_INEXISTENTE: 'La mesa no existe.',

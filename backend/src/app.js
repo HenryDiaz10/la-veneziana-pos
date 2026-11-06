@@ -31,6 +31,7 @@ import rolesRouter from './routes/roles.routes.js';
 import categoriasRouter from './routes/categorias.routes.js';
 
 import autorizacionesRouter from './routes/autorizaciones.routes.js';
+import reportesRouter from './routes/reportes.routes.js';
 
 import productosRouter from './routes/productos.routes.js';
 
@@ -176,6 +177,7 @@ app.use('/api/usuarios', usuariosRouter);
 app.use('/api/roles', rolesRouter);
 
 app.use('/api/autorizaciones', autorizacionesRouter);
+app.use('/api/reportes', reportesRouter);
 
 // Catálogo: categorías protegidas por sesión y permiso.
 app.use('/api/categorias', categoriasRouter);

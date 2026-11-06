@@ -8,8 +8,8 @@ cuenta/rol/estado, reinicia bloqueo por intentos, revoca sesiones y registra
 auditoría sin secretos. Requiere un administrador activo y BD local; no es un
 endpoint público ni un mecanismo de recuperación en producción.
 
-**Avance actual: fase 38 implementada y probada.**
-La siguiente etapa es la **fase 39: consultas gerenciales del backend**.
+**Avance actual: fase 39 implementada y probada.**
+La siguiente etapa es la **fase 40: interfaz y gráficos gerenciales**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -128,6 +128,12 @@ La siguiente etapa es la **fase 39: consultas gerenciales del backend**.
   locales configurables, texto/icono estáticos y pruebas de audio/reloj/responsive.
   Los recordatorios no determinan por sí solos el estado físico del producto.
 
+- Fase 39: API gerencial con periodo/estado/sesión, PEN y zona horaria explícita,
+  ventas y medios sin duplicación por pagos mixtos, devoluciones por desembolso,
+  costos históricos y estimación condicionada a calidad. Registro autorizado e
+  idempotente de gastos/categorías, vinculación a egresos sin doble conteo y
+  separación de principal de deuda. Pruebas HTTP/MySQL y rollback con fixtures.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
@@ -138,6 +144,7 @@ Operaciones de mesas: [backend/MESAS.md](backend/MESAS.md).
 Modificadores y notas: [MODIFICADORES_NOTAS.md](MODIFICADORES_NOTAS.md).
 Eventos y protocolo KDS: [backend/KDS.md](backend/KDS.md).
 Tablero de cocina y despacho: [frontend/KDS.md](frontend/KDS.md).
+Consultas gerenciales y gastos: [backend/REPORTES.md](backend/REPORTES.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
