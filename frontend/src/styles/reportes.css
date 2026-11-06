@@ -1,0 +1,51 @@
+.vz-reportes { display: grid; gap: 1.3rem; max-width: 1760px; margin: auto; min-width: 0; }
+.vz-reportes .vz-page-header { margin-bottom: 0; }
+.vz-report-acciones { display: flex; gap: .6rem; flex-wrap: wrap; }
+.vz-report-filtros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; border: 1px solid var(--app-borde); padding: 1.2rem; border-radius: 1rem; background: var(--app-superficie); align-items: end; }
+.vz-report-filtros label { display: grid; gap: .45rem; font-size: .82rem; font-weight: 700; min-width: 0; }
+.vz-report-filtros input, .vz-report-filtros select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--app-borde); border-radius: .65rem; padding: .65rem; background: var(--app-fondo); color: var(--app-texto); }
+.vz-report-filtros > p { grid-column: 1/-1; font-size: .75rem; color: var(--app-secundario); }
+.vz-report-contexto { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .85rem 1rem; border-left: 4px solid #f59e0b; background: var(--app-superficie); border-radius: .6rem; font-size: .82rem; }
+.vz-report-contexto small { color: var(--app-secundario); }
+.vz-report-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.vz-report-kpi { padding: 1.2rem; border: 1px solid var(--app-borde); border-top: 4px solid #f59e0b; border-radius: 1rem; background: var(--app-superficie); min-width: 0; }
+.vz-report-kpi.tono-lima { border-top-color: #84cc16; }
+.vz-report-kpi.tono-rojo { border-top-color: #ef4444; }
+.vz-report-kpi p { font-size: .78rem; font-weight: 650; }
+.vz-report-kpi strong { display: block; margin: .7rem 0; font-weight: 800; font-size: clamp(1.2rem, 1.7vw, 1.8rem); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.vz-report-kpi small { display: block; font-size: .72rem; color: var(--app-secundario); }
+.vz-report-panel { min-width: 0; background: var(--app-superficie); border: 1px solid var(--app-borde); border-radius: 1rem; padding: 1.2rem; }
+.vz-report-panel > header { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.vz-report-panel h2 { font-weight: 800; font-size: 1.05rem; }
+.vz-report-panel header p, .vz-report-nota { color: var(--app-secundario); font-size: .78rem; margin-top: .4rem; line-height: 1.6; }
+.vz-report-graficos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; align-items: start; }
+.vz-report-canvas { position: relative; height: 300px; min-width: 0; }
+.vz-report-vacio { display: grid; place-items: center; padding: 2rem .5rem; color: var(--app-secundario); min-height: 100px; font-size: .85rem; }
+.vz-report-canvas .vz-report-vacio { height: 100%; }
+.vz-report-leyenda { display: grid; gap: .55rem; margin: 1rem 0; font-size: .78rem; }
+.vz-report-leyenda li { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.vz-report-leyenda li > span { width: .7rem; height: .7rem; border-radius: 50%; }
+.vz-report-leyenda strong { margin-left: auto; font-variant-numeric: tabular-nums; }
+.vz-report-scroll { max-height: 340px; overflow: auto; }
+.vz-reportes table { width: 100%; font-size: .8rem; border-collapse: collapse; table-layout: fixed; }
+.vz-reportes th, .vz-reportes td { padding: .65rem .4rem; text-align: right; border-bottom: 1px solid var(--app-borde); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.vz-reportes th:first-child { text-align: left; }
+.vz-reportes thead { background: var(--app-elevada); }
+.vz-reportes tbody tr:nth-child(even) { background: var(--app-elevada); }
+.vz-report-lista > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; border-bottom: 1px solid var(--app-borde); padding: .8rem 0; font-size: .85rem; }
+.vz-report-lista dd { font-weight: 750; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.vz-report-gastos article { display: flex; gap: .6rem; justify-content: space-between; border-bottom: 1px solid var(--app-borde); padding: .8rem 0; font-size: .85rem; overflow-wrap: anywhere; }
+.vz-report-gastos article > div { min-width: 0; }
+.vz-report-gastos p { color: var(--app-secundario); font-size: .75rem; margin-top: .3rem; }
+.vz-report-gastos article > strong { flex-shrink: 0; }
+.vz-report-paginacion { display: flex; gap: .6rem; align-items: center; justify-content: end; margin-top: 1rem; flex-wrap: wrap; }
+.vz-report-paginacion span { margin-right: auto; font-size: .8rem; }
+.vz-report-alerta { border: 1px solid #f59e0b; background: color-mix(in srgb, #f59e0b 8%, var(--app-superficie)); border-radius: 1rem; padding: 1rem; }
+.vz-report-alerta h2 { font-weight: 800; margin-bottom: .4rem; }
+.vz-report-alerta ul, .vz-report-criterios { list-style: disc; padding-left: 1.2rem; font-size: .85rem; margin-top: .5rem; }
+.vz-report-consultando { font-size: .82rem; color: var(--app-secundario); }
+.vz-reportes summary { cursor: pointer; min-height: 44px; font-weight: 700; padding-top: .5rem; }
+.vz-reportes :focus-visible { outline: 3px solid var(--app-foco); outline-offset: 3px; }
+@media(max-width: 1200px) { .vz-report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width: 900px) { .vz-report-graficos { grid-template-columns: minmax(0, 1fr); } .vz-report-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width: 480px) { .vz-report-filtros, .vz-report-kpis { grid-template-columns: minmax(0, 1fr); } .vz-report-panel { padding: 1rem .75rem; } .vz-report-canvas { height: 270px; } .vz-report-gastos article { flex-direction: column; } .vz-reportes table { font-size: .7rem; } .vz-reportes th:first-child { width: 36%; } }

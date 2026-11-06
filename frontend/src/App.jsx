@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 
 import {
   Link,
@@ -24,6 +24,8 @@ import Pagos from './pages/Pagos.jsx'
 import ArqueoCaja from './pages/ArqueoCaja.jsx'
 import Salon from './pages/Salon.jsx'
 import TableroKds from './pages/TableroKds.jsx'
+// Los gráficos se descargan únicamente al entrar al reporte autorizado.
+const Reportes = lazy(() => import('./pages/Reportes.jsx'))
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
@@ -242,6 +244,11 @@ function App() {
           <Route element={<ProtectedRoute modulo="caja" accion="gestionar" />}>
             <Route element={<AdminLayout />}>
               <Route path="/caja" element={<ArqueoCaja />} />
+            </Route>
+          </Route>
+          <Route element={<ProtectedRoute modulo="reportes" accion="leer" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/reportes" element={<Suspense fallback={<p role="status">Cargando reportes…</p>}><Reportes/></Suspense>} />
             </Route>
           </Route>
           <Route element={<ProtectedRoute modulo="kds" accion="operar" />}>

@@ -8,8 +8,8 @@ cuenta/rol/estado, reinicia bloqueo por intentos, revoca sesiones y registra
 auditoría sin secretos. Requiere un administrador activo y BD local; no es un
 endpoint público ni un mecanismo de recuperación en producción.
 
-**Avance actual: fase 39 implementada y probada.**
-La siguiente etapa es la **fase 40: interfaz y gráficos gerenciales**.
+**Avance actual: fase 40 implementada y probada.**
+La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
@@ -134,6 +134,11 @@ La siguiente etapa es la **fase 40: interfaz y gráficos gerenciales**.
   idempotente de gastos/categorías, vinculación a egresos sin doble conteo y
   separación de principal de deuda. Pruebas HTTP/MySQL y rollback con fixtures.
 
+- Fase 40: pantalla gerencial protegida, indicadores, filtros aplicados,
+  dona de cobros y barras diarias con Chart.js, tablas exactas, advertencias y
+  consulta paginada de gastos. PNG con contexto/leyenda y CSV con datos y filtros;
+  diseño adaptable, temas, reduced-motion y carga diferida del módulo gráfico.
+
 Detalle y contrato: [backend/PEDIDOS.md](backend/PEDIDOS.md).
 Interfaz de pagos: [frontend/PAGOS.md](frontend/PAGOS.md).
 Integración y agente: [VENTA_FINAL.md](VENTA_FINAL.md).
@@ -145,6 +150,7 @@ Modificadores y notas: [MODIFICADORES_NOTAS.md](MODIFICADORES_NOTAS.md).
 Eventos y protocolo KDS: [backend/KDS.md](backend/KDS.md).
 Tablero de cocina y despacho: [frontend/KDS.md](frontend/KDS.md).
 Consultas gerenciales y gastos: [backend/REPORTES.md](backend/REPORTES.md).
+Interfaz y gráficos: [frontend/REPORTES.md](frontend/REPORTES.md).
 
 **Sesiones actuales:** ocho horas desde el login aunque no haya interacción,
 sin cierre por inactividad a los quince minutos. Los fallos temporales de conexión no desmontan
@@ -153,7 +159,7 @@ formularios ni equivalen a logout. Implementación y pruebas:
 
 El frontend permite ingresar, recuperar la sesión al recargar y cerrarla;
 administrar Catálogo y Clientes según permisos y consultar los roles en Seguridad.
-Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja, /salon, /cocina y /seguridad exigen sesión;
+Las rutas /inicio, /pos, /catalogo, /recetas, /inventario, /compras, /clientes, /caja, /salon, /cocina, /reportes y /seguridad exigen sesión;
 las secciones de negocio comprueban también su permiso específico.
 El POS permite revisar y registrar pedidos; Pagos confirma el cobro con caja
 propia, versión y bloqueo vigentes. Solo la confirmación oficial permite retirar

@@ -28,13 +28,17 @@
     "test:modificadores:navegador": "node tests/modificadores-navegador.mjs",
     "test:kds": "node --test tests/kds.test.mjs tests/kds-tiempo.test.mjs",
     "test:kds:navegador": "node tests/kds-navegador.mjs",
-    "test:kds:avisos": "node tests/kds-avisos-navegador.mjs"
+    "test:kds:avisos": "node tests/kds-avisos-navegador.mjs",
+    "test:reportes": "node --test tests/reportes.test.mjs",
+    "test:reportes:navegador": "node tests/reportes-navegador.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",
     "@fontsource-variable/montserrat": "5.3.0",
     "@fontsource-variable/playfair-display": "5.3.0",
+    "chart.js": "4.6.1",
     "react": "^19.2.8",
+    "react-chartjs-2": "5.3.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "7.18.4",
     "zustand": "5.0.15"

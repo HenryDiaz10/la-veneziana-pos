@@ -497,3 +497,13 @@ audio automáticamente tras F5. Guía y límites en [KDS.md](KDS.md).
 
 Pruebas: `test:kds`, `test:kds:navegador`, `test:kds:avisos`, lint y build.
 Resumen fuera de Git: `DOCUMENTACION/FASES/FASE_38.pdf`.
+
+### Fase 40: reportes gerenciales
+
+`/reportes`, con reportes/leer, consulta la API de fase 39: indicadores, filtros
+de periodo/estado/sesión/zona, dona de cobros, barras diarias, importes exactos,
+calidad del margen y gastos paginados. Chart.js 4.6.1 y react-chartjs-2 5.3.1,
+fijados en package.json/lock, cargados al abrir el módulo protegido.
+Exportar CSV o PNG del gráfico con filtros/leyenda. Respeta temas, teclado,
+tacto y reduced-motion; no interpreta null como cero ni calcula utilidad nueva.
+Guía y pruebas: [REPORTES.md](REPORTES.md). PDF: `DOCUMENTACION/FASES/FASE_40.pdf`.
