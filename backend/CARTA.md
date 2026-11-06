@@ -57,7 +57,11 @@ chorizo en la nota y hot dog en la tabla, sin inventar una receta definitiva.
 Catorce bebidas envasadas tienen su insumo directo por unidad, con físico y
 reservado inicial **cero**. No se crearon compras, Kardex, reservas ni saldos
 ficticios. Para tener existencias se debe registrar el ingreso real en Compras.
-No se inventaron cantidades de ingredientes ni recetas de cocina.
+Posteriormente, por solicitud del propietario, se completaron las recetas con
+sus referencias de harina, queso y salsa y cantidades estimadas para los demás
+ingredientes. Ver [RECETARIO.md](RECETARIO.md) y el detalle por presentación en
+[recetas-carta.csv](data/recetas-carta.csv). Los insumos nuevos también inician
+sin existencias ni costos; se deben registrar las cantidades reales en almacén.
 
 Las quince tarifas de delivery se conservaron en la configuración
 `CARTA_TARIFAS_DELIVERY` y en la página pública de referencia

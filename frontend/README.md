@@ -500,6 +500,12 @@ Resumen fuera de Git: `DOCUMENTACION/FASES/FASE_38.pdf`.
 
 ### Fase 40: reportes gerenciales
 
+Actualización posterior: `/reportes` se dedica al análisis de ventas con nueve
+gráficos, mapa de actividad y filtros; `/estado-resultados` muestra los cuatro
+niveles financieros, gastos y compras. Ambos tienen entrada y ruta protegida
+independientes. CSVs separados y, en resultados, impresión para guardar PDF.
+Ver [criterios y pruebas](../backend/ANALITICA_Y_RESULTADOS.md).
+
 `/reportes`, con reportes/leer, consulta la API de fase 39: indicadores, filtros
 de periodo/estado/sesión/zona, dona de cobros, barras diarias, importes exactos,
 calidad del margen y gastos paginados. Chart.js 4.6.1 y react-chartjs-2 5.3.1,

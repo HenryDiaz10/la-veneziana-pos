@@ -16,6 +16,7 @@ const consultar = operacion => async (req, res, next) => {
 };
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key') });
 router.get('/gerencial', exigirPermiso('reportes', 'leer'), consultar(consultarGerencial));
+router.get('/resultados', exigirPermiso('reportes', 'leer'), consultar(consultarGerencial));
 router.get('/gastos', exigirPermiso('reportes', 'leer'), consultar(listarGastos));
 router.get('/gastos/categorias', exigirPermiso('reportes', 'leer'), manejarComercial(() => categoriasGasto()));
 // Lectura gerencial no implica poder registrar gastos. Reutilizar el permiso

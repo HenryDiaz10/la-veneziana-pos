@@ -34,6 +34,8 @@ try {
     return { status: r.status, json: await r.json(), headers: r.headers };
   };
   assert.equal((await pedir('/reportes/gerencial', null)).status, 401);
+  assert.equal((await pedir('/reportes/resultados?desde=2026-11-01&hasta=2026-11-06', null)).status, 401);
+  assert.equal((await pedir('/reportes/resultados?desde=2026-11-01&hasta=2026-11-06', 1)).status, 403);
   assert.equal((await pedir('/reportes/gerencial', 1)).status, 403);
   assert.equal((await pedir('/reportes/gerencial')).status, 400);
   assert.equal((await pedir('/reportes/gerencial?desde=2026-02-30&hasta=2026-11-05')).status, 400);
@@ -68,6 +70,7 @@ try {
     const venta = await m.VentaComprobante.create({ pedido_id: pedido.id, sesion_caja_id: sesionId, cajero_id: usuarios[0].id, serie_correlativo: `F39-${randomUUID().slice(0, 12)}`,
       subtotal_gravado: cantidad === 10 ? '90.00' : '9.00', igv_total: cantidad === 10 ? '10.00' : '1.00', total_final_venta: total,
       estado_emision: estado, fecha_emision: new Date(fecha), snapshot_fiscal_json: { fixture: true }, operacion_uid: randomUUID() }, { transaction: tx });
+    await m.VentaDetalleSnapshot.create({venta_id:venta.id,pedido_item_id:pedido.lineas[0].id,descripcion_snapshot:'Fixture comercial histórico',cantidad,precio_unitario:'10.00',descuento:'0.00',base_imponible:cantidad===10?'90.00':'9.00',impuesto:cantidad===10?'10.00':'1.00',total,snapshot_json:{fixture:true}},{transaction:tx});
     const tarea = await m.KdsTarea.findOne({ where: { pedido_item_id: pedido.lineas[0].id }, transaction: tx });
     return { venta, tarea };
   };
@@ -80,6 +83,11 @@ try {
   const q = { desde: '2026-11-05', hasta: '2026-11-05', sesion_id: String(sesion.id) };
   const reporte = () => consultarGerencial(q, tx);
   const parcial = await reporte(); assert.equal(parcial.ventas.cantidad, 1); assert.equal(parcial.ventas.total, '100.00'); assert.equal(parcial.estimacion.completa, false);
+  assert.equal(parcial.analitica.productos_top[0].unidades,'10','Dos medios de pago no duplican unidades');
+  assert.equal(parcial.analitica.canales[0].total,'100.00');
+  assert.equal(parcial.analitica.horas[0].cantidad,1,'Medianoche de Lima');
+  assert.equal((await consultarGerencial({...q,canal:'delivery'},tx)).ventas.cantidad,0);
+  assert.equal((await consultarGerencial({...q,mesero_id:String(usuarios[1].id)},tx)).ventas.cantidad,0);
   assert.ok(parcial.estimacion.advertencias.includes('reservas_pendientes'));
   await consumirTarea(actual.tarea.id, { usuarioId: usuarios[0].id, transaction: tx });
   await m.InventarioKardex.update({ fecha_movimiento: new Date('2026-11-05T15:00:00Z') }, { where: { referencia_documento: `tarea:${actual.tarea.id}` }, transaction: tx });
@@ -118,6 +126,16 @@ try {
   assert.equal(await m.GastoFinancieroOperativo.count({ transaction: tx }), categoriasPrevias);
   const todos = await consultarGerencial({ ...q, estado: 'todos' }, tx); assert.equal(todos.ventas.cantidad, 2); assert.equal(todos.estimacion.completa, false);
   const utc = await consultarGerencial({ ...q, zona_horaria: 'UTC' }, tx); assert.equal(utc.ventas.cantidad, 2);
+  // Dos cuentas en la misma mesa son dos atenciones y una mesa física distinta.
+  const zona=await m.ZonaRestaurante.create({nombre:'Fixture analítica'},{transaction:tx});
+  const mesa=await m.MesaSalon.create({zona_id:zona.id,codigo_mesa:`RA${marca.slice(0,6)}`,estado_actual:'libre'},{transaction:tx});
+  const pedidosRanking=(await m.VentaComprobante.findAll({where:{sesion_caja_id:sesion.id,estado_emision:'emitida'},transaction:tx})).map(v=>v.pedido_id);
+  await m.PedidoMaster.update({tipo_atencion:'salon',mesa_id:mesa.id,estado_cuenta:'pagada'},{where:{id:pedidosRanking},transaction:tx});
+  const salon=await consultarGerencial({...q,canal:'salon'},tx);
+  assert.equal(salon.analitica.meseros[0].atenciones,1);
+  const amplio=await consultarGerencial({...q,desde:'2026-11-04',hasta:'2026-11-06',canal:'salon'},tx);
+  assert.equal(amplio.analitica.meseros[0].atenciones,3);
+  assert.equal(amplio.analitica.meseros[0].mesas_distintas,1);
   const ruta = `/reportes/gerencial?desde=2026-11-05&hasta=2026-11-05&sesion_id=${sesion.id}`;
   const respuesta = await pedir(ruta); assert.equal(respuesta.status, 200); assert.equal(respuesta.headers.get('cache-control'), 'no-store'); assert.equal(respuesta.json.ventas.cantidad, 0);
   // Los registros de esta prueba no son visibles fuera de la transacción.

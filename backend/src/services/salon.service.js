@@ -3,6 +3,7 @@ import { sequelize } from '../config/database.js';
 import { ZonaRestaurante, MesaSalon, PedidoMaster, AuditLog } from '../models/index.js';
 import { CAMPOS_MESA, CAMPOS_CUENTA_MESA, presentarMesa } from './mesas.service.js';
 import { CUENTAS_ACTIVAS } from './mesas-reglas.js';
+import { presentarZona } from './salon-configuracion.js';
 
 // Una única lectura coherente; consultar el mapa nunca ocupa ni libera mesas.
 export async function consultarSalon() {
@@ -13,6 +14,7 @@ export async function consultarSalon() {
     const cuentas = ids.length ? await PedidoMaster.findAll({ where: { mesa_id: ids, estado_cuenta: CUENTAS_ACTIVAS }, attributes: CAMPOS_CUENTA_MESA, transaction, raw: true }) : [];
     const marcas = ids.length ? await AuditLog.findAll({ where: { entidad_afectada: 'mesas_salon', entidad_id: ids }, attributes: ['entidad_id', [fn('MAX', col('id')), 'marca']], group: ['entidad_id'], transaction, raw: true }) : [];
     const porMesa = new Map(cuentas.map(p => [p.mesa_id, p])), porMarca = new Map(marcas.map(a => [String(a.entidad_id), a.marca]));
-    return { consultado_en: new Date().toISOString(), zonas, mesas: mesas.map(m => presentarMesa(m, porMesa.get(m.id), porMarca.get(String(m.id)) ?? null)) };
+    const marcasZona=zonas.length?await AuditLog.findAll({where:{entidad_afectada:'zonas_restaurante',entidad_id:zonas.map(z=>z.id)},attributes:['entidad_id',[fn('MAX',col('id')),'marca']],group:['entidad_id'],transaction,raw:true}):[];
+    return { consultado_en: new Date().toISOString(), zonas:zonas.map(z=>presentarZona(z,marcasZona.find(m=>String(m.entidad_id)===String(z.id))?.marca??null)), mesas: mesas.map(m => presentarMesa(m, porMesa.get(m.id), porMarca.get(String(m.id)) ?? null)) };
   });
 }

@@ -1,7 +1,8 @@
 import { Op, fn, col, where, Transaction } from 'sequelize';
 import { createHash } from 'node:crypto';
 import { sequelize } from '../config/database.js';
-import { CompraFactura, CompraDetalle, ProveedorMaestro, InsumoAlmacen, UnidadMedida, AuditLog, InventarioKardex, Rol } from '../models/index.js';
+import { CompraFactura, CompraDetalle, ProveedorMaestro, InsumoAlmacen, UnidadMedida, AuditLog, InventarioKardex, Rol, ConfiguracionGlobal } from '../models/index.js';
+import { CLAVE_PROVEEDORES_REFERENCIA, referenciasCoincidentes } from '../../data/proveedores-referencia.mjs';
 import { registrarMovimiento } from './inventario.service.js';
 import { consumirAutorizacion } from './autorizaciones.service.js';
 import { ErrorInventario, idInsumoValido } from './inventario-calculo.js';
@@ -9,7 +10,10 @@ import { validarCompra, validarProveedor, validarAltaInsumo, textoCompra, objeto
 const exigir = (c, codigo) => { if (!c) throw new ErrorInventario(codigo); };
 const UID = /^compra:[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const PROVEEDOR = ['id','razon_social','ruc','telefono_contacto','correo_contacto','dias_credito','estado'];
-async function tx(operacion) {
+async function tx(operacion, padre) {
+  // Permitir una carga de varios documentos atómica; el llamador controla
+  // commit/rollback cuando proporciona una transacción externa.
+  if (padre) return operacion(padre);
   for (let n=0;;n++) try { return await sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }, operacion); }
   catch (e) { if (e.original?.code === 'ER_LOCK_DEADLOCK' && n<2) continue;
     if (e.name === 'SequelizeUniqueConstraintError') throw new ErrorInventario('DOCUMENTO_DUPLICADO'); throw e; }
@@ -25,8 +29,16 @@ async function auditoria(entidad,id,actor,antes,despues,descripcion,transaction)
     datos_anteriores: antes, datos_nuevos: despues, descripcion },{transaction});
 }
 export async function listarProveedores(opciones) {
-  const p=parametros(opciones), { count,rows }=await ProveedorMaestro.findAndCountAll({ where: buscar(['razon_social','ruc'],p.busqueda),attributes:PROVEEDOR,order:[['id','ASC']],limit:p.limite,offset:(p.pagina-1)*p.limite });
-  return { proveedores:rows,paginacion:paginacion(p,count) };
+  const p=parametros(opciones);
+  const config=await ConfiguracionGlobal.findByPk(CLAVE_PROVEEDORES_REFERENCIA);
+  const referencias=Array.isArray(config?.valor_json?.proveedores)?config.valor_json.proveedores:[];
+  const rucs=referenciasCoincidentes(referencias,p.busqueda);
+  const filtro=rucs.length?{[Op.or]:[buscar(['razon_social','ruc'],p.busqueda),{ruc:{[Op.in]:rucs}}]}:buscar(['razon_social','ruc'],p.busqueda);
+  const { count,rows }=await ProveedorMaestro.findAndCountAll({ where:filtro,attributes:PROVEEDOR,order:[['id','ASC']],limit:p.limite,offset:(p.pagina-1)*p.limite });
+  return { proveedores:rows.map(row=>{
+    const referencia=referencias.find(r=>r.ruc===row.ruc);
+    return {...row.toJSON(),marcas:referencia?.marcas??[],rubro:referencia?.rubro??null,ficticio:referencia?.ficticio===true};
+  }),paginacion:paginacion(p,count) };
 }
 export function guardarProveedor(id,datos,actor) {
   const entrada=validarProveedor(datos); exigir(id===null||idInsumoValido(id),'DATOS_INVALIDOS');
@@ -98,7 +110,7 @@ async function validarInsumos(lineas,transaction) {
     exigir(['kg','l','un'].includes(u?.abreviatura?.toLowerCase()),'UNIDAD_CAMBIADA');
   }
 }
-export function guardarCompra(id,datos,actor) {
+export function guardarCompra(id,datos,actor,{transaction:padre}={}) {
   const entrada=validarCompra(datos); exigir(id===null||idInsumoValido(id),'DATOS_INVALIDOS');
   exigir(id===null?UID.test(datos.operacion_uid??''):typeof datos.revision==='string','DATOS_INVALIDOS');
   return tx(async transaction=>{
@@ -113,10 +125,10 @@ export function guardarCompra(id,datos,actor) {
     await CompraDetalle.bulkCreate(lineas.map(l=>({...l,compra_id:c.id})),{transaction});
     await auditoria('compras_facturas',c.id,actor,antes,entrada,'Compra guardada como borrador; sin ingreso de stock',transaction);
     return serializar(c,transaction);
-  }).catch(async error=>{
+  },padre).catch(async error=>{
     // Dos altas con el mismo UID pueden competir antes de que exista la fila.
     // Tras el rollback de la perdedora, devolver la operación ya confirmada.
-    if(id===null&&error.codigo==='DOCUMENTO_DUPLICADO') {
+    if(!padre&&id===null&&error.codigo==='DOCUMENTO_DUPLICADO') {
       const anterior=await CompraFactura.findOne({where:{operacion_uid:datos.operacion_uid}});
       if(anterior) {
         const resultado=await consultarCompra(anterior.id),c=resultado.compra;
@@ -127,7 +139,7 @@ export function guardarCompra(id,datos,actor) {
     throw error;
   });
 }
-export function confirmarCompra(id,datos,actor) {
+export function confirmarCompra(id,datos,actor,{transaction:padre}={}) {
   exigir(idInsumoValido(id)&&objetoCompra(datos,['revision'])&&typeof datos.revision==='string','DATOS_INVALIDOS');
   return tx(async transaction=>{
     const c=await CompraFactura.findByPk(id,{transaction,lock:transaction.LOCK.UPDATE}); exigir(c,'COMPRA_INEXISTENTE');
@@ -141,7 +153,7 @@ export function confirmarCompra(id,datos,actor) {
     await c.update({estado_registro:'confirmada'},{transaction});
     await auditoria('compras_facturas',c.id,actor,{estado_registro:'borrador'},{estado_registro:'confirmada'},'Confirmación de compra e ingreso de almacén',transaction);
     return serializar(c,transaction);
-  });
+  },padre);
 }
 export function compensarCompra(id,datos,actor) {
   exigir(idInsumoValido(id)&&objetoCompra(datos,['documento','motivo','autorizacion_id','revision']),'DATOS_INVALIDOS');

@@ -9,8 +9,10 @@ export function filtroReporte(datos) {
   if (!fecha(datos.desde) || !fecha(datos.hasta) || datos.desde > datos.hasta || (Date.parse(datos.hasta) - Date.parse(datos.desde)) / 86400000 >= 366) throw new Error('Selecciona fechas válidas y un periodo de hasta 366 días.')
   if (!['emitida', 'anulada', 'rechazada_sunat', 'todos'].includes(datos.estado) || !['America/Lima', 'UTC'].includes(datos.zona_horaria)) throw new Error('Revisa estado y zona horaria.')
   const sesion = String(datos.sesion_id ?? '').trim()
+  const canal = datos.canal ?? 'todos', mesero = String(datos.mesero_id ?? '').trim()
+  if (!['todos', 'salon', 'llevar', 'delivery'].includes(canal) || (mesero && (!/^[1-9]\d{0,9}$/.test(mesero) || BigInt(mesero)>2147483647n))) throw new Error('Revisa canal y responsable de atención.')
   if (sesion && (!/^[1-9]\d{0,9}$/.test(sesion) || BigInt(sesion) > 2147483647n)) throw new Error('La sesión debe ser un ID entero positivo.')
-  return { desde: datos.desde, hasta: datos.hasta, estado: datos.estado, zona_horaria: datos.zona_horaria, moneda: 'PEN', ...(sesion ? { sesion_id: sesion } : {}) }
+  return { desde: datos.desde, hasta: datos.hasta, estado: datos.estado, zona_horaria: datos.zona_horaria, moneda: 'PEN', ...(sesion ? { sesion_id: sesion } : {}), ...(canal!=='todos'?{canal}:{}), ...(mesero?{mesero_id:mesero}:{}) }
 }
 export function filtrosInicialesReporte(ahora = new Date()) {
   const partes = Object.fromEntries(new Intl.DateTimeFormat('en', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(ahora).map(p => [p.type, p.value]))
@@ -20,6 +22,24 @@ export function filtrosInicialesReporte(ahora = new Date()) {
 export function validarReporte(r) {
   exigir(r?.version_algoritmo === 1 && Number.isFinite(Date.parse(r.consultado_en)))
   filtroReporte(r.filtros)
+  if (r.analitica) {
+    const a=r.analitica,entero=n=>Number.isSafeInteger(n)&&n>=0,unidades=n=>typeof n==='string'&&/^\d{1,60}$/.test(n),texto=n=>typeof n==='string'&&n.length<=600
+    exigir(entero(a.productos_vendidos)&&texto(a.alcance))
+    if(a.responsables) exigir(Array.isArray(a.responsables)&&a.responsables.length<=100&&a.responsables.every(m=>entero(m.usuario_id)&&texto(m.nombre)))
+    for(const k of ['canales','horas','calor','meseros','productos_top','productos_baja_rotacion','categorias']) exigir(Array.isArray(a[k]))
+    exigir(a.canales.length<=3&&a.canales.every(c=>['salon','llevar','delivery'].includes(c.canal)&&entero(c.cantidad)&&dinero(c.total)))
+    exigir(a.horas.length===24&&a.horas.every((h,i)=>h.hora===i&&entero(h.cantidad)&&dinero(h.total)))
+    exigir(a.calor.length<=168&&a.calor.every(c=>entero(c.dia)&&c.dia<7&&entero(c.hora)&&c.hora<24&&entero(c.cantidad)&&dinero(c.total)))
+    exigir(a.meseros.length<=20&&a.meseros.every(m=>entero(m.usuario_id)&&texto(m.nombre)&&entero(m.atenciones)&&entero(m.mesas_distintas)&&dinero(m.total)))
+    for(const k of ['productos_top','productos_baja_rotacion']) exigir(a[k].length<=10&&a[k].every(p=>entero(p.producto_id)&&texto(p.nombre)&&unidades(p.unidades)&&entero(p.tickets)))
+    exigir(a.categorias.length<=20&&a.categorias.every(c=>entero(c.id)&&texto(c.nombre)&&unidades(c.unidades)))
+    exigir(entero(a.sin_ventas?.cantidad)&&Array.isArray(a.sin_ventas.productos)&&a.sin_ventas.productos.length<=50&&a.sin_ventas.productos.every(p=>entero(p.producto_id)&&texto(p.nombre)&&p.unidades==='0'))
+  }
+  if (r.compras) {
+    exigir(Number.isSafeInteger(r.compras.cantidad) && r.compras.cantidad >= 0 && Number.isSafeInteger(r.compras.parciales) && r.compras.parciales >= 0 && r.compras.parciales <= r.compras.cantidad)
+    for (const k of ['total', 'saldadas', 'pendientes_sin_abonos', 'total_documentos_parciales']) exigir(dinero(r.compras[k]) && !r.compras[k].startsWith('-'))
+    exigir(r.compras.parciales ? r.compras.saldo_pendiente === null : dinero(r.compras.saldo_pendiente) && !r.compras.saldo_pendiente.startsWith('-'))
+  }
   exigir(r.filtros.moneda === 'PEN' && Number.isSafeInteger(r.ventas?.cantidad) && r.ventas.cantidad >= 0)
   for (const k of ['total', 'base_registrada', 'impuesto_registrado', 'ticket_promedio']) exigir(dinero(r.ventas[k]) && !r.ventas[k].startsWith('-'))
   exigir(Array.isArray(r.medios) && r.medios.length === Object.keys(MEDIOS_REPORTE).length && new Set(r.medios.map(m => m.metodo)).size === r.medios.length)
@@ -58,5 +78,15 @@ export function csvReporte(r) {
     ['Indicador', 'Importe'], ...Object.entries(r.ventas), ['Devoluciones del periodo', r.devoluciones_periodo], ['Neto comercial con impuesto', r.neto_comercial_periodo_incluye_impuesto], ['Costo cohorte', r.costos.cohorte_ventas], ['Resultado referencial', r.estimacion.resultado_tras_gastos ?? 'No disponible'],
     ['Medio', 'Cobrado', 'Devuelto', 'Neto'], ...r.medios.map(m => [MEDIOS_REPORTE[m.metodo], m.cobrado, m.devuelto, m.neto]),
     ['Gastos', 'Importe'], ...Object.entries(r.gastos.por_clase).map(([k, v]) => [CLASES_REPORTE[k], v]), ['Fecha', 'Ventas', 'Total'], ...serieCompletaReporte(r).map(d => [d.fecha, d.cantidad, d.total])]
+  if (r.compras) filas.push(['Compras registradas (incluye IGV)', r.compras.total], ['Compras pagadas (estado actual)', r.compras.saldadas], ['Saldo pendiente proveedores', r.compras.saldo_pendiente ?? 'No disponible: abonos parciales sin desglose'], ['Documentos con abonos parciales', r.compras.parciales], ['Alcance compras', 'Por fecha de emisión; global, sin filtro de sesión ni estado de venta. No es flujo bancario ni gasto adicional.'])
   return '\uFEFF' + filas.map(f => f.map(celdaCsvReporte).join(';')).join('\r\n')
+}
+
+// Exportación operativa separada del estado de resultados financiero.
+export function csvAnalitica(r) {
+  const a=r.analitica
+  const filas=[['LA VENEZIANA','Reportes gerenciales'],['Consultado',r.consultado_en],...Object.entries(filtroReporte(r.filtros)),['Ventas con impuesto',r.ventas.total],['Tickets',r.ventas.cantidad],['Ticket promedio',r.ventas.ticket_promedio],['Fecha','Tickets','Total'],...serieCompletaReporte(r).map(d=>[d.fecha,d.cantidad,d.total])]
+  if(a)filas.push(['Productos vendidos distintos',a.productos_vendidos],['Productos top','Unidades','Tickets'],...a.productos_top.map(p=>[p.nombre,p.unidades,p.tickets]),['Baja rotación','Unidades','Tickets'],...a.productos_baja_rotacion.map(p=>[p.nombre,p.unidades,p.tickets]),['Productos activos sin ventas',a.sin_ventas.cantidad],...a.sin_ventas.productos.map(p=>[p.nombre,'0']),['Responsable','Atenciones de salón','Mesas distintas','Venta atribuida'],...a.meseros.map(m=>[m.nombre,m.atenciones,m.mesas_distintas,m.total]),['Canal','Tickets','Total'],...a.canales.map(c=>[c.canal,c.cantidad,c.total]),['Hora','Tickets','Total'],...a.horas.map(h=>[h.hora,h.cantidad,h.total]),['Categoría','Unidades'],...a.categorias.map(c=>[c.nombre,c.unidades]),['Día semana (lunes=0)','Hora','Tickets','Total'],...a.calor.map(c=>[c.dia,c.hora,c.cantidad,c.total]),['Alcance',a.alcance])
+  filas.push(['Medio','Cobrado','Devuelto','Neto'],...r.medios.map(m=>[MEDIOS_REPORTE[m.metodo],m.cobrado,m.devuelto,m.neto]))
+  return '\uFEFF'+filas.map(f=>f.map(celdaCsvReporte).join(';')).join('\r\n')
 }

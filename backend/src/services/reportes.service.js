@@ -2,13 +2,15 @@ import { QueryTypes, Transaction } from 'sequelize';
 import { sequelize } from '../config/database.js';
 import { filtrosReporte, CLASES_GASTO, decimalReporte as valor, formatoReporte as formato } from './reportes-reglas.js';
 import { MEDIOS_CAJA } from './caja-calculo.js';
+import { analiticaGerencial } from './reportes-analitica.js';
 
 export function consultarGerencial(query, padre) {
   const f = filtrosReporte(query);
   return sequelize.transaction(padre ? { transaction: padre } : { isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ }, async transaction => {
     const leer = sql => sequelize.query(sql, { replacements: f, type: QueryTypes.SELECT, transaction });
     const estado = "(:estado = 'todos' OR v.estado_emision= :estado)";
-    const ventas = `v.fecha_emision>= :inicio AND v.fecha_emision< :fin AND ${estado} AND (:sesion_id IS NULL OR v.sesion_caja_id= :sesion_id)`;
+    const atencion=`EXISTS(SELECT 1 FROM pedidos_master pa WHERE pa.id=v.pedido_id AND (:canal = 'todos' OR pa.tipo_atencion= :canal) AND (:mesero_id IS NULL OR pa.usuario_creador_id= :mesero_id))`;
+    const ventas = `v.fecha_emision>= :inicio AND v.fecha_emision< :fin AND ${estado} AND (:sesion_id IS NULL OR v.sesion_caja_id= :sesion_id) AND ${atencion}`;
     // Agregar cabeceras SIN unir pagos/detalles: una venta mixta cuenta una vez.
     const [v] = await leer(`SELECT COUNT(*) cantidad, COALESCE(SUM(v.total_final_venta),0) total,
       COALESCE(SUM(v.subtotal_gravado),0) base, COALESCE(SUM(v.igv_total),0) impuesto FROM ventas_comprobantes v WHERE ${ventas}`);
@@ -19,13 +21,23 @@ export function consultarGerencial(query, padre) {
     // Desembolsos por su fecha y sesión, incluso si la venta original es antigua.
     const devoluciones = await leer(`SELECT p.metodo_pago, SUM(p.monto) monto FROM devoluciones_pagos p
       JOIN ventas_devoluciones d ON d.id=p.devolucion_id JOIN ventas_comprobantes v ON v.id=d.venta_id
-      WHERE d.creado_en>= :inicio AND d.creado_en< :fin AND ${estado}
+      WHERE d.creado_en>= :inicio AND d.creado_en< :fin AND ${estado} AND ${atencion}
         AND (:sesion_id IS NULL OR p.sesion_id= :sesion_id) GROUP BY p.metodo_pago`);
     const gastos = await leer(`SELECT g.clasificacion, SUM(g.monto_gasto) monto FROM gastos_financieros_operativos g
       LEFT JOIN movimientos_caja_chica m ON m.id=g.movimiento_caja_id
       WHERE g.fecha_gasto BETWEEN :desde AND :hasta AND (:sesion_id IS NULL OR m.sesion_id= :sesion_id) GROUP BY g.clasificacion`);
     const [noAsignados] = await leer(`SELECT COALESCE(SUM(g.monto_gasto),0) monto FROM gastos_financieros_operativos g
       WHERE g.fecha_gasto BETWEEN :desde AND :hasta AND g.movimiento_caja_id IS NULL`);
+    // Situación actual de documentos emitidos en el rango, a nivel global.
+    // No inferir importes abonados a partir del estado pagado_parcial.
+    const [compras] = await leer(`SELECT COUNT(*) cantidad, COALESCE(SUM(total),0) total,
+      COALESCE(SUM(IF(estado_pago='pagado_total',total,0)),0) saldadas,
+      COALESCE(SUM(IF(estado_pago='pendiente',total,0)),0) pendientes,
+      COALESCE(SUM(estado_pago='pagado_parcial'),0) parciales,
+      COALESCE(SUM(IF(estado_pago='pagado_parcial',total,0)),0) total_parciales
+      FROM compras_facturas WHERE estado_registro='confirmada'
+      AND estado_pago IN ('pendiente','pagado_parcial','pagado_total')
+      AND fecha_emision BETWEEN :desde AND :hasta`);
     const [caja] = await leer(`SELECT COALESCE(SUM(IF(m.tipo='ingreso',m.monto,0)),0) ingresos,
       COALESCE(SUM(IF(m.tipo='egreso',m.monto,0)),0) egresos,
       COALESCE(SUM(IF(m.tipo='egreso' AND NOT EXISTS(SELECT 1 FROM gastos_financieros_operativos g WHERE g.movimiento_caja_id=m.id),m.monto,0)),0) egresos_sin_gasto
@@ -66,12 +78,14 @@ export function consultarGerencial(query, padre) {
     const margen = valor(v.base) * 100n - valor(c.costo, 4);
     const totalGastos = Object.values(gastosPorClase).reduce((a, x) => a + valor(x), 0n);
     const cobrados = medios.reduce((a, m) => a + valor(m.cobrado), 0n);
+    const analitica=await analiticaGerencial(leer,ventas);
     if (cobrados !== valor(v.total)) advertencias.push('pagos_no_concilian_con_ventas');
-    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f,
+    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f, analitica,
       politica: { ingresos: 'fecha_emision y estado de venta; pagos aplicados, no efectivo recibido',
         devoluciones: 'fecha del desembolso, sesion que lo realiza, estado de venta original',
         costos_cohorte: 'snapshots de reservas consumidas de las ventas seleccionadas a fecha de consulta',
         gastos: 'fecha_gasto civil; sesion solo cuando existe movimiento vinculado',
+        compras: 'documentos confirmados por fecha de emision; estado de pago actual, global sin filtro de sesion/estado de venta; no flujo bancario ni nuevo gasto',
         capital: 'amortizacion de principal no es gasto: egreso separado sin clasificar como interes/comision',
         alcance: 'reporte interno referencial; no cierre contable ni declaracion tributaria' },
       ventas: { cantidad: Number(v.cantidad), total: formato(valor(v.total)), base_registrada: formato(valor(v.base)), impuesto_registrado: formato(valor(v.impuesto)),
@@ -80,6 +94,7 @@ export function consultarGerencial(query, padre) {
       devoluciones_periodo: formato(medios.reduce((a, m) => a + valor(m.devuelto), 0n)),
       neto_comercial_periodo_incluye_impuesto: formato(valor(v.total) - medios.reduce((a, m) => a + valor(m.devuelto), 0n)),
       gastos: { por_clase: gastosPorClase, total: formato(totalGastos), sin_asignacion_sesion_en_periodo: formato(valor(noAsignados.monto)) },
+      compras: { cantidad: Number(compras.cantidad), total: formato(valor(compras.total)), saldadas: formato(valor(compras.saldadas)), pendientes_sin_abonos: formato(valor(compras.pendientes)), parciales: Number(compras.parciales), total_documentos_parciales: formato(valor(compras.total_parciales)), saldo_pendiente: Number(compras.parciales) ? null : formato(valor(compras.pendientes)) },
       movimientos: { ingresos: formato(valor(caja.ingresos)), egresos: formato(valor(caja.egresos)), egresos_sin_gasto: formato(valor(caja.egresos_sin_gasto)) },
       costos: { cohorte_ventas: formato(valor(c.costo, 4), 4), calidad: c,
         salidas_periodo: salidas.map(s => ({ tipo: s.tipo_transaccion, costo: formato(valor(s.costo, 4), 4), sin_costo: Number(s.sin_costo) })) },

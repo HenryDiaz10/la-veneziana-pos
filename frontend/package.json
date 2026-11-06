@@ -24,12 +24,13 @@
     "test:arqueo:navegador": "node tests/arqueo-navegador.mjs",
     "test:salon": "node --test tests/salon-mapa.test.mjs",
     "test:salon:navegador": "node tests/salon-navegador.mjs",
+    "test:salon:configuracion:navegador": "node tests/salon-configuracion-navegador.mjs",
     "test:modificadores": "node --test tests/modificadores.test.mjs",
     "test:modificadores:navegador": "node tests/modificadores-navegador.mjs",
     "test:kds": "node --test tests/kds.test.mjs tests/kds-tiempo.test.mjs",
     "test:kds:navegador": "node tests/kds-navegador.mjs",
     "test:kds:avisos": "node tests/kds-avisos-navegador.mjs",
-    "test:reportes": "node --test tests/reportes.test.mjs",
+    "test:reportes": "node --test tests/reportes.test.mjs tests/resultados.test.mjs",
     "test:reportes:navegador": "node tests/reportes-navegador.mjs"
   },
   "dependencies": {

@@ -26,6 +26,7 @@ import Salon from './pages/Salon.jsx'
 import TableroKds from './pages/TableroKds.jsx'
 // Los gráficos se descargan únicamente al entrar al reporte autorizado.
 const Reportes = lazy(() => import('./pages/Reportes.jsx'))
+const EstadoResultados = lazy(() => import('./pages/EstadoResultados.jsx'))
 
 import Catalogo from './pages/Catalogo.jsx'
 import Clientes from './pages/Clientes.jsx'
@@ -249,6 +250,7 @@ function App() {
           <Route element={<ProtectedRoute modulo="reportes" accion="leer" />}>
             <Route element={<AdminLayout />}>
               <Route path="/reportes" element={<Suspense fallback={<p role="status">Cargando reportes…</p>}><Reportes/></Suspense>} />
+              <Route path="/estado-resultados" element={<Suspense fallback={<p role="status">Cargando resultados…</p>}><EstadoResultados/></Suspense>} />
             </Route>
           </Route>
           <Route element={<ProtectedRoute modulo="kds" accion="operar" />}>

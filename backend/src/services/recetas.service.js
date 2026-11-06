@@ -1,7 +1,7 @@
 import { Op, fn, col, where } from 'sequelize';
 import { sequelize } from '../config/database.js';
 import { ProductoVenta, VarianteProducto, CategoriaVenta, RecetaBom, InsumoAlmacen, UnidadMedida,
-  ModificadorBom, ModificadorItem, ModificadorCatalogo, ProductoModificador } from '../models/index.js';
+  ModificadorBom, ModificadorItem, ModificadorCatalogo, ProductoModificador, ConfiguracionGlobal } from '../models/index.js';
 import { esIdRecetaValido, validarVinculoReceta, validarRecetaCompleta, validarDeltaReceta, validarResolucionReceta } from '../validators/recetas.js';
 import { unidadCanonica, unidadesCompatibles, convertirCantidadBase, cantidadEscalada, formatearCantidad,
   congelarSnapshotReceta, MAX_CANTIDAD_ESCALADA } from './recetas-calculo.js';
@@ -108,7 +108,9 @@ export function consultarReceta(productoId, varianteId = null) {
     const filas = await RecetaBom.findAll({ where: { producto_venta_id: productoId, variante_id: varianteId },
       attributes: CAMPOS_BOM, order: [['insumo_id', 'ASC']], transaction });
     const insumos = await cargarInsumos(filas.map(f => f.insumo_id), transaction, false);
+    const referencia = await ConfiguracionGlobal.findByPk('CARTA_RECETAS_REFERENCIA_V1', { transaction });
     return { estado: 'consultado', producto, receta: { producto_venta_id: productoId, variante_id: varianteId,
+      referencia: referencia?.valor_json?.productos?.includes(producto.sku) ? `Origen: recetario de referencia. Validar porciones con cocina.${referencia.valor_json.merma_version ? ' La cantidad bruta ya incluye la merma estimada: no agregarla otra vez. Las opciones también incluyen su pérdida estimada.' : ' Las porciones iniciales son estimadas.'}` : null,
       ingredientes: filas.map(f => serializarFila(f, insumos)) } };
   });
 }

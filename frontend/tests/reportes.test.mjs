@@ -2,6 +2,20 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { reporteFixture } from './reportes-fixture.mjs'
 import { filtroReporte, filtrosInicialesReporte, validarReporte, monedaReporte, serieCompletaReporte, csvReporte, celdaCsvReporte } from '../src/utils/reportes.js'
+
+test('compras saldadas se validan y exportan; saldo parcial desconocido conserva null', () => {
+  const r = reporteFixture()
+  r.compras = { cantidad: 6, total: '9954.90', saldadas: '9954.90', pendientes_sin_abonos: '0.00', parciales: 0, total_documentos_parciales: '0.00', saldo_pendiente: '0.00' }
+  validarReporte(r)
+  assert.ok(csvReporte(r).includes('"Compras pagadas (estado actual)";"9954.90"'))
+  r.compras.parciales = 1
+  assert.throws(() => validarReporte(r))
+  r.compras.saldo_pendiente = null
+  validarReporte(r)
+  assert.ok(csvReporte(r).includes('abonos parciales sin desglose'))
+  r.compras.saldadas = '-1.00'
+  assert.throws(() => validarReporte(r))
+})
 test('filtros del calendario real, Lima inicial y sesión estricta', () => {
   const inicial = filtrosInicialesReporte(new Date('2026-11-06T03:00:00Z')); assert.equal(inicial.hasta, '2026-11-05'); assert.equal(inicial.desde, '2026-10-30')
   for (const c of [{ desde: '2026-02-30' }, { hasta: '2027-12-31' }, { sesion_id: '1 OR 1=1' }, { sesion_id: '-2' }, { zona_horaria: 'otra' }]) assert.throws(() => filtroReporte({ ...inicial, ...c }))

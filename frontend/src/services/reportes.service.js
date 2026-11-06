@@ -1,14 +1,16 @@
 import { solicitarApi } from './api.js'
 import { filtroReporte, validarReporte, MEDIOS_REPORTE, monedaReporte, COLORES_REPORTE } from '../utils/reportes.js'
-export async function consultarGerencial({ filtros }, signal) {
+export async function consultarGerencial({ filtros, financiero }, signal) {
   const f = filtroReporte(filtros), query = new URLSearchParams(f)
-  const r = validarReporte(await solicitarApi(`/reportes/gerencial?${query}`, { signal }))
+  const r = validarReporte(await solicitarApi(`/reportes/${financiero?'resultados':'gerencial'}?${query}`, { signal }))
   if (JSON.stringify(filtroReporte(r.filtros)) !== JSON.stringify(f)) throw new Error('Los filtros recibidos no corresponden a la consulta.')
   return r
 }
 export async function consultarGastosReporte({ filtros, despues }, signal) {
   const f = filtroReporte(filtros)
   delete f.estado // Un gasto independiente no tiene estado de emisión de venta.
+  delete f.canal
+  delete f.mesero_id
   const r = await solicitarApi(`/reportes/gastos?${new URLSearchParams({ ...f, limite: '10', ...(despues ? { despues: String(despues) } : {}) })}`, { signal })
   if (!Array.isArray(r?.gastos) || !r.paginacion || !r.gastos.every(g => Number.isSafeInteger(g.id) && g.id > 0 && typeof g.descripcion === 'string' && /^\d+\.\d{2}$/.test(g.monto_gasto) && typeof g.fecha_gasto === 'string' && ['operativo', 'financiero', 'extraordinario', 'provision_impuesto'].includes(g.clasificacion)) || !(r.paginacion.siguiente === null || Number.isSafeInteger(r.paginacion.siguiente) && r.paginacion.siguiente > (despues ?? 0))) throw new Error('Listado de gastos no válido.')
   return r
@@ -35,7 +37,7 @@ export function imagenReporte(canvas, reporte, tipo, oscuro) {
   ctx.fillStyle = oscuro ? '#1b2028' : '#ffffff'; ctx.fillRect(0, 0, salida.width, salida.height)
   ctx.fillStyle = oscuro ? '#f8fafc' : '#0f172a'; ctx.font = 'bold 24px Arial'
   ctx.fillText(`La Veneziana · ${tipo === 'medios' ? 'Cobros por medio' : 'Ventas por día'}`, 24, 36)
-  ctx.font = '16px Arial'; ctx.fillText(`${reporte.filtros.desde} a ${reporte.filtros.hasta} · ${reporte.filtros.estado} · ${reporte.filtros.zona_horaria} · PEN · sesión ${reporte.filtros.sesion_id ?? 'todas'}`, 24, 66)
+  ctx.font = '16px Arial'; ctx.fillText(`${reporte.filtros.desde} a ${reporte.filtros.hasta} · ${reporte.filtros.estado} · ${reporte.filtros.zona_horaria} · PEN · sesión ${reporte.filtros.sesion_id ?? 'todas'} · canal ${reporte.filtros.canal??'todos'} · responsable ${reporte.filtros.mesero_id??'todos'}`, 24, 66,950)
   ctx.drawImage(canvas, 0, 84, ancho, altoGrafico)
   ctx.font = '18px Arial'; leyenda.forEach((s, i) => {
     const y = 112 + altoGrafico + i * 32

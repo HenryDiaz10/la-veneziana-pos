@@ -10,3 +10,7 @@ export function reporteFixture() {
     estimacion: { completa: true, advertencias: [], margen_base_menos_costo: '80.0000', resultado_tras_gastos: '66.0000' },
     politica: { ingresos: 'Fecha de emisión y estado de venta.', alcance: 'Reporte interno referencial, no cierre contable.' } }
 }
+
+export function analiticaFixture() {
+  return {productos_vendidos:2,productos_top:[{producto_id:1,nombre:'Pizza americana familiar',unidades:'8',tickets:4},{producto_id:2,nombre:'Coca-Cola 1 litro',unidades:'3',tickets:2}],productos_baja_rotacion:[{producto_id:2,nombre:'Coca-Cola 1 litro',unidades:'3',tickets:2},{producto_id:1,nombre:'Pizza americana familiar',unidades:'8',tickets:4}],canales:[{canal:'salon',cantidad:3,total:'60.00'},{canal:'llevar',cantidad:2,total:'40.00'}],horas:Array.from({length:24},(_,hora)=>({hora,cantidad:hora===19?5:0,total:hora===19?'100.00':'0.00'})),calor:[{dia:4,hora:19,cantidad:5,total:'100.00'}],meseros:[{usuario_id:20,nombre:'Mesera de prueba',atenciones:3,mesas_distintas:2,total:'60.00'}],categorias:[{id:1,nombre:'Pizzas',unidades:'8'},{id:2,nombre:'Bebidas',unidades:'3'}],sin_ventas:{cantidad:1,productos:[{producto_id:3,nombre:'Producto sin venta de prueba',unidades:'0'}]},alcance:'Fixture de pruebas: unidades de snapshots y cuentas de salón.'}
+}

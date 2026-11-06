@@ -13,6 +13,12 @@ test('gastos positivos y clasificación: capital no se registra como gasto', () 
   for (const cambio of [{ clasificacion: 'amortizacion_capital' }, { monto_gasto: '-1' }, { monto_gasto: '0' }, { monto_gasto: '1e2' }, { usuario_registro_id: 7 }, { movimiento_caja_id: '2' }]) assert.throws(() => validarGasto({ ...g, ...cambio }));
   assert.throws(() => filtrosReporte({ desde: '2026-11-05', hasta: '2026-11-05', limite: ['50'] }, true));
 });
+
+test('filtros operativos de canal/responsable rechazan arrays e inyección',()=>{
+  const q={desde:'2026-11-01',hasta:'2026-11-06'};
+  assert.equal(filtrosReporte({...q,canal:'salon',mesero_id:'20'}).mesero_id,20);
+  for(const c of [{canal:'otro'},{canal:['salon']},{canal:"salon' OR 1=1"},{mesero_id:'-1'},{mesero_id:20},{mesero_id:'2147483648'}])assert.throws(()=>filtrosReporte({...q,...c}));
+});
 test('agregados grandes, signos y cuatro decimales sin Number ni pérdida de centavos', () => {
   assert.equal(formatoReporte(decimalReporte('99999999999999.99') + decimalReporte('0.01')), '100000000000000.00');
   assert.equal(formatoReporte(decimalReporte('-0.0001', 4), 4), '-0.0001');

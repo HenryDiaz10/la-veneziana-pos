@@ -18,6 +18,7 @@ function AdminLayout() {
   const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
   const enlaces = [{ ruta: '/inicio', texto: 'Inicio', icono: 'inicio' }]
   if (permite('reportes', 'leer')) enlaces.push({ ruta: '/reportes', texto: 'Reportes gerenciales', icono: 'grafico' })
+  if (permite('reportes', 'leer')) enlaces.push({ ruta: '/estado-resultados', texto: 'Estado de resultados', icono: 'billete' })
   if (permite('kds', 'operar')) enlaces.push({ ruta: '/cocina', texto: 'Cocina y despacho', icono: 'recetas' })
   if (permite('mesas', 'gestionar')) enlaces.push({ ruta: '/salon', texto: 'Salón y mesas', icono: 'mesas' })
   if (permite('ventas', 'cobrar')) enlaces.push({ ruta: '/pos', texto: 'Punto de venta', icono: 'carrito' })

@@ -8,17 +8,19 @@ export function fechaReporte(v) {
 }
 // Periodos civiles inclusivos; SQL usa [inicio, fin) en UTC. No usar zona del SO.
 export function filtrosReporte(q, gastos = false) {
-  campos(q, ['desde', 'hasta', 'sesion_id', 'moneda', 'zona_horaria', ...(gastos ? ['clasificacion', 'despues', 'limite'] : ['estado'])]);
+  campos(q, ['desde', 'hasta', 'sesion_id', 'moneda', 'zona_horaria', ...(gastos ? ['clasificacion', 'despues', 'limite'] : ['estado','canal','mesero_id'])]);
   const a = fechaReporte(q.desde), b = fechaReporte(q.hasta);
   exigir(a <= b && b - a < 366 * 86400000);
   const zona = q.zona_horaria ?? 'America/Lima', moneda = q.moneda ?? 'PEN';
   exigir(['America/Lima', 'UTC'].includes(zona) && moneda === 'PEN');
   exigir(q.sesion_id === undefined || (typeof q.sesion_id === 'string' && /^[1-9]\d{0,9}$/.test(q.sesion_id) && idEntero(Number(q.sesion_id))));
   const estado = q.estado ?? 'emitida'; exigir(gastos || ['emitida', 'anulada', 'rechazada_sunat', 'todos'].includes(estado));
+  const canal=q.canal??'todos'; exigir(['todos','salon','llevar','delivery'].includes(canal));
+  exigir(q.mesero_id===undefined||(typeof q.mesero_id==='string'&&/^[1-9]\d{0,9}$/.test(q.mesero_id)&&idEntero(Number(q.mesero_id))));
   const offset = zona === 'America/Lima' ? 5 * 3600000 : 0;
   const sql = ms => new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
   const f = { desde: q.desde, hasta: q.hasta, sesion_id: q.sesion_id === undefined ? null : Number(q.sesion_id), moneda, zona_horaria: zona, estado,
-    inicio: sql(a + offset), fin: sql(b + 86400000 + offset), offset: zona === 'America/Lima' ? '-05:00' : '+00:00' };
+    inicio: sql(a + offset), fin: sql(b + 86400000 + offset), offset: zona === 'America/Lima' ? '-05:00' : '+00:00',canal,mesero_id:q.mesero_id===undefined?null:Number(q.mesero_id) };
   if (gastos) {
     exigir(q.clasificacion === undefined || CLASES_GASTO.includes(q.clasificacion));
     const limite = q.limite === undefined ? 50 : Number(q.limite), despues = q.despues === undefined ? 0 : Number(q.despues);

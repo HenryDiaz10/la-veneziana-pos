@@ -11,6 +11,13 @@ const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idemp
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
 const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE', 'CATEGORIA_GASTO_INEXISTENTE']);
 const mensajes = {
+  ZONA_INEXISTENTE:'La zona ya no existe. Actualiza el salón.',
+  ZONA_DESACTUALIZADA:'La zona cambió en otra pantalla. Actualiza antes de editar.',
+  ZONA_DUPLICADA:'Ya existe una zona con ese nombre.',
+  ZONA_CON_MESAS:'La zona tiene mesas. Reubícalas antes de eliminarla, incluidas las inhabilitadas.',
+  AFORO_ZONA_EXCEDIDO:'La cantidad total de sillas supera el aforo de la zona. Revisa las capacidades o el aforo.',
+  CODIGO_MESA_DUPLICADO:'Ya existe una mesa con ese código en el restaurante.',
+  MESA_EN_USO:'Solo se pueden configurar mesas libres o inhabilitadas, sin responsable ni cuenta activa. Completa la atención y limpieza primero.',
   CATEGORIA_GASTO_INEXISTENTE: 'La categoría de gasto no existe.',
   CATEGORIA_GASTO_DUPLICADA: 'Ya existe una categoría con ese nombre.',
   MOVIMIENTO_GASTO_NO_VALIDO: 'Vincula un egreso autorizado por el importe completo del gasto.',

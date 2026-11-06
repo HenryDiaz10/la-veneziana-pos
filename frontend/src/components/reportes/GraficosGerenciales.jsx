@@ -1,12 +1,12 @@
 import { useMemo, useRef } from 'react'
-import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title } from 'chart.js'
-import { Doughnut, Bar } from 'react-chartjs-2'
+import { Chart as ChartJS, ArcElement, BarElement, LineElement, PointElement, Filler, CategoryScale, LinearScale, Tooltip, Legend, Title } from 'chart.js'
+import { Doughnut, Line } from 'react-chartjs-2'
 import { useTemaStore } from '../../stores/tema.store.js'
 import { MEDIOS_REPORTE, monedaReporte, serieCompletaReporte, COLORES_REPORTE as colores } from '../../utils/reportes.js'
 import BotonBase from '../ui/BotonBase.jsx'
 import { imagenReporte } from '../../services/reportes.service.js'
 
-ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, Title)
+ChartJS.register(ArcElement, BarElement, LineElement, PointElement, Filler, CategoryScale, LinearScale, Tooltip, Legend, Title)
 // Fondo explícito también en PNG: legible en cualquiera de los dos temas.
 const fondo = { id: 'fondoVeneziana', beforeDraw(chart, _args, options) { const { ctx, width, height } = chart; ctx.save(); ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = options.color; ctx.fillRect(0, 0, width, height); ctx.restore() } }
 export default function GraficosGerenciales({ reporte, bloqueado }) {
@@ -25,7 +25,7 @@ export default function GraficosGerenciales({ reporte, bloqueado }) {
       <p className="vz-report-nota">Las devoluciones y netos se muestran en la tabla; no se representan valores negativos en la dona.</p>
     </section>
     <section className="vz-report-panel"><header><div><h2>Ventas por día</h2><p>Total con impuesto, por fecha de emisión.</p></div><BotonBase disabled={bloqueado || !reporte.ventas.cantidad} onClick={() => png(barras, 'ventas')}>Descargar PNG de ventas</BotonBase></header>
-      <div className="vz-report-canvas">{reporte.ventas.cantidad ? <Bar ref={barras} role="img" aria-label="Ventas diarias en soles. Detalle exacto disponible debajo del gráfico." plugins={[fondo]} data={{ labels: serie.map(d => d.fecha.slice(5)), datasets: [{ label: 'Ventas con impuesto', data: serie.map(d => Number(d.total)), backgroundColor: '#F59E0B', hoverBackgroundColor: '#D97706', borderRadius: 5 }] }} options={{ ...opciones, scales: { x: { ticks: { color: tinta, maxTicksLimit: 8 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: tinta }, title: { display: true, text: 'S/ (escala visual)', color: tinta } } }, plugins: { ...opciones.plugins, tooltip: { callbacks: { title: c => serie[c[0].dataIndex].fecha, label: c => monedaReporte(serie[c.dataIndex].total) } } } }}/>
+      <div className="vz-report-canvas">{reporte.ventas.cantidad ? <Line ref={barras} role="img" aria-label="Ventas diarias en soles. Detalle exacto disponible debajo del gráfico." plugins={[fondo]} data={{ labels: serie.map(d => d.fecha.slice(5)), datasets: [{ label: 'Ventas con impuesto', fill: true, borderColor: '#F59E0B', tension: 0.3, data: serie.map(d => Number(d.total)), backgroundColor: 'rgba(245,158,11,0.13)', hoverBackgroundColor: '#D97706', borderRadius: 5 }] }} options={{ ...opciones, scales: { x: { ticks: { color: tinta, maxTicksLimit: 8 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: tinta }, title: { display: true, text: 'S/ (escala visual)', color: tinta } } }, plugins: { ...opciones.plugins, tooltip: { callbacks: { title: c => serie[c[0].dataIndex].fecha, label: c => monedaReporte(serie[c.dataIndex].total) } } } }}/>
         : <p className="vz-report-vacio">Todavía no hay ventas en el periodo seleccionado.</p>}</div>
       <details><summary>Ver detalle diario exacto ({serie.length} días)</summary><div className="vz-report-scroll"><table><caption className="sr-only">Detalle de ventas por día</caption><thead><tr><th>Fecha</th><th>Ventas</th><th>Total</th></tr></thead><tbody>{serie.map(d => <tr key={d.fecha}><th scope="row">{d.fecha}</th><td>{d.cantidad}</td><td>{monedaReporte(d.total)}</td></tr>)}</tbody></table></div></details>
     </section>

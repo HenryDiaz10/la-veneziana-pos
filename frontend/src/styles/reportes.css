@@ -1,4 +1,24 @@
 .vz-reportes { display: grid; gap: 1.3rem; max-width: 1760px; margin: auto; min-width: 0; }
+.vz-report-tabs,.vz-report-periodos {display:flex;gap:.6rem;flex-wrap:wrap}
+.vz-report-tabs a {padding:.8rem 1.1rem;border:1px solid var(--app-borde);border-radius:.8rem;font-weight:700;font-size:.85rem}
+.vz-report-tabs a[aria-current=page] {background:#f59e0b;color:#17120b;border-color:#f59e0b}
+.vz-report-periodos button {border:1px solid var(--app-borde);border-radius:2rem;background:var(--app-superficie)}
+.vz-report-kpi.tono-azul {border-top-color:#38bdf8}
+.vz-analytics-count {font-size:2.5rem;font-weight:850;color:#f59e0b}
+.vz-zero-products {display:grid;gap:.5rem;margin-top:1rem;max-height:350px;overflow:auto}
+.vz-zero-products>span {display:flex;justify-content:space-between;gap:.8rem;padding:.6rem;background:var(--app-elevada);border-radius:.5rem;font-size:.78rem}
+.vz-zero-products strong {color:#f59e0b}
+.vz-heatmap {margin-top:1rem;overflow-x:auto}
+.vz-heat-row {display:grid;grid-template-columns:32px repeat(24,minmax(16px,1fr));gap:3px;margin-bottom:3px;font-size:.64rem;min-width:560px}
+.vz-heat-cell {min-height:26px;display:grid;place-items:center;border-radius:3px;color:var(--app-texto)}
+.vz-heat-row>span:first-child,.vz-heat-row>strong {display:flex;align-items:center}
+.vz-gasto-form>fieldset {border:0;min-width:0}
+@media print {.vz-no-print {display:none!important}.vz-admin-grid{display:block!important}.vz-main{padding:0!important;max-width:none!important;margin:0!important}.vz-shell>header{display:none!important}}
+.vz-resultados-tabla {margin-top:1rem}
+.vz-resultados-tabla th {font-weight:500}
+.vz-resultados-tabla .vz-resultado-nivel {background:color-mix(in srgb,#f59e0b 12%,var(--app-superficie));border-left:4px solid #f59e0b}
+.vz-resultados-tabla .vz-resultado-nivel th,.vz-resultados-tabla .vz-resultado-nivel td {padding:1rem .65rem;font-weight:800}
+@media print {@page {size:A4;margin:15mm} body {background:white!important;color:black!important} aside,header.app-header,nav,.vz-report-filtros,.vz-report-tabs,.vz-report-periodos,.vz-report-acciones,.vz-reportes button,a[href='#contenido-principal'] {display:none!important} .vz-reportes{display:block;max-width:none} .vz-report-panel,.vz-report-kpi{background:white!important;color:black!important;break-inside:avoid;margin-bottom:12px} .vz-reportes .vz-page-header{display:block!important} .vz-report-kpis{display:grid;grid-template-columns:repeat(2,1fr)} .vz-estado-resultados{width:100%} .vz-report-nota{color:#444!important} }
 .vz-reportes .vz-page-header { margin-bottom: 0; }
 .vz-report-acciones { display: flex; gap: .6rem; flex-wrap: wrap; }
 .vz-report-filtros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; border: 1px solid var(--app-borde); padding: 1.2rem; border-radius: 1rem; background: var(--app-superficie); align-items: end; }

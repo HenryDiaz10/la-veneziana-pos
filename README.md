@@ -11,6 +11,40 @@ endpoint público ni un mecanismo de recuperación en producción.
 **Avance actual: fase 40 implementada y probada.**
 La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
+Mejora posterior a la fase 40: recetario completo de la carta con las porciones
+de pizza indicadas por el propietario y estimaciones para los demás sabores y
+preparaciones. Cubre 83 preparados (192 recetas entre bases y variantes), sus
+opciones y 14 bebidas de consumo directo. Incluye 111 insumos nuevos sin saldos
+ficticios. [Criterios y comandos](backend/RECETARIO.md) y
+[cantidades por ingrediente](backend/data/recetas-carta.csv). La pantalla Recetas
+indica el origen referencial; las cantidades siguen siendo editables.
+Se añadieron mermas estimadas por insumo: 1% en líquidos, 2% en sólidos,
+3% en carnes/salsas y 5% en frutas/verduras limpias; unidades, agua, hielo,
+sal y azúcar conservan 0%. Los objetivos se convierten una vez a bruto,
+incluyendo opciones, sin afectar los pedidos anteriores ni inventar existencias.
+También se registraron seis empresas como proveedores de referencia (Alicorp,
+San Fernando, Lindley, AJEPER, Gloria y Makro) y una carnicería ficticia marcada
+como ejemplo. El listado de Compras muestra marcas y rubros y permite buscarlos.
+[Identidades, contactos, fuentes y carga](backend/PROVEEDORES.md).
+El [abastecimiento inicial](backend/ABASTECIMIENTO_INICIAL.md) del 06/11/2026
+añade 6 compras internas confirmadas para los 125 insumos/bebidas, con cantidades
+y costos estimados autorizados, IGV solicitado 18% y total S/9,954.90.
+Incluye Kardex, costos promedio y verificación de contribución de 206 presentaciones.
+Los documentos no son facturas externas. Posteriormente el propietario indicó
+saldar las seis compras: S/9,954.90 pagados administrativamente y saldo cero,
+con auditoría y sin asignar un banco/caja de origen no especificado.
+El reporte gerencial y su CSV muestran compras registradas, saldadas y pendientes
+por fecha de emisión, sin duplicarlas como gastos ni alterar el stock.
+Actualización: se separó **Estado de resultados** (`/estado-resultados`) del
+análisis operativo (`/reportes`). Este último tiene nueve gráficos, mapa de calor,
+rankings de meseros/productos, ceros separados y filtros por canal y responsable.
+Finanzas conserva compras/gastos y muestra los cuatro niveles de utilidad,
+registro autorizado de gastos, CSV propio e impresión/PDF desde el navegador.
+[Fuentes, criterios y validación](backend/ANALITICA_Y_RESULTADOS.md).
+Salón y mesas incorpora configuración administrativa de zonas/aforo y mesas
+por zona (código, sillas, ubicación e inhabilitación), con permisos, revisiones
+y protección de mesas en uso. [Uso y pruebas](backend/SALON_CONFIGURACION.md).
+
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.

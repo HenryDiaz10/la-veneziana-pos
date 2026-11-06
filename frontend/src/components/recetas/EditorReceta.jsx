@@ -70,6 +70,7 @@ export default function EditorReceta({ producto, receta, base, varianteId, onEst
   }
 
   return <>
+    {receta?.referencia && <p className="vz-notice mb-5">{receta.referencia}</p>}
     {mensaje && <p className="vz-notice" role="status"><Icono nombre="estado"/>{mensaje}</p>}
     {error && <p role="alert" className="mb-5 rounded-xl border border-app-borde bg-app-superficie p-4 text-sm text-app-error">{error}</p>}
     {heredada && <div className="vz-recipe-inherited mb-5"><div><h2 className="font-titulo text-sm font-bold">Esta variante utiliza la receta base</h2><p className="mt-2 text-xs leading-relaxed text-app-secundario">Puedes conservarla o copiarla para crear una receta específica. Al guardar una variante, su receta sustituye por completo a la base.</p></div><BotonBase onClick={() => cambiar(filasDesdeReceta(base))} className="shrink-0 border border-app-borde"><Icono nombre="copiar"/>Copiar receta base</BotonBase></div>}
