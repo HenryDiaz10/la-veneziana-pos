@@ -33,7 +33,8 @@ await context.route('**/api/**', async route => {
   await route.fulfill({ json: body })
 })
 try {
-  await page.goto('http://localhost:5173/pos')
+  await page.goto((process.env.TEST_BASE_URL??'http://localhost:5173')+'/pos')
+  assert.ok(await page.locator('.pos-receipt-registro').getByRole('button',{name:'Registrar pedido',exact:true}).isDisabled())
   const añadir = page.getByRole('button', { name: 'Añadir Caldo de gallina especial al pedido', exact: true })
   await añadir.click()
   let modal = page.getByRole('dialog')
@@ -76,6 +77,9 @@ try {
   assert.ok(ancho.contenido <= ancho.visible + 1)
   await modal.getByRole('button', { name: 'Cancelar', exact: true }).click()
   // Registrar el borrador no lo limpia. El total del servidor se usa al cobrar.
+  await page.getByRole('button',{name:/Recibo \/ Pedido/}).click()
+  assert.equal(await recibo.getByRole('button',{name:'Registrar pedido',exact:true}).count(),1,'Registro dentro del recibo')
+  assert.ok(!(await recibo.getByRole('button',{name:'Registrar pedido',exact:true}).isDisabled()),'Se puede registrar sin abrir el desplegable')
   await page.getByRole('button', { name: 'Datos y registro del pedido', exact: true }).click()
   await page.getByLabel('Atención', { exact: true }).selectOption('salon')
   await page.getByLabel('Mesa disponible', { exact: true }).selectOption('5')
@@ -86,9 +90,17 @@ try {
     await page.getByRole('button', { name: 'Datos y registro del pedido', exact: true }).click()
   }
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
+  for(const width of [320,390,768,1366]){
+    await page.setViewportSize({width,height:900})
+    assert.ok(await recibo.getByRole('button',{name:'Registrar pedido',exact:true}).isVisible(),'Registro visible en el recibo '+width)
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Sin desbordamiento '+width)
+  }
+  if(process.argv[3])await recibo.screenshot({path:process.argv[3]+'-recibo.png'})
   await page.getByRole('button', { name: 'Registrar pedido', exact: true }).click()
   await page.getByRole('button', { name: 'Confirmar registro', exact: true }).click()
   await page.getByRole('link', { name: /Continuar con P-PRUEBA/ }).waitFor()
+  assert.equal(await page.getByRole('link',{name:/Continuar con P-PRUEBA/}).evaluate(el=>Boolean(el.closest('[inert]'))),false,'Cobro accesible dentro del recibo registrado')
+  assert.ok(await recibo.getByRole('button',{name:'Editar línea 1',exact:true}).evaluate(el=>Boolean(el.closest('[inert]'))),'Edición bloqueada tras registro')
   assert.equal(pedidoRegistrado.tipo_atencion, 'salon'); assert.equal(pedidoRegistrado.mesa_id, 5)
   assert.equal(pedidoRegistrado.lineas[0].cantidad, 2)
   assert.equal(pedidoRegistrado.lineas[0].indicaciones, 'Sin cebolla, poco ají')

@@ -153,11 +153,10 @@ export default function PuntoVenta() {
         onCambiarVista={setVistaMovil}
       />
 
-      <RegistrarPedido key={usuario?.id} consulta={consultaResumen} listo={listoParaOperar}/>
       {/* Grilla Principal del POS: 8 columnas Catálogo vs 4 columnas Recibo Térmico */}
-      <div className="pos-grid" inert={operacionBloqueada || undefined}>
+      <div className="pos-grid">
         {/* Panel del Catálogo de Productos (Visible en escritorio o cuando la pestaña móvil es catálogo) */}
-        <div className={`min-w-0 ${vistaMovil === 'recibo' ? 'hidden lg:block' : 'block'}`}>
+        <div inert={operacionBloqueada || undefined} className={`min-w-0 ${vistaMovil === 'recibo' ? 'hidden lg:block' : 'block'}`}>
           <CatalogoPos
             categorias={categorias}
             productos={productos}
@@ -176,7 +175,8 @@ export default function PuntoVenta() {
 
         {/* Panel del Recibo Térmico Financiero (Visible en escritorio o cuando la pestaña móvil es recibo) */}
         <div className={`min-w-0 ${vistaMovil === 'catalogo' ? 'hidden lg:block' : 'block'}`}>
-          {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} registrado={Object.keys(comercial.vinculos).length > 0} />}
+          {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} bloqueado={operacionBloqueada} registrado={Object.keys(comercial.vinculos).length > 0}
+            accionesRegistro={<RegistrarPedido enRecibo consulta={consultaResumen} listo={listoParaOperar}/>}/>}
         </div>
       </div>
 

@@ -1,5 +1,24 @@
 # Fase 27: interfaz operativa del punto de venta
 
+## Confirmar desde el borrador
+
+El registro está al pie de `ReciboTermico`, junto al total y la revisión del
+borrador. **Registrar pedido** permanece visible aunque **Datos del pedido**
+esté plegado. Ese desplegable permite cambiar atención, mesa, cliente/dirección
+e indicaciones. El modal final muestra el tipo de atención, mesa cuando aplica
+y total estimado; el servidor conserva sus validaciones de precio/receta/stock.
+
+`PuntoVenta.jsx` pasa `RegistrarPedido` como acción del recibo. Al registrar,
+se bloquea la edición del catálogo/borrador y se conserva el carrito hasta el
+cobro. El enlace **Continuar con ... · Cobrar** aparece dentro del mismo recibo,
+fuera de la zona inerte para que siga siendo accesible. El componente se monta
+una sola vez y conserva sus estados al cambiar entre catálogo y recibo en móvil.
+
+`tests/cocina-navegador.mjs` comprueba registro visible sin desplegar datos,
+borrador vacío deshabilitado, mesa/notas correctas, enlace de cobro accesible,
+edición bloqueada, recuperación sin doble cobro y limpieza solo al confirmar
+el pago. Incluye la ubicación en el recibo y anchos de 320 a 1366 píxeles.
+
 Revisada y corregida el 17/10/2026. La ruta `/pos` se integra en `AdminLayout`,
 con navegación por permisos, temas claro/oscuro y borrador separado por empleado.
 

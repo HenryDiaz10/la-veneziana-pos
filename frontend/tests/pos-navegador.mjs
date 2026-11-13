@@ -226,7 +226,7 @@ await context.route('**/api/**', async route => {
 
 try {
   console.log('1. Navegando al POS como cajero autenticado...')
-  await page.goto('http://localhost:5173/pos')
+  await page.goto((process.env.TEST_BASE_URL??'http://localhost:5173')+'/pos')
 
   await page.getByRole('button', { name: 'Reintentar catálogo' }).click()
 
@@ -375,7 +375,7 @@ try {
   await page.setViewportSize({ width: 320, height: 340 })
   await modalExtenso.getByRole('button', { name: 'Guardar cambios' }).click()
   await page.locator('.pos-receipt-line').nth(1).getByText('S/ 100000000.00', { exact: true }).waitFor()
-  assert.equal(await page.locator('.pos-receipt-line').nth(1).locator('span').filter({ hasText: /^\+ Extra/ }).count(), 10)
+  assert.equal(await page.locator('.pos-receipt-line').nth(1).getByRole('list', { name: 'Opciones seleccionadas' }).getByRole('listitem').filter({ hasText: /^Extra/ }).count(), 10)
   await page.getByRole('button', { name: 'Catálogo', exact: true }).click()
   await page.setViewportSize({ width: 1280, height: 900 })
 

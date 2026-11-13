@@ -12,7 +12,7 @@ import ResumenModificadores from '../carrito/ResumenModificadores.jsx'
 import { useCartStore } from '../../stores/useCartStore.js'
 import { useAuthStore } from '../../stores/auth.store.js'
 
-export default function ReciboTermico({ consulta, registrado = false }) {
+export default function ReciboTermico({ consulta, registrado = false, bloqueado = false, accionesRegistro }) {
   const lineas = useCartStore(s => s.lineas)
   const usuario = useAuthStore(s => s.usuario)
   const [edicionId, setEdicionId] = useState(null)
@@ -27,6 +27,7 @@ export default function ReciboTermico({ consulta, registrado = false }) {
   const configuracionEditada = lineaEditada ? datos?.[lineaEditada.productoId] : null
 
   function comprobarPropietario() {
+    if(bloqueado||registrado)throw new Error('Completa la operación registrada antes de modificar el borrador.')
     const sesion = useAuthStore.getState()
     const carrito = useCartStore.getState()
     if (
@@ -67,6 +68,8 @@ export default function ReciboTermico({ consulta, registrado = false }) {
 
   return (
     <section aria-labelledby="titulo-recibo-pos" className="pos-receipt">
+      {/* Solo la edición queda inerte; el registro y el enlace de cobro siguen accesibles. */}
+      <div inert={bloqueado||registrado||undefined}>
       {/* Cabecera del Recibo Térmico */}
       <header className="pos-receipt-header">
         <p className="text-[10px] tracking-widest font-black uppercase text-marca-dorado">
@@ -281,12 +284,14 @@ export default function ReciboTermico({ consulta, registrado = false }) {
           </span>
         </div>
         <p className="text-xs text-app-secundario">
-          {registrado ? 'Pedido registrado. Continúa su cobro desde el enlace superior.' : 'Borrador sin reserva de stock. No se ha registrado un pedido ni realizado un cobro.'}
+          {registrado ? 'Pedido registrado. Continúa al cobro desde el enlace de este recibo.' : 'Borrador sin reserva de stock. Confirma el registro aquí para enviar el pedido; todavía no se realiza un cobro.'}
         </p>
-        <BotonSecundario className="w-full" disabled={!lineas.length || !totalDisponible} onClick={() => setMostrarRevision(true)}>
+        <BotonBase className="w-full border border-app-borde" disabled={!lineas.length || !totalDisponible} onClick={() => setMostrarRevision(true)}>
           Revisar borrador
-        </BotonSecundario>
+        </BotonBase>
       </footer>
+      </div>
+      {accionesRegistro&&<div className="pos-receipt-registro" aria-label="Confirmación del borrador">{accionesRegistro}</div>}
 
       {/* Modal de Edición de Línea */}
       {lineaEditada && configuracionEditada?.producto && (

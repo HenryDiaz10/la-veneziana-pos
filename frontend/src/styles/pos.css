@@ -192,6 +192,16 @@
     padding: 1.25rem;
   }
 
+  .pos-receipt-registro {
+    background: var(--app-elevada);
+    border-top: 1px solid var(--app-borde);
+    padding: 1.25rem;
+    min-width: 0;
+  }
+  .pos-order-register { min-width: 0; }
+  .pos-order-register fieldset { min-width: 0; }
+  .pos-order-register label { min-width: 0; font-size: .85rem; }
+
   /* El diálogo base controla el único desplazamiento, incluso con teclado. */
   .pos-modal-content { min-width: 0; overflow-wrap: anywhere; }
 
