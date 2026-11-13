@@ -4,7 +4,7 @@
 
 | Perfil | Secciones disponibles |
 |---|---|
-| Administrador | Inicio, Mis trabajadores, Reportes gerenciales, Estado de resultados, Salón y mesas, Arqueo de caja, Catálogo, Recetas, Clientes, Inventario y Compras. |
+| Administrador | Inicio, Mis trabajadores, Reportes gerenciales, Historial de ventas, Estado de resultados, Salón y mesas, Arqueo de caja, Catálogo, Recetas, Clientes, Inventario y Compras. |
 | Mesero | Inicio, Salón y mesas, Tomar pedido y Clientes. |
 | Cajero | Inicio, Punto de venta, Pagos de pedidos, Arqueo de caja y Clientes. |
 | Cocinero | Inicio y Cocina y despacho. |

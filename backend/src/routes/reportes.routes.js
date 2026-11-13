@@ -5,6 +5,7 @@ import { manejarComercial } from '../controllers/pedidos.controller.js';
 import { consultarGerencial } from '../services/reportes.service.js';
 import { listarGastos, categoriasGasto, registrarCategoriaGasto, registrarGasto } from '../services/gastos.service.js';
 import { ErrorPedido } from '../services/pedidos-calculo.js';
+import { listarHistorialVentas, consultarVentaHistorial } from '../services/historial-ventas.service.js';
 const router = Router();
 router.use(autenticar);
 const consultar = operacion => async (req, res, next) => {
@@ -16,6 +17,8 @@ const consultar = operacion => async (req, res, next) => {
 };
 const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idempotency-Key') });
 router.get('/gerencial', exigirPermiso('reportes', 'leer'), consultar(consultarGerencial));
+router.get('/ventas', exigirPermiso('reportes', 'leer'), consultar(listarHistorialVentas));
+router.get('/ventas/:id', exigirPermiso('reportes', 'leer'), manejarComercial(req => consultarVentaHistorial(req.params.id)));
 router.get('/resultados', exigirPermiso('reportes', 'leer'), consultar(consultarGerencial));
 router.get('/gastos', exigirPermiso('reportes', 'leer'), consultar(listarGastos));
 router.get('/gastos/categorias', exigirPermiso('reportes', 'leer'), manejarComercial(() => categoriasGasto()));

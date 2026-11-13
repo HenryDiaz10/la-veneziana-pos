@@ -5,7 +5,7 @@ const {chromium}=await import(pathToFileURL(process.argv[2]??'C:/Users/Henry/.ca
 const browser=await chromium.launch({channel:'msedge',headless:true})
 const base=process.env.TEST_BASE_URL??'http://localhost:5173'
 const permisos=[['pedidos','crear'],['mesas','gestionar'],['kds','operar'],['ventas','cobrar'],['ventas','devolver'],['caja','gestionar'],['catalogo','gestionar'],['inventario','gestionar'],['clientes','buscar'],['clientes','gestionar'],['reportes','leer'],['seguridad','gestionar'],['configuracion','gestionar']].map(([modulo,accion])=>({modulo,accion}))
-const perfiles={administrador:['/inicio','/trabajadores','/reportes','/estado-resultados','/salon','/caja','/catalogo','/recetas','/clientes','/inventario','/compras'],mesero:['/inicio','/salon','/tomar-pedido','/clientes'],cajero:['/inicio','/pos','/pagos','/caja','/clientes'],cocinero:['/inicio','/cocina']}
+const perfiles={administrador:['/inicio','/trabajadores','/reportes','/historial-ventas','/estado-resultados','/salon','/caja','/catalogo','/recetas','/clientes','/inventario','/compras'],mesero:['/inicio','/salon','/tomar-pedido','/clientes'],cajero:['/inicio','/pos','/pagos','/caja','/clientes'],cocinero:['/inicio','/cocina']}
 try{
  for(const [rol,rutas] of Object.entries(perfiles)){
   const c=await browser.newContext(),p=await c.newPage(),errores=[],api=[]

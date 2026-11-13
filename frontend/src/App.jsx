@@ -22,6 +22,7 @@ import AdminLayout from './layouts/AdminLayout.jsx'
 import PuntoVenta from './pages/PuntoVenta.jsx'
 import RecuperarOperacion from './components/RecuperarOperacion.jsx'
 import Pagos from './pages/Pagos.jsx'
+import HistorialVentas from './pages/HistorialVentas.jsx'
 import ArqueoCaja from './pages/ArqueoCaja.jsx'
 import Salon from './pages/Salon.jsx'
 import TableroKds from './pages/TableroKds.jsx'
@@ -251,6 +252,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute modulo="reportes" accion="leer" />}>
             <Route element={<AdminLayout />}>
+              <Route path="/historial-ventas" element={<HistorialVentas/>}/>
               <Route path="/reportes" element={<Suspense fallback={<p role="status">Cargando reportes…</p>}><Reportes/></Suspense>} />
               <Route path="/estado-resultados" element={<Suspense fallback={<p role="status">Cargando resultados…</p>}><EstadoResultados/></Suspense>} />
             </Route>

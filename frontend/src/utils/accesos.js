@@ -5,6 +5,7 @@ const secciones = [
   {ruta:'/inicio',texto:'Inicio',icono:'inicio',roles:perfilesSistema},
   {ruta:'/trabajadores',texto:'Mis trabajadores',icono:'clientes',roles:['administrador'],permiso:['seguridad','gestionar'],descripcion:'Administra cuentas y perfiles del equipo.'},
   {ruta:'/reportes',texto:'Reportes gerenciales',icono:'grafico',roles:['administrador'],permiso:['reportes','leer'],descripcion:'Consulta ventas, productos y atención del negocio.'},
+  {ruta:'/historial-ventas',texto:'Historial de ventas',icono:'lista',roles:['administrador'],permiso:['reportes','leer'],descripcion:'Revisa compras de clientes, importes, productos y pagos.'},
   {ruta:'/estado-resultados',texto:'Estado de resultados',icono:'billete',roles:['administrador'],permiso:['reportes','leer'],descripcion:'Revisa ingresos, compras, gastos y resultados.'},
   {ruta:'/cocina',texto:'Cocina y despacho',icono:'recetas',roles:['cocinero'],permiso:['kds','operar'],descripcion:'Consulta las preparaciones y actualiza su avance.'},
   {ruta:'/salon',texto:'Salón y mesas',icono:'mesas',roles:['administrador','mesero'],permiso:['mesas','gestionar'],descripcion:'Revisa las zonas, mesas y atención en salón.'},

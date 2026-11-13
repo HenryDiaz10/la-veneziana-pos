@@ -4,7 +4,7 @@ import { obtenerAccesos, puedeAccederRuta } from '../src/utils/accesos.js'
 import { permisosEfectivos } from '../../backend/src/security/perfiles.js'
 const todos = [['pedidos','crear'],['mesas','gestionar'],['kds','operar'],['ventas','cobrar'],['ventas','devolver'],['caja','gestionar'],['catalogo','gestionar'],['inventario','gestionar'],['clientes','buscar'],['clientes','gestionar'],['reportes','leer'],['seguridad','gestionar'],['configuracion','gestionar']].map(([modulo,accion])=>({modulo,accion}))
 const esperados={
-  administrador:['/inicio','/trabajadores','/reportes','/estado-resultados','/salon','/caja','/catalogo','/recetas','/clientes','/inventario','/compras'],
+  administrador:['/inicio','/trabajadores','/reportes','/historial-ventas','/estado-resultados','/salon','/caja','/catalogo','/recetas','/clientes','/inventario','/compras'],
   mesero:['/inicio','/salon','/tomar-pedido','/clientes'],
   cajero:['/inicio','/pos','/pagos','/caja','/clientes'],
   cocinero:['/inicio','/cocina']

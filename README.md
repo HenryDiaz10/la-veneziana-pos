@@ -11,6 +11,11 @@ endpoint público ni un mecanismo de recuperación en producción.
 **Avance actual: fase 40 implementada y probada.**
 La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
+El administrador dispone de **Historial de ventas**: compras realizadas por clientes,
+filtros por fechas/cliente/ticket/estado/canal/medio de pago, paginación, resumen
+y detalle de productos históricos, pagos y devoluciones.
+[Funcionamiento y criterios](backend/HISTORIAL_VENTAS.md).
+
 Las secciones se limitan por perfil, tanto en menú e Inicio como por URL y permisos
 efectivos del servidor: administración de negocio para el administrador, pedidos
 y mesas para el mesero, venta/cobro/caja para el cajero y KDS para el cocinero.
