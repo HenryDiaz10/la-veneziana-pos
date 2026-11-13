@@ -3,5 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "description": "Sistema web de gestión para la pizzería La Veneziana.",
-  "scripts": {}
+  "scripts": {
+    "docs:check": "node scripts/verificar-documentacion.mjs",
+    "docs:test": "node --test scripts/verificar-documentacion.test.mjs"
+  }
 }
