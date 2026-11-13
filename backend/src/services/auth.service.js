@@ -34,7 +34,7 @@ function obtenerHashSimulado() {
 }
 
 export async function iniciarSesion(datos) {
-  const credenciales = validarCredencialesLogin(datos);
+  const credenciales = validarCredencialesLogin(datos, { permitirUsuario: true });
 
   if (!credenciales) {
     return { estado: 'datos_invalidos' };
@@ -46,13 +46,12 @@ export async function iniciarSesion(datos) {
     // Bloquear la fila mientras comprobamos y actualizamos los intentos.
     // Evita que dos solicitudes sobrescriban el mismo contador.
     const usuario = await Usuario.findOne({
-      where: {
-        email: credenciales.email
-      },
+      where: credenciales.email.includes('@') ? { email: credenciales.email } : { usuario_acceso: credenciales.email.toLowerCase() },
 
       attributes: [
         'id',
         'nombre_completo',
+        'usuario_acceso',
         'email',
         'password_hash',
         'rol_id',
@@ -176,6 +175,7 @@ export async function iniciarSesion(datos) {
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre_completo,
+        usuario: usuario.usuario_acceso,
         email: usuario.email,
 
         rol: {

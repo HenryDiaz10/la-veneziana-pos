@@ -131,7 +131,7 @@ function Login() {
                 htmlFor={correoId}
                 className="block text-sm font-semibold text-slate-100"
               >
-                Correo electrónico
+                Usuario o correo electrónico
               </label>
 
               <div className="relative mt-2">
@@ -149,13 +149,13 @@ function Login() {
               <input
                 id={correoId}
                 name="email"
-                type="email"
+                type="text"
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
                 required
                 maxLength={100}
-                placeholder="nombre@ejemplo.com"
+                placeholder="cocinero01 o nombre@ejemplo.com"
                 className="login-input min-h-12 w-full rounded-xl border border-white/25 py-3 pr-4 pl-12 text-base text-white placeholder:text-slate-300"
                 disabled={pendiente}
               />

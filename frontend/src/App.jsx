@@ -14,6 +14,7 @@ import ProtectedRoute from './routes/ProtectedRoute.jsx'
 import { useAuthStore } from './stores/auth.store.js'
 
 import Seguridad from './pages/Seguridad.jsx'
+import Trabajadores from './pages/Trabajadores.jsx'
 
 import Componentes from './pages/Componentes.jsx'
 
@@ -200,6 +201,7 @@ function App() {
                 path="/seguridad"
                 element={<Seguridad />}
               />
+              <Route path="/trabajadores" element={<Trabajadores/>}/>
 
               {/* Galería disponible únicamente en desarrollo. */}
               {import.meta.env.DEV && (

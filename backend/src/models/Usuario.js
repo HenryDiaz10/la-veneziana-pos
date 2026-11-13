@@ -20,6 +20,9 @@ export const Usuario = sequelize.define(
       allowNull: false,
     },
 
+    // Alias único de acceso. Null conserva el acceso por correo de cuentas previas.
+    usuario_acceso: { type: DataTypes.STRING(40), allowNull: true, unique: true, defaultValue: null },
+
     // Documento opcional; no puede repetirse cuando tiene un valor.
     documento_identidad: {
       type: DataTypes.STRING(20),
@@ -28,10 +31,10 @@ export const Usuario = sequelize.define(
       defaultValue: null,
     },
 
-    // Correo obligatorio y único utilizado para iniciar sesión.
+    // Correo opcional si el trabajador utiliza un alias de acceso.
     email: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
       unique: true,
     },
 

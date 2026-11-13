@@ -20,6 +20,11 @@ export const CajaFisica = sequelize.define(
       allowNull: false,
     },
 
+    // Responsable autorizado para abrir futuros turnos de esta terminal.
+    cajero_asignado_id: { type: DataTypes.INTEGER, allowNull: true, defaultValue: null },
+    // Revisión de configuración para impedir sobrescrituras concurrentes.
+    version_config: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+
     // Dirección IP opcional del equipo.
     ip_maquina: {
       type: DataTypes.STRING(45),

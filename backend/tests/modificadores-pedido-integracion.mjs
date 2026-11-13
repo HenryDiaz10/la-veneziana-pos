@@ -109,7 +109,7 @@ try {
   assert.equal((await m.InsumoAlmacen.findByPk(insumos[2].id)).stock_fisico, '1.0000');
   assert.equal(await m.InventarioKardex.count({ where: { referencia_documento: `tarea:${tarea.id}` } }), 2);
   // Ticket: usar la selección histórica, no el catálogo editado.
-  caja = await m.CajaFisica.create({ nombre_terminal: `F35 ${marca.slice(0, 8)}`, estado: 'activa' });
+  caja = await m.CajaFisica.create({ nombre_terminal: `F35 ${marca.slice(0, 8)}`, estado: 'activa', cajero_asignado_id:usuarios[0].id });
   const sesion = (await abrirCaja({ caja_fisica_id: caja.id, apertura_monto_base: '0' }, ctx())).sesion;
   pedido = (await cambiarBloqueoPago(pedido.id, { version: pedido.version }, ctx())).pedido;
   padre = await sequelize.transaction();

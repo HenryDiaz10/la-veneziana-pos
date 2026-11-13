@@ -17,6 +17,7 @@ function AdminLayout() {
   // Conservar los permisos reales: el diseño no habilita nuevas secciones.
   const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
   const enlaces = [{ ruta: '/inicio', texto: 'Inicio', icono: 'inicio' }]
+  if (permite('seguridad', 'gestionar')) enlaces.push({ ruta: '/trabajadores', texto: 'Mis trabajadores', icono: 'clientes' })
   if (permite('reportes', 'leer')) enlaces.push({ ruta: '/reportes', texto: 'Reportes gerenciales', icono: 'grafico' })
   if (permite('reportes', 'leer')) enlaces.push({ ruta: '/estado-resultados', texto: 'Estado de resultados', icono: 'billete' })
   if (permite('kds', 'operar')) enlaces.push({ ruta: '/cocina', texto: 'Cocina y despacho', icono: 'recetas' })

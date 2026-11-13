@@ -59,6 +59,7 @@ export async function autenticarTokenSesion(token) {
         attributes: [
           'id',
           'nombre_completo',
+          'usuario_acceso',
           'email',
           'estado',
           'rol_id'
@@ -93,6 +94,7 @@ export async function autenticarTokenSesion(token) {
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre_completo,
+        usuario: usuario.usuario_acceso,
         email: usuario.email,
 
         rol: {

@@ -7,6 +7,7 @@ import { solicitarApi } from '../services/api.js'
 import { idSesionValido, prepararCierre } from '../utils/arqueo-calculo.js'
 import useConsultaRemota from '../hooks/useConsultaRemota.js'
 import AperturaCaja from '../components/pos/AperturaCaja.jsx'
+import ConfiguracionCajas from '../components/caja/ConfiguracionCajas.jsx'
 import ConteoEfectivo from '../components/caja/ConteoEfectivo.jsx'
 import ModalMovimientoCaja from '../components/caja/ModalMovimientoCaja.jsx'
 import Modal from '../components/ui/Modal.jsx'
@@ -24,6 +25,8 @@ export default function ArqueoCaja() {
   return <ContenidoArqueo key={uid} uid={uid}/>
 }
 function ContenidoArqueo({ uid }) {
+  const administra=useAuthStore(s=>s.usuario?.permisos.some(p=>p.modulo==='seguridad'&&p.accion==='gestionar'))
+  const [versionCajas,setVersionCajas]=useState(0)
   const [parametros] = useSearchParams()
   const inicial = parametros.getAll('sesion').length === 1 && idSesionValido(parametros.get('sesion')) ? parametros.get('sesion') : ''
   const [seleccion, setSeleccion] = useState(inicial), [numero, setNumero] = useState(inicial), [errorNumero, setErrorNumero] = useState('')
@@ -40,6 +43,7 @@ function ContenidoArqueo({ uid }) {
   const refrescar = () => { actual.reintentar(); resumen.reintentar() }
   return <section className="vz-page" aria-labelledby="titulo-arqueo">
     <header className="vz-page-header"><div><p className="vz-kicker"><Icono nombre="billete"/>La Veneziana · Control de caja</p><h1 id="titulo-arqueo" className="vz-page-title">Arqueo de caja</h1><p className="vz-page-description">Revisa el turno, cuenta el efectivo y confirma su cierre.</p></div><BotonBase className="border border-app-borde" disabled={actual.pendiente || resumen.pendiente} onClick={refrescar}><Icono nombre="actualizar"/>Actualizar resumen</BotonBase></header>
+    {administra&&<ConfiguracionCajas onActualizado={()=>{refrescar();setVersionCajas(v=>v+1)}}/>}
     <form onSubmit={e => { e.preventDefault(); if (!idSesionValido(numero.trim())) { setErrorNumero('Indica un número de sesión válido, mayor que cero.'); return } setErrorNumero(''); setSeleccion(numero.trim()) }} className="vz-cash-lookup">
       <label className="min-w-0 flex-1 text-sm font-semibold">Consultar sesión por número<input className="vz-purchase-input mt-2 w-full" value={numero} onChange={e => setNumero(e.target.value)} inputMode="numeric" autoComplete="off" maxLength={10} placeholder="Opcional · sesión propia"/></label><BotonBase type="submit" className="border border-app-borde">Consultar sesión</BotonBase><BotonBase className="border border-app-borde" onClick={() => { setSeleccion(''); setNumero(''); setErrorNumero(''); refrescar() }}>Ver turno actual</BotonBase>{errorNumero && <p role="alert" className="w-full text-sm text-app-error">{errorNumero}</p>}
     </form>
@@ -47,7 +51,7 @@ function ContenidoArqueo({ uid }) {
     {resumen.error && <div role="alert" className="vz-panel mb-5 space-y-3"><p className="text-app-error">{resumen.error}</p><BotonBase onClick={resumen.reintentar}>Reintentar resumen</BotonBase></div>}
     {(actual.pendiente || resumen.pendiente) && <p role="status" className={resumen.datos ? 'sr-only' : 'vz-panel mb-5'}>Consultando el turno y sus operaciones…</p>}
     {resumen.datos && <TurnoCaja key={id} datos={resumen.datos} pendiente={actual.pendiente || resumen.pendiente} refrescar={refrescar} registro={registro} uid={uid} borrador={borradores[id] ?? BORRADOR_VACIO} onBorrador={parche => setBorradores(prev => ({ ...prev, [id]: { ...(prev[id] ?? BORRADOR_VACIO), ...parche } }))}/>}
-    {!actual.pendiente && actual.datos && !actual.datos.sesion && <div className="mt-5"><AperturaCaja onAbrir={() => { setSeleccion(''); refrescar() }}/></div>}
+    {!actual.pendiente && actual.datos && !actual.datos.sesion && <div className="mt-5"><AperturaCaja key={versionCajas} onAbrir={() => { setSeleccion(''); refrescar() }}/></div>}
     {!id && !actual.pendiente && !actual.error && <div className="vz-client-welcome"><span className="vz-empty-icon"><Icono nombre="billete"/></span><h2 className="font-titulo text-xl font-bold">Tu siguiente turno empieza aquí</h2><p className="mt-3 text-sm text-app-secundario">Abre una caja para trabajar o consulta un cierre propio por su número de sesión.</p></div>}
   </section>
 }

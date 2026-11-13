@@ -1,0 +1,15 @@
+import {Router} from 'express';
+import {autenticar} from '../middlewares/autenticar.js';
+import {exigirPermiso} from '../middlewares/exigirPermiso.js';
+import {manejarComercial} from '../controllers/pedidos.controller.js';
+import {ErrorPedido} from '../services/pedidos-calculo.js';
+import {listarTrabajadores,guardarTrabajador,cambiarPasswordTrabajador,eliminarTrabajador} from '../services/trabajadores.service.js';
+import {idMesa} from '../services/mesas-reglas.js';
+const router=Router();router.use(autenticar,exigirPermiso('seguridad','gestionar'));
+const ctx=req=>({usuarioId:req.auth.usuario.id,clave:req.get('Idempotency-Key')});
+router.get('/',async(req,res,next)=>{try{res.json(await listarTrabajadores(req.query));}catch(e){if(e instanceof ErrorPedido)return res.status(400).json({mensaje:'Revisa los filtros y la paginación de trabajadores.'});next(e);}});
+router.post('/',manejarComercial(req=>guardarTrabajador(null,req.body,ctx(req)),201));
+router.patch('/:id',manejarComercial(req=>guardarTrabajador(idMesa(req.params.id),req.body,ctx(req))));
+router.post('/:id/password',manejarComercial(req=>cambiarPasswordTrabajador(idMesa(req.params.id),req.body,ctx(req))));
+router.delete('/:id',manejarComercial(req=>eliminarTrabajador(idMesa(req.params.id),req.body,ctx(req))));
+export default router;

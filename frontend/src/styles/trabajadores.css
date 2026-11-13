@@ -1,0 +1,19 @@
+.vz-workers{max-width:1500px;margin:auto;display:grid;gap:1.3rem;min-width:0}
+.vz-worker-label{display:grid;gap:.5rem;font-size:.83rem;font-weight:650;min-width:0}
+.vz-worker-input{width:100%;min-width:0;min-height:44px;padding:.7rem .8rem;border:1px solid var(--app-borde);border-radius:.7rem;color:var(--app-texto);background:var(--app-fondo);font:inherit}
+.vz-worker-input:focus-visible{outline:3px solid var(--app-foco);outline-offset:2px}
+.vz-worker-filtros{display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem}
+.vz-workers-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.vz-worker-card{border:1px solid var(--app-borde);border-top:3px solid #f59e0b;border-radius:1rem;background:var(--app-superficie);padding:1.3rem;min-width:0}
+.vz-worker-card>header{display:flex;gap:.8rem;align-items:flex-start;flex-wrap:wrap}
+.vz-worker-card>header>div{flex:1;min-width:100px;overflow-wrap:anywhere}
+.vz-worker-card h2{font-weight:800;font-size:1rem}.vz-worker-card header p{font-size:.8rem;color:var(--app-secundario);margin-top:.3rem}
+.vz-worker-avatar{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:#f59e0b25;color:#f59e0b;font-weight:800;flex-shrink:0}
+.vz-worker-meta{display:grid;gap:.5rem;margin:1.2rem 0;font-size:.8rem;overflow-wrap:anywhere;color:var(--app-secundario)}.vz-worker-meta strong{color:var(--app-texto)}
+.vz-worker-card footer{display:flex;flex-wrap:wrap;gap:.5rem;border-top:1px solid var(--app-borde);padding-top:1rem}.vz-worker-card footer button{font-size:.75rem;padding:.6rem .8rem}
+.vz-worker-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.vz-worker-alert{border:1px solid var(--app-error);border-radius:.8rem;padding:1rem;font-size:.85rem}
+.vz-worker-permisos{padding:.8rem;border:1px solid var(--app-borde);border-radius:.8rem;font-size:.8rem}.vz-worker-permisos summary{cursor:pointer;font-weight:700;min-height:32px}.vz-worker-permisos ul{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.7rem}.vz-worker-permisos li{padding:.35rem .5rem;background:var(--app-elevada);border-radius:.5rem}
+.vz-worker-pagination{display:flex;gap:.7rem;align-items:center;justify-content:flex-end;flex-wrap:wrap;font-size:.85rem}.vz-worker-pagination span{margin-right:auto}
+@media(max-width:900px){.vz-workers-grid{grid-template-columns:1fr}.vz-worker-filtros{grid-template-columns:1fr 1fr}.vz-worker-filtros>label:first-child{grid-column:1/-1}}
+@media(max-width:480px){.vz-worker-form-grid,.vz-worker-filtros{grid-template-columns:1fr}.vz-worker-card{padding:1rem}}

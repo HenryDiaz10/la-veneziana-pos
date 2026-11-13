@@ -16,13 +16,13 @@ export async function login(req, res, next) {
 
     if (resultado.estado === 'datos_invalidos') {
       return res.status(400).json({
-        mensaje: 'Debes enviar un correo válido y una contraseña válida.'
+        mensaje: 'Debes enviar un usuario o correo válido y una contraseña válida.'
       });
     }
 
     if (resultado.estado === 'credenciales_invalidas') {
       return res.status(401).json({
-        mensaje: 'Correo o contraseña incorrectos.'
+        mensaje: 'Usuario, correo o contraseña incorrectos.'
       });
     }
 

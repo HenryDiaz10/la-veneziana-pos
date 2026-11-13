@@ -1,4 +1,4 @@
-﻿// API simulada y reloj controlado: no usa credenciales ni sesiones reales.
+// API simulada y reloj controlado: no usa credenciales ni sesiones reales.
 import assert from 'node:assert/strict'
 import { pathToFileURL } from 'node:url'
 const runtime=process.argv[2]??'C:/Users/Henry/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs'
@@ -85,7 +85,7 @@ try{
   assert.equal(guardado.lineas[0].cantidad,1,'El borrador confirmado permanece guardado')
   await page.getByText('La sesión venció o dejó de estar disponible. Vuelve a ingresar.',{exact:true}).waitFor()
   modo='activa'
-  await page.getByLabel('Correo electrónico',{exact:true}).fill('operador@example.invalid')
+  await page.getByLabel('Usuario o correo electrónico',{exact:true}).fill('operador@example.invalid')
   await page.getByLabel('Contraseña',{exact:true}).fill('clave-simulada-no-real')
   await page.getByRole('button',{name:/Ingresar/}).click()
   await page.getByRole('heading',{name:'Punto de venta',exact:true}).waitFor()
@@ -103,7 +103,7 @@ try{
   await page.waitForURL('**/login')
   await cancelada
   liberarConsulta()
-  await page.getByLabel('Correo electrónico',{exact:true}).waitFor()
+  await page.getByLabel('Usuario o correo electrónico',{exact:true}).waitFor()
   assert.ok(page.url().endsWith('/login'))
   assert.deepEqual(errores,[])
   console.log('OK: actividad y 20 minutos sin interacción en segundo plano, formulario intacto, fallo de red sin logout, corte al llegar a ocho horas y logout concurrente seguro.')

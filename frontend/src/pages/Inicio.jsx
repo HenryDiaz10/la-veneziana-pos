@@ -16,7 +16,7 @@ function Inicio() {
   if (permite('clientes', 'buscar')) accesos.push({ ruta: '/clientes', titulo: 'Clientes', icono: 'clientes', tono: 'dorado', descripcion: 'Consulta sus datos de contacto, direcciones y fidelización en una sola ficha.' })
   if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/catalogo', titulo: 'Catálogo', icono: 'catalogo', tono: 'dorado', descripcion: 'Organiza categorías, presenta tus productos y mantén sus precios al día.' })
   if (permite('ventas', 'cobrar')) accesos.push({ ruta: '/pos', titulo: 'Punto de venta', icono: 'carrito', tono: 'lima', descripcion: 'Accede al espacio de atención y venta de la pizzería.' })
-  if (permite('seguridad', 'gestionar')) accesos.push({ ruta: '/seguridad', titulo: 'Seguridad', icono: 'seguridad', tono: 'rojo', descripcion: 'Consulta los perfiles del equipo y sus permisos de acceso.' })
+  if (permite('seguridad', 'gestionar')) accesos.push({ ruta: '/trabajadores', titulo: 'Mis trabajadores', icono: 'clientes', tono: 'dorado', descripcion: 'Crea cuentas para el equipo y administra perfiles y accesos.' }, { ruta: '/seguridad', titulo: 'Seguridad', icono: 'seguridad', tono: 'rojo', descripcion: 'Consulta los perfiles del equipo y sus permisos de acceso.' })
   return (
     <section aria-labelledby="titulo-inicio" className="vz-page">
       <div className="vz-page-header">

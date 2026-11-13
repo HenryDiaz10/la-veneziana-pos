@@ -40,7 +40,7 @@ try {
   for(const nombre of ['Pecho','Pierna'])opciones.push(await m.ModificadorItem.create({grupo_id:grupo.id,nombre_modificador:nombre,precio_adicional:'0.00'}));
   await m.ProductoModificador.create({producto_id:productos[0].id,grupo_id:grupo.id});
   cliente=await m.Cliente.create({nombres:'Cliente temporal F28',puntos_vip_actuales:100,puntos_vip_historicos:100,estado:'activo'});
-  caja=await m.CajaFisica.create({nombre_terminal:`F28 ${marca.slice(0,8)}`,estado:'activa'});
+  caja=await m.CajaFisica.create({nombre_terminal:`F28 ${marca.slice(0,8)}`,estado:'activa',cajero_asignado_id:usuarios[0].id});
   const saldo=async n=>(await m.InsumoAlmacen.findByPk(insumos[n].id)).toJSON();
   // Atomicidad ante selección incompleta y falta de stock.
   await rechaza(()=>crearPedido(llevar([linea(productos[0])]),ctx()),'SELECCION_INCOMPLETA');

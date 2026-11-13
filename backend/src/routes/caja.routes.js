@@ -3,8 +3,16 @@ import { autenticar } from '../middlewares/autenticar.js';
 import { exigirPermiso } from '../middlewares/exigirPermiso.js';
 import { abrir, cajaActual, recuperar, resolver } from '../controllers/pedidos.controller.js';
 import * as cierre from '../controllers/caja-cierre.controller.js';
+import {manejarComercial} from '../controllers/pedidos.controller.js';
+import {listarConfiguracionCajas,guardarConfiguracionCaja} from '../services/cajas-configuracion.service.js';
+import {idMesa} from '../services/mesas-reglas.js';
 const router = Router();
 router.use(autenticar, exigirPermiso('caja', 'gestionar'));
+// Configurar terminales requiere además permiso administrativo de seguridad.
+router.get('/configuracion',exigirPermiso('seguridad','gestionar'),manejarComercial(()=>listarConfiguracionCajas()));
+const contexto=req=>({usuarioId:req.auth.usuario.id,clave:req.get('Idempotency-Key')});
+router.post('/configuracion',exigirPermiso('seguridad','gestionar'),manejarComercial(req=>guardarConfiguracionCaja(null,req.body,contexto(req)),201));
+router.patch('/configuracion/:id',exigirPermiso('seguridad','gestionar'),manejarComercial(req=>guardarConfiguracionCaja(idMesa(req.params.id),req.body,contexto(req))));
 router.get('/sesion', cajaActual);
 router.get('/impresion/pendientes', cierre.colaImpresion);
 router.get('/impresion/:uid', cierre.estadoImpresion);

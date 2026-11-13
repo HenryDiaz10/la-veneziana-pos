@@ -25,6 +25,7 @@ import kdsRouter from './routes/kds.routes.js';
 import devolucionesRouter from './routes/devoluciones.routes.js';
 
 import usuariosRouter from './routes/usuarios.routes.js';
+import trabajadoresRouter from './routes/trabajadores.routes.js';
 
 import rolesRouter from './routes/roles.routes.js';
 
@@ -173,6 +174,7 @@ app.get('/ready', async (req, res) => {
 app.use('/api/auth', authRouter);
 
 app.use('/api/usuarios', usuariosRouter);
+app.use('/api/trabajadores', trabajadoresRouter);
 
 app.use('/api/roles', rolesRouter);
 

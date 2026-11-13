@@ -25,6 +25,8 @@
     "test:salon": "node --test tests/salon-mapa.test.mjs",
     "test:salon:navegador": "node tests/salon-navegador.mjs",
     "test:salon:configuracion:navegador": "node tests/salon-configuracion-navegador.mjs",
+    "test:trabajadores:navegador": "node tests/trabajadores-navegador.mjs",
+    "test:cajas:configuracion:navegador": "node tests/cajas-configuracion-navegador.mjs",
     "test:modificadores": "node --test tests/modificadores.test.mjs",
     "test:modificadores:navegador": "node tests/modificadores-navegador.mjs",
     "test:kds": "node --test tests/kds.test.mjs tests/kds-tiempo.test.mjs",

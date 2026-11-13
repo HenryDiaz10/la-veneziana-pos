@@ -11,6 +11,21 @@ const contexto = req => ({ usuarioId: req.auth.usuario.id, clave: req.get('Idemp
   puedeCanjear: req.auth.usuario.permisos.some(p => p.modulo === 'clientes' && p.accion === 'gestionar') });
 const inexistentes = new Set(['PEDIDO_INEXISTENTE', 'OPERACION_INEXISTENTE', 'VENTA_INEXISTENTE', 'MESA_INEXISTENTE', 'TAREA_KDS_INEXISTENTE', 'CATEGORIA_GASTO_INEXISTENTE']);
 const mensajes = {
+  CAJA_NO_DISPONIBLE:'La caja está en mantenimiento o ya no existe.',
+  CAJA_NO_ASIGNADA:'Esta caja no está asignada a tu cuenta. Solicita la asignación al administrador.',
+  CAJERO_NO_HABILITADO:'El responsable debe estar activo y tener permisos caja/gestionar y ventas/cobrar.',
+  CAJA_FISICA_INEXISTENTE:'La caja ya no existe. Actualiza el listado.',
+  CONFIGURACION_CAJA_DESACTUALIZADA:'La configuración cambió. Actualiza y vuelve a editar.',
+  CAJA_EN_USO:'Cierra el turno de esta caja antes de cambiar su configuración.',
+  NOMBRE_CAJA_DUPLICADO:'Ya existe una caja con ese nombre.',
+  CONFIGURACION_CAJA_NO_AUTORIZADA:'Tu cuenta ya no puede administrar cajas.',
+  ACCESO_TRABAJADORES_REVOCADO:'Tu perfil ya no permite administrar trabajadores. Vuelve a ingresar al sistema.',
+  TRABAJADOR_INEXISTENTE:'El trabajador ya no existe. Actualiza el listado.',
+  TRABAJADOR_DESACTUALIZADO:'Los datos del trabajador cambiaron. Cierra el formulario, actualiza y vuelve a editar.',
+  IDENTIDAD_TRABAJADOR_DUPLICADA:'El usuario de acceso, correo o documento ya pertenece a otra cuenta, incluida una cuenta dada de baja.',
+  ROL_TRABAJADOR_INEXISTENTE:'El perfil seleccionado ya no existe.',
+  CUENTA_PROPIA_PROTEGIDA:'No puedes eliminar tu cuenta, cambiar tu propio perfil/estado ni restablecer tu propia contraseña desde esta sección.',
+  ULTIMO_ADMINISTRADOR:'Debe permanecer al menos un administrador activo.',
   ZONA_INEXISTENTE:'La zona ya no existe. Actualiza el salón.',
   ZONA_DESACTUALIZADA:'La zona cambió en otra pantalla. Actualiza antes de editar.',
   ZONA_DUPLICADA:'Ya existe una zona con ese nombre.',

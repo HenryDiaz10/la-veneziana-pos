@@ -32,7 +32,7 @@ try {
   insumo = await m.InsumoAlmacen.create({ nombre: `F34 ${marca}`, codigo: `F34-${marca}`, unidad_medida_id: unidad.id, activo: true, perecible: false });
   await registrarMovimiento({ insumo_id: insumo.id, tipo_transaccion: 'INGRESO_AJUSTE', cantidad: '30', costo_unitario: '1', operacion_uid: `mov:f34:${marca}`, usuario_id: usuarios[0].id, referencia_documento: 'Fixture F34' });
   producto = await m.ProductoVenta.create({ nombre: `F34 ${marca}`, categoria_id: categoria.id, precio_venta_base: '10.00', tipo_producto: 'producto_directo', controla_stock: true, insumo_directo_id: insumo.id, estado: 'activo' });
-  caja = await m.CajaFisica.create({ nombre_terminal: `F34 ${marca.slice(0, 8)}`, estado: 'activa' });
+  caja = await m.CajaFisica.create({ nombre_terminal: `F34 ${marca.slice(0, 8)}`, estado: 'activa', cajero_asignado_id:usuarios[2].id });
   const sesion = (await abrirCaja({ caja_fisica_id: caja.id, apertura_monto_base: '0' }, ctx(2))).sesion;
   servidor = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
   const base = `http://127.0.0.1:${servidor.address().port}/api`, cookies = [];

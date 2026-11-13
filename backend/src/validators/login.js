@@ -1,5 +1,5 @@
 // Devolver las credenciales validadas o null si el formato es inválido.
-export function validarCredencialesLogin(datos) {
+export function validarCredencialesLogin(datos, { permitirUsuario = false } = {}) {
   // El cuerpo debe ser un objeto, no null ni un arreglo.
   if (
     datos === null ||
@@ -24,7 +24,7 @@ export function validarCredencialesLogin(datos) {
   // Comprobación básica de formato y longitud de la columna SQL.
   if (
     correo.length > 100 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
+    (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) && !(permitirUsuario && /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,39}$/.test(correo)))
   ) {
     return null;
   }

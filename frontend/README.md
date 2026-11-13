@@ -4,6 +4,18 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Administración de cajas:** Arqueo incorpora creación de terminales, asignación
+de cajero y mantenimiento, disponible con permisos administrativos. El cajero
+abre únicamente sus cajas asignadas. [Guía](../backend/CAJAS_CONFIGURACION.md).
+
+**Mis trabajadores:** sección administrativa en `/trabajadores`, protegida por
+`seguridad/gestionar`. Incluye búsqueda, filtros, paginación, formularios de alta
+y edición, perfiles y sus permisos, restablecimiento de contraseña y baja con
+reactivación. Se adapta a laptop y celular, conserva el listado durante las
+consultas y admite ingreso por usuario o correo. Las contraseñas solo se
+introducen y no se guardan en el navegador.
+[Guía y pruebas](../backend/TRABAJADORES.md).
+
 **Fase 36:** backend KDS con notificaciones WebSocket y consulta paginada de
 tareas. Vite reenvía HTTP y WebSocket bajo `/api`; no se añadió pantalla KDS
 ni dependencia al navegador. Contrato para la fase 37: [KDS.md](../backend/KDS.md).

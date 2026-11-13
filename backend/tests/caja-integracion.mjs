@@ -60,7 +60,7 @@ try {
     usuarios.push(await m.Usuario.create({ nombre_completo: 'Prueba temporal F31', email: `f31-${usuarios.length}-${marca}@example.invalid`, password_hash: hash, rol_id: rol.id, estado: 'activo' }));
   }
   for (let i = 0; i < 3; i++) {
-    cajas.push(await m.CajaFisica.create({ nombre_terminal: `F31 ${marca.slice(0, 8)} ${i}`, estado: 'activa' }));
+    cajas.push(await m.CajaFisica.create({ nombre_terminal: `F31 ${marca.slice(0, 8)} ${i}`, estado: 'activa', cajero_asignado_id:usuarios[i].id }));
     sesiones.push((await abrirCaja({ caja_fisica_id: cajas[i].id, apertura_monto_base: '100.00' }, ctx(i))).sesion);
   }
   servidor = await new Promise(r => { const s = app.listen(0, '127.0.0.1', () => r(s)); });

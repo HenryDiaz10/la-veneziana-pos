@@ -45,6 +45,18 @@ Salón y mesas incorpora configuración administrativa de zonas/aforo y mesas
 por zona (código, sillas, ubicación e inhabilitación), con permisos, revisiones
 y protección de mesas en uso. [Uso y pruebas](backend/SALON_CONFIGURACION.md).
 
+**Mis trabajadores** (`/trabajadores`): alta y edición de cuentas, usuario de
+acceso o correo, perfiles con sus permisos, restablecimiento de contraseña y
+baja/reactivación conservando el historial. Los cambios sensibles revocan las
+sesiones anteriores. La migración 0052 conserva el acceso por correo existente.
+[Funcionamiento, archivos y pruebas](backend/TRABAJADORES.md).
+
+**Administración de cajas:** en Arqueo de caja el administrador puede crear
+terminales y asignar cajeros activos con permisos de caja y cobro. Las nuevas
+aperturas exigen asignación; una caja con turno abierto no admite cambios de
+configuración. La migración 0053 conserva todos los responsables históricos.
+[Reglas, archivos y pruebas](backend/CAJAS_CONFIGURACION.md).
+
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.
