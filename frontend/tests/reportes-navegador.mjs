@@ -27,6 +27,7 @@ await context.route('**/api/**',async route=>{
 try{
  await page.clock.setFixedTime(new Date('2026-11-13T18:00:00Z'));await page.goto((process.env.TEST_BASE_URL??'http://127.0.0.1:5173')+'/reportes')
  await page.getByRole('heading',{name:'Cómo va el negocio',exact:true}).waitFor()
+ await page.locator('.vz-report-kpi').filter({hasText:'Compras y otros gastos'}).getByText('S/ 132.00',{exact:true}).waitFor()
  assert.equal(await page.locator('canvas').count(),1)
  const vistas=page.getByRole('navigation',{name:'Contenido del reporte'})
  const peticiones=consultas.length
@@ -68,6 +69,7 @@ try{
  assert.equal(await page.locator('canvas').count(),0);assert.equal(await page.getByRole('heading',{name:'Productos más vendidos',exact:true}).count(),0)
  await page.getByRole('row').filter({hasText:'1 · Utilidad bruta'}).getByText('S/ 80.0000',{exact:true}).waitFor()
  await page.getByRole('row').filter({hasText:'4 · Utilidad neta tras provisión'}).getByText('S/ 66.0000',{exact:true}).waitFor()
+ await page.getByRole('region',{name:'Total de compras y gastos registrados'}).getByText('S/ 132.00',{exact:true}).waitFor()
  for(const width of [320,390,768,1366])for(const tema of ['claro','oscuro'])for(const vista of ['Compras y gastos','Documentos y caja','Resultado del negocio']){
   await page.setViewportSize({width,height:1000})
   if(await page.evaluate(()=>document.documentElement.dataset.tema)!==tema)await page.getByRole('button',{name:`Activar modo ${tema}`,exact:true}).click()

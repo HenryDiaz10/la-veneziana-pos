@@ -70,6 +70,16 @@ su resultado y desglose; **Registrar gasto** permanece en la cabecera de ambas
 páginas. Fechas visibles, filtros adicionales desplegables y navegación sin
 recargar ni perder el periodo aplicado.
 
+Cada vista de ambos reportes ofrece **Guardar vista en PDF**: prepara sus datos,
+gráficos, nombre, periodo y filtros para elegir «Guardar como PDF» en el diálogo
+del navegador. Los paneles sin actividad son compactos, los encabezados alinean
+el botón PNG y los rankings largos se desplazan dentro de una altura limitada.
+
+**Compras y otros gastos** integra automáticamente las compras confirmadas con
+los demás gastos registrados, con desglose y clasificación en gráficos/CSV/PDF.
+Es un total administrativo de documentos; la utilidad mantiene el costo consumido
+para no descontar la misma compra dos veces.
+
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.

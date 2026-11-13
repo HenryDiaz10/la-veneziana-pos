@@ -37,6 +37,7 @@ function Formulario({uid,onGuardado,onBloqueo}) {
     finally{enCurso.current=false;setPendiente(false)}
   }
   return <form ref={form} onSubmit={enviar} className="vz-gasto-form">
+    <p className="vz-report-nota">Las compras confirmadas ya se incluyen automáticamente en «Compras y otros gastos». Aquí registra otros conceptos, como alquiler o servicios; no vuelvas a cargar una compra ya registrada.</p>
     {error&&<p role="alert" className="vz-report-alerta">{error}{fijada?' Reintenta con los mismos datos; se conserva la clave para evitar duplicados.':''}</p>}{mensaje&&<p role="status">{mensaje}</p>}
     <fieldset disabled={pendiente||fijada}><div className="vz-report-filtros">
       <label>Categoría<select name="categoria_id">{categorias.datos?.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}</select></label>

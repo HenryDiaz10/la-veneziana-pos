@@ -9,6 +9,11 @@ ventas/atención, compras/gastos y documentos/caja en vistas propias. Resultados
 abre en su utilidad y desglose. Registro de gasto desde la cabecera en modal,
 filtros avanzados desplegables y periodo conservado entre vistas.
 
+Cada vista permite **Guardar vista en PDF** mediante el diálogo del navegador,
+con sus gráficos y filtros aplicados. La copia no cambia el contenido original;
+se limpia al cerrar la impresión. Tarjetas vacías compactas, encabezados alineados
+y rankings con altura visible limitada. Prueba: `npm.cmd run test:reportes:pdf`.
+
 **Administración de cajas:** Arqueo incorpora creación de terminales, asignación
 de cajero y mantenimiento, disponible con permisos administrativos. El cajero
 abre únicamente sus cajas asignadas. [Guía](../backend/CAJAS_CONFIGURACION.md).

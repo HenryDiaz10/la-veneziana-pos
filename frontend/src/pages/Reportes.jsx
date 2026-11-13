@@ -1,10 +1,12 @@
-import {useMemo,useState} from 'react'
+import {useMemo,useState,useRef} from 'react'
 import {Link} from 'react-router-dom'
 import {useAuthStore} from '../stores/auth.store.js'
 import useConsultaRemota from '../hooks/useConsultaRemota.js'
 import {consultarGerencial,descargarReporte} from '../services/reportes.service.js'
 import {filtrosInicialesReporte,filtroReporte,monedaReporte,MEDIOS_REPORTE,AVISOS_REPORTE,csvAnalitica} from '../utils/reportes.js'
+import {resumenComprasGastos} from '../utils/compras-gastos.js'
 import {csvResultados} from '../utils/resultados.js'
+import {imprimirVistaReporte} from '../utils/reporte-pdf.js'
 import GraficosGerenciales from '../components/reportes/GraficosGerenciales.jsx'
 import AnaliticaGraficos from '../components/reportes/AnaliticaGraficos.jsx'
 import EstadoFinanciero from '../components/reportes/EstadoFinanciero.jsx'
@@ -20,6 +22,7 @@ export default function Reportes({financiero=false}) {
   return <ContenidoReportes key={`${uid}-${financiero}`} uid={uid} financiero={financiero}/>
 }
 function ContenidoReportes({uid,financiero}) {
+  const contenido=useRef(null),[exportando,setExportando]=useState(false),[errorPdf,setErrorPdf]=useState('')
   const [revisionGastos,setRevisionGastos]=useState(0),[vista,setVista]=useState('resumen')
   const [aplicados,setAplicados]=useState(filtrosInicialesReporte)
   const [edicion,setEdicion]=useState(()=>({...aplicados,sesion_id:'',canal:'todos',mesero_id:''})),[errorFiltro,setErrorFiltro]=useState('')
@@ -28,6 +31,11 @@ function ContenidoReportes({uid,financiero}) {
   const r=consulta.datos,bloqueado=consulta.pendiente||Boolean(consulta.error),a=r?.analitica
   const titulo=financiero?'Estado de resultados':'Reportes gerenciales'
   const vistas=[['resumen',financiero?'Resultado del negocio':'Resumen'],...(!financiero?[['ventas','Ventas y atención']]:[]),['compras','Compras y gastos'],['documentos','Documentos y caja']]
+  async function guardarPdf(){
+    setErrorPdf('');setExportando(true)
+    try{await imprimirVistaReporte({contenido:contenido.current,titulo,vista:vistas.find(([id])=>id===vista)[1],reporte:r,onFinalizar:()=>setExportando(false)})}
+    catch{setExportando(false);setErrorPdf('No se pudo preparar el PDF. Reintenta cuando termine de cargar la vista.')}
+  }
   function campo(nombre,valor){setEdicion(f=>({...f,[nombre]:valor}));setErrorFiltro('')}
   function aplicar(e){e.preventDefault();try{setAplicados(filtroReporte(edicion));setErrorFiltro('')}catch(e){setErrorFiltro(e.message)}}
   function rapido(tipo){
@@ -41,7 +49,7 @@ function ContenidoReportes({uid,financiero}) {
         <RegistrarGasto compacto uid={uid} onGuardado={()=>{setRevisionGastos(v=>v+1);consulta.reintentar()}}/>
         <BotonBase onClick={consulta.reintentar} disabled={consulta.pendiente}>Actualizar reporte</BotonBase>
         <BotonBase className="border border-app-borde" disabled={bloqueado||!r} onClick={()=>descargarReporte(financiero?csvResultados(r):csvAnalitica(r),'text/csv;charset=utf-8',`veneziana-${financiero?'resultados':'gerencial'}-${r.filtros.desde}-${r.filtros.hasta}.csv`)}>Exportar CSV</BotonBase>
-        {financiero&&<BotonBase disabled={bloqueado||!r} onClick={()=>window.print()}>Imprimir / guardar PDF</BotonBase>}
+        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||exportando} onClick={guardarPdf}>Guardar vista en PDF</BotonBase>
       </div>
     </header>
     <nav className="vz-report-tabs" aria-label="Tipo de reporte"><Link to="/reportes" aria-current={!financiero?'page':undefined}>Reportes gerenciales</Link><Link to="/estado-resultados" aria-current={financiero?'page':undefined}>Estado de resultados</Link></nav>
@@ -59,19 +67,21 @@ function ContenidoReportes({uid,financiero}) {
       </form>
     </section>
     {errorFiltro&&<p role="alert" className="vz-report-alerta">{errorFiltro}</p>}
+    {errorPdf&&<p role="alert" className="vz-report-alerta">{errorPdf}</p>}
     {consulta.error&&<div role="alert" className="vz-report-alerta"><p>{consulta.error}</p><BotonBase onClick={consulta.reintentar}>Reintentar reporte</BotonBase></div>}
     {consulta.pendiente&&<p role="status" className="vz-report-consultando">Consultando reporte… {r?'Los resultados visibles corresponden a la consulta anterior; las exportaciones están deshabilitadas.':'Esperando los registros del sistema.'}</p>}
     {r&&<>
       <div className="vz-report-contexto"><strong>{r.filtros.desde} al {r.filtros.hasta}</strong><span>{r.filtros.estado} · {r.filtros.canal??'todos los canales'} · Sesión {r.filtros.sesion_id??'todas'} · Responsable {r.filtros.mesero_id??'todos'}</span><small>Actualizado: {new Date(r.consultado_en).toLocaleString('es-PE',{timeZone:r.filtros.zona_horaria})}</small></div>
       {/* Cambiar de vista conserva filtros y datos; evita cargar otra vez el reporte. */}
       <nav className="vz-report-vistas" aria-label="Contenido del reporte">{vistas.map(([id,nombre])=><button key={id} type="button" aria-pressed={vista===id} onClick={()=>setVista(id)}>{nombre}</button>)}</nav>
-      <div className="vz-report-contenido" key={vista}>
+      <p className="vz-report-exportar-ayuda">PDF: <strong>{vistas.find(([id])=>id===vista)[1]}</strong> · Pulsa «Guardar vista en PDF» y elige «Guardar como PDF» en la ventana de impresión.</p>
+      <div className="vz-report-contenido" ref={contenido} key={vista}>
         {vista==='resumen'&&(financiero?<>
           {!r.estimacion.completa&&<details className="vz-report-alerta"><summary>Hay datos pendientes para calcular el resultado</summary><ul>{r.estimacion.advertencias.map(k=><li key={k}>{AVISOS_REPORTE[k]??k}</li>)}</ul></details>}
           <EstadoFinanciero reporte={r}/>
           <p className="vz-report-ayuda">Para revisar pagos a proveedores y otros gastos, abre <button onClick={()=>setVista('compras')}>Compras y gastos</button>. Los documentos están en <button onClick={()=>setVista('documentos')}>Documentos y caja</button>.</p>
         </>:<>
-          <div className="vz-report-kpis"><Indicador titulo="Ventas del periodo" importe={monedaReporte(r.ventas.total)} detalle={`${r.ventas.cantidad} tickets · con IGV`} tono="lima"/><Indicador titulo="Compras confirmadas" importe={monedaReporte(r.compras?.total??null)} detalle={`${r.compras?.cantidad??0} documentos · con IGV`} tono="rojo"/><Indicador titulo="Gastos registrados" importe={monedaReporte(r.gastos.total)} detalle="Según fecha del gasto" tono="azul"/><Indicador titulo="Ticket promedio" importe={monedaReporte(r.ventas.ticket_promedio)} detalle="Promedio por venta" tono="dorado"/></div>
+          <div className="vz-report-kpis"><Indicador titulo="Ventas del periodo" importe={monedaReporte(r.ventas.total)} detalle={`${r.ventas.cantidad} tickets · con IGV`} tono="lima"/><Indicador titulo="Compras confirmadas" importe={monedaReporte(r.compras?.total??null)} detalle={`${r.compras?.cantidad??0} documentos · con IGV`} tono="rojo"/><Indicador titulo="Compras y otros gastos" importe={monedaReporte(resumenComprasGastos(r)?.total??null)} detalle="Compras confirmadas + otros gastos registrados" tono="azul"/><Indicador titulo="Ticket promedio" importe={monedaReporte(r.ventas.ticket_promedio)} detalle="Promedio por venta" tono="dorado"/></div>
           <ActividadFinanciera vista="resumen" reporte={r} bloqueado={bloqueado}/>
           <div className="vz-report-accesos"><button onClick={()=>setVista('ventas')}><strong>¿Qué se vende más?</strong><span>Productos, horarios y atención de meseros →</span></button><button onClick={()=>setVista('compras')}><strong>¿En qué se utiliza el dinero?</strong><span>Compras, proveedores y gastos →</span></button></div>
         </>)}

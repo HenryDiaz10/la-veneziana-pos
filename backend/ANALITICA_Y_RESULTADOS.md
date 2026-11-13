@@ -1,6 +1,47 @@
 # Análisis gerencial y estado de resultados
 
+## Total de compras y otros gastos registrados
+
+El resumen gerencial y la vista de compras muestran **Compras y otros gastos**:
+compras confirmadas con IGV más los gastos registrados una sola vez. El mismo
+desglose aparece en el resultado financiero, CSV y PDF de la vista. El gráfico
+de clasificación incorpora **Compras de inventario**, además de gastos operativos,
+financieros, extraordinarios y provisión. Las próximas compras confirmadas se
+incluyen automáticamente sin crear gastos manuales duplicados.
+
+Este total es administrativo: incluye documentos pendientes y provisiones; no
+se presenta como flujo bancario ni reemplaza los gastos reconocidos del resultado.
+La utilidad conserva el costo consumido y sus gastos clasificados. La función
+`frontend/src/utils/compras-gastos.js` suma exactamente con BigInt; no cambia
+asientos, inventario ni registros. El formulario de gastos indica que no se debe
+registrar otra vez una compra existente. Prueba: S/9,954.90 + S/37.90 = S/9,992.80,
+sin modificar utilidad, con importes grandes exactos y exportación consistente.
+
 ## Distribución para el administrador
+
+Cada vista de las dos pantallas dispone de **Guardar vista en PDF**. Abre el
+diálogo del navegador para seleccionar «Guardar como PDF». La copia de impresión
+solo incluye el contenido de la vista elegida, nombre, fechas, filtros y momento
+de consulta. Captura los gráficos como imágenes y espera su decodificación para
+evitar páginas sin gráficos; conserva el estado de los detalles desplegados.
+Las tablas incluyen los registros cargados (compras: últimos 50; gastos: página
+actual), sin inventar un listado completo no consultado. El encabezado y el pie
+explican ese alcance. Al cerrar/cancelar la impresión se elimina la copia y se
+restaura el título, sin alterar la vista ni los gráficos originales.
+
+`frontend/src/utils/reporte-pdf.js` prepara y limpia esta copia. No añade librerías
+ni servicios externos. `npm.cmd run test:reportes:pdf` desde frontend genera PDFs
+de las siete vistas con API interceptada y verifica título, filtros, gráficos,
+limpieza y disponibilidad de la acción. También reproduce las tarjetas vacías
+de meseros/24 horas sin actividad y proveedor con datos junto a gastos vacíos,
+en ambos temas y entre 320 y 1920 píxeles.
+
+Las tarjetas comparten una zona visual limitada y encabezados con botón PNG
+alineado a la derecha. Una lista de horas a cero no reserva la altura de 24
+barras: las categorías cero permanecen en la tabla exacta. Los rankings largos
+se desplazan dentro de la tarjeta; el PDF muestra una imagen completa escalada.
+La impresión quita menús, botones y límites de altura de las tablas, usa un fondo
+claro y evita páginas vacías causadas por la altura mínima de la aplicación.
 
 La vista inicial de gerencia es **Resumen**: ventas, compras, gastos y ticket
 promedio, con una evolución diaria. **Ventas y atención** reúne los nueve

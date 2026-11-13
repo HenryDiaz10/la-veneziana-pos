@@ -33,7 +33,8 @@
     "test:kds:navegador": "node tests/kds-navegador.mjs",
     "test:kds:avisos": "node tests/kds-avisos-navegador.mjs",
     "test:reportes": "node --test tests/reportes.test.mjs tests/resultados.test.mjs tests/reportes-actividad.test.mjs",
-    "test:reportes:navegador": "node tests/reportes-navegador.mjs"
+    "test:reportes:navegador": "node tests/reportes-navegador.mjs",
+    "test:reportes:pdf": "node tests/reportes-pdf-navegador.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0",
