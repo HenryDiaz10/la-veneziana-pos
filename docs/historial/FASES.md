@@ -141,5 +141,7 @@ Este registro describe cada entrega en su fecha; los pendientes de fases antigua
 - Pedidos del mesero, límites por perfil y listado administrativo de clientes.
 - Historial de ventas con filtros, productos y pagos históricos.
 - Organización temática de la documentación y comprobación de enlaces.
+- Vista gerencial Mis clientes: frecuencia, ingresos netos, unidades, nuevos y
+  recurrentes, productos favoritos y PDF/CSV con los filtros aplicados.
 
 Detalles previos: [desarrollo general](DESARROLLO.md) e [historial del frontend](FRONTEND.md).

@@ -6,7 +6,7 @@ const {chromium}=await import(pathToFileURL(process.argv[2]??'C:/Users/Henry/.ca
 const carpeta=process.argv[3]??'C:/Users/Henry/Documents/Codex/work/pdf-reportes-vistas'
 await mkdir(carpeta,{recursive:true})
 const browser=await chromium.launch({channel:'msedge',headless:true}),ctx=await browser.newContext({viewport:{width:1366,height:1000},reducedMotion:'reduce'}),page=await ctx.newPage()
-const errores=[];let sinActividad=false,impresos=0
+const errores=[];let sinActividad=false,sinClientes=false,impresos=0
 page.on('pageerror',e=>errores.push(e.message));await page.clock.setFixedTime(new Date('2026-11-13T18:00:00Z'))
 await ctx.addInitScript(()=>{window.print=()=>{window.pruebasImpresion=(window.pruebasImpresion??0)+1}})
 await ctx.route('**/api/**',async route=>{
@@ -19,11 +19,16 @@ await ctx.route('**/api/**',async route=>{
     body=reporteFixture();body.filtros.hasta='2026-11-13';body.analitica=analiticaFixture();body.actividad_financiera=actividadFixture()
     body.compras={cantidad:1,total:'118.00',saldadas:'118.00',pendientes_sin_abonos:'0.00',parciales:0,total_documentos_parciales:'0.00',saldo_pendiente:'0.00'}
     if(sinActividad){body.analitica.horas=body.analitica.horas.map(h=>({...h,total:'0.00',cantidad:0}));body.analitica.meseros=[];body.gastos.por_clase={operativo:'0.00',financiero:'0.00',extraordinario:'0.00',provision_impuesto:'0.00'}}
+    if(sinClientes){
+      const c=body.clientes
+      for(const k of Object.keys(c.resumen))c.resumen[k]=typeof c.resumen[k]==='number'?0:'0.00'
+      for(const k of ['ranking_ingresos','ranking_frecuencia','ranking_unidades','evolucion','productos'])c[k]=[]
+    }
   }
   await route.fulfill({json:body})
 })
 try{
-  for(const [ruta,vistas] of [['reportes',['Resumen','Ventas y atención','Compras y gastos','Documentos y caja']],['estado-resultados',['Resultado del negocio','Compras y gastos','Documentos y caja']]]){
+  for(const [ruta,vistas] of [['reportes',['Resumen','Ventas y atención','Mis clientes','Compras y gastos','Documentos y caja']],['estado-resultados',['Resultado del negocio','Compras y gastos','Documentos y caja']]]){
     await page.goto((process.env.TEST_BASE_URL??'http://127.0.0.1:5173')+'/'+ruta)
     await page.getByRole('navigation',{name:'Contenido del reporte'}).waitFor()
     if(ruta==='estado-resultados')await page.getByRole('button',{name:'Activar modo oscuro',exact:true}).click()
@@ -55,21 +60,31 @@ try{
   // con datos junto a gastos vacíos. Verificar tamaño y alineación de tarjetas.
   sinActividad=true;await page.goto((process.env.TEST_BASE_URL??'http://127.0.0.1:5173')+'/reportes')
   await page.getByRole('navigation',{name:'Contenido del reporte'}).waitFor()
-  for(const width of [320,390,768,1366,1920])for(const tema of ['claro','oscuro'])for(const vista of ['Ventas y atención','Compras y gastos']){
+  for(const width of [320,390,768,1366,1920])for(const tema of ['claro','oscuro'])for(const vista of ['Ventas y atención','Mis clientes','Compras y gastos']){
     await page.setViewportSize({width,height:1000})
     if(await page.evaluate(()=>document.documentElement.dataset.tema)!==tema)await page.getByRole('button',{name:`Activar modo ${tema}`,exact:true}).click()
     await page.getByRole('navigation',{name:'Contenido del reporte'}).getByRole('button',{name:vista,exact:true}).click()
     await page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth)
     const tarjetas=await page.locator('.is-empty-chart').evaluateAll(xs=>xs.map(x=>({alto:x.getBoundingClientRect().height,area:x.querySelector('.vz-report-canvas').getBoundingClientRect().height})))
     if(vista==='Ventas y atención')assert.ok(tarjetas.length)
-    else await page.getByRole('heading',{name:'Compras y otros gastos',exact:true}).waitFor()
+    else if(vista==='Compras y gastos')await page.getByRole('heading',{name:'Compras y otros gastos',exact:true}).waitFor()
+    else {
+      assert.equal(await page.locator('.vz-report-contenido canvas').count(),7)
+      await page.getByRole('heading',{name:'Detalle de mis clientes · Top 20 por ingreso neto',exact:true}).waitFor()
+    }
     assert.ok(tarjetas.every(t=>t.area<=310&&t.alto<580),'Panel vacío gigante '+JSON.stringify(tarjetas))
     const cabeceras=await page.locator('.vz-report-chart>header').evaluateAll(xs=>xs.map(h=>({boton:h.querySelector('button').getBoundingClientRect(),texto:h.querySelector('div').getBoundingClientRect()})))
     assert.ok(cabeceras.every(h=>h.boton.x>=h.texto.right-1),'PNG no alineado')
     if(width===1366&&tema==='oscuro'){
       const grid=page.locator('.vz-report-graficos').last();await grid.screenshot({path:`${carpeta}/${vista.replaceAll(' ','-')}.png`})
     }
+    if(vista==='Mis clientes'&&width===390&&tema==='claro')await page.locator('.vz-report-contenido').screenshot({path:`${carpeta}/clientes-movil.png`})
   }
-  assert.equal(impresos,7);assert.deepEqual(errores,[])
-  console.log('OK: siete vistas exportadas con gráficos, título, periodo y limpieza; tarjetas vacías compactas, encabezados alineados y diseño 320-1920 en ambos temas.')
+  sinClientes=true;await page.reload()
+  await page.getByRole('navigation',{name:'Contenido del reporte'}).getByRole('button',{name:'Mis clientes',exact:true}).click()
+  await page.getByText('No hay compras con un cliente identificado en estos filtros.',{exact:false}).waitFor()
+  assert.equal(await page.locator('.vz-report-contenido .is-empty-chart').count(),7)
+  assert.equal(await page.getByRole('button',{name:'Guardar vista en PDF',exact:true}).isDisabled(),false)
+  assert.equal(impresos,8);assert.deepEqual(errores,[])
+  console.log('OK: ocho vistas exportadas con gráficos, título, periodo y limpieza; tarjetas vacías compactas, encabezados alineados y diseño 320-1920 en ambos temas.')
 }finally{await browser.close()}

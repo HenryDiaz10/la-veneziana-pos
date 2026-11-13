@@ -3,12 +3,13 @@ import {Link} from 'react-router-dom'
 import {useAuthStore} from '../stores/auth.store.js'
 import useConsultaRemota from '../hooks/useConsultaRemota.js'
 import {consultarGerencial,descargarReporte} from '../services/reportes.service.js'
-import {filtrosInicialesReporte,filtroReporte,monedaReporte,MEDIOS_REPORTE,AVISOS_REPORTE,csvAnalitica} from '../utils/reportes.js'
+import {filtrosInicialesReporte,filtroReporte,monedaReporte,MEDIOS_REPORTE,AVISOS_REPORTE,csvAnalitica,csvClientes} from '../utils/reportes.js'
 import {resumenComprasGastos} from '../utils/compras-gastos.js'
 import {csvResultados} from '../utils/resultados.js'
 import {imprimirVistaReporte} from '../utils/reporte-pdf.js'
 import GraficosGerenciales from '../components/reportes/GraficosGerenciales.jsx'
 import AnaliticaGraficos from '../components/reportes/AnaliticaGraficos.jsx'
+import MisClientes from '../components/reportes/MisClientes.jsx'
 import EstadoFinanciero from '../components/reportes/EstadoFinanciero.jsx'
 import ActividadFinanciera from '../components/reportes/ActividadFinanciera.jsx'
 import GastosReporte from '../components/reportes/GastosReporte.jsx'
@@ -30,7 +31,8 @@ function ContenidoReportes({uid,financiero}) {
   const consulta=useConsultaRemota(consultarGerencial,solicitud,{conservarDatos:true,claveDatos:uid})
   const r=consulta.datos,bloqueado=consulta.pendiente||Boolean(consulta.error),a=r?.analitica
   const titulo=financiero?'Estado de resultados':'Reportes gerenciales'
-  const vistas=[['resumen',financiero?'Resultado del negocio':'Resumen'],...(!financiero?[['ventas','Ventas y atención']]:[]),['compras','Compras y gastos'],['documentos','Documentos y caja']]
+  const vistas=[['resumen',financiero?'Resultado del negocio':'Resumen'],...(!financiero?[['ventas','Ventas y atención'],['clientes','Mis clientes']]:[]),['compras','Compras y gastos'],['documentos','Documentos y caja']]
+  const sinDatosVista=vista==='clientes'&&!r?.clientes
   async function guardarPdf(){
     setErrorPdf('');setExportando(true)
     try{await imprimirVistaReporte({contenido:contenido.current,titulo,vista:vistas.find(([id])=>id===vista)[1],reporte:r,onFinalizar:()=>setExportando(false)})}
@@ -48,8 +50,8 @@ function ContenidoReportes({uid,financiero}) {
       <div className="vz-report-acciones">
         <RegistrarGasto compacto uid={uid} onGuardado={()=>{setRevisionGastos(v=>v+1);consulta.reintentar()}}/>
         <BotonBase onClick={consulta.reintentar} disabled={consulta.pendiente}>Actualizar reporte</BotonBase>
-        <BotonBase className="border border-app-borde" disabled={bloqueado||!r} onClick={()=>descargarReporte(financiero?csvResultados(r):csvAnalitica(r),'text/csv;charset=utf-8',`veneziana-${financiero?'resultados':'gerencial'}-${r.filtros.desde}-${r.filtros.hasta}.csv`)}>Exportar CSV</BotonBase>
-        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||exportando} onClick={guardarPdf}>Guardar vista en PDF</BotonBase>
+        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||sinDatosVista} onClick={()=>descargarReporte(financiero?csvResultados(r):vista==='clientes'?csvClientes(r):csvAnalitica(r),'text/csv;charset=utf-8',`veneziana-${financiero?'resultados':vista==='clientes'?'mis-clientes':'gerencial'}-${r.filtros.desde}-${r.filtros.hasta}.csv`)}>Exportar CSV</BotonBase>
+        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||sinDatosVista||exportando} onClick={guardarPdf}>Guardar vista en PDF</BotonBase>
       </div>
     </header>
     <nav className="vz-report-tabs" aria-label="Tipo de reporte"><Link to="/reportes" aria-current={!financiero?'page':undefined}>Reportes gerenciales</Link><Link to="/estado-resultados" aria-current={financiero?'page':undefined}>Estado de resultados</Link></nav>
@@ -90,6 +92,7 @@ function ContenidoReportes({uid,financiero}) {
           {r.filtros.estado!=='emitida'&&<p className="vz-report-alerta">Se muestran documentos {r.filtros.estado}. Estos importes no equivalen a ventas emitidas vigentes.</p>}
           <GraficosGerenciales reporte={r} bloqueado={bloqueado}/><AnaliticaGraficos reporte={r} bloqueado={bloqueado}/>
         </>}
+        {vista==='clientes'&&!financiero&&<MisClientes reporte={r} bloqueado={bloqueado}/>}
         {vista==='compras'&&<ActividadFinanciera vista="compras" reporte={r} bloqueado={bloqueado}/>}
         {vista==='documentos'&&<>
           <ActividadFinanciera vista="documentos" reporte={r} bloqueado={bloqueado}/>

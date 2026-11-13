@@ -103,6 +103,11 @@
 .vz-report-chart.is-empty-chart>.vz-report-canvas{height:140px;min-height:140px;flex:1}
 .vz-report-chart>details{margin-top:auto;padding-top:.7rem}
 .vz-report-exportar-ayuda{font-size:.76rem;color:var(--app-secundario);line-height:1.6}
+.vz-clientes-oportunidades dl{display:grid;gap:1rem;margin-top:1rem}
+.vz-clientes-oportunidades dl>div{border-left:3px solid #f59e0b;padding:.4rem .8rem;background:var(--app-elevada);border-radius:.5rem}
+.vz-clientes-oportunidades dt{font-weight:750;font-size:.85rem;margin-bottom:.35rem}
+.vz-clientes-oportunidades dd{font-size:.82rem;line-height:1.65;color:var(--app-secundario);overflow-wrap:anywhere}
+.vz-clientes-ficha{display:block;font-size:.7rem;color:var(--app-secundario);font-weight:400;margin-top:.3rem}
 .vz-report-exportacion{display:none}
 @media print{
  html:has(body.vz-imprimiendo-vista),body.vz-imprimiendo-vista{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important;color-scheme:light!important}

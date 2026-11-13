@@ -63,7 +63,9 @@ La dona no representa devoluciones como segmentos negativos; muestra su tabla.
   temas, proporción del gráfico conservada y resolución del canvas duplicada.
 
 Ningún archivo se sube al servidor: las descargas se generan en el navegador.
-No incluye credenciales ni datos personales de clientes. No exportar una consulta
+No incluye credenciales. La vista posterior
+[Mis clientes](MIS_CLIENTES.md) sí incluye nombres y rankings de clientes.
+No exportar una consulta
 pendiente o fallida. El resultado sigue siendo una estimación interna; no es
 declaración fiscal ni cierre contable. Hereda los límites temporales de fase 39.
 

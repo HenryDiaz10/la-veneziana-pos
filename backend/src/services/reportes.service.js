@@ -4,6 +4,7 @@ import { filtrosReporte, CLASES_GASTO, decimalReporte as valor, formatoReporte a
 import { MEDIOS_CAJA } from './caja-calculo.js';
 import { analiticaGerencial } from './reportes-analitica.js';
 import {actividadFinanciera} from './reportes-actividad.js';
+import {analiticaClientes} from './reportes-clientes.js';
 
 export function consultarGerencial(query, padre) {
   const f = filtrosReporte(query);
@@ -81,8 +82,9 @@ export function consultarGerencial(query, padre) {
     const cobrados = medios.reduce((a, m) => a + valor(m.cobrado), 0n);
     const analitica=await analiticaGerencial(leer,ventas);
     const actividad_financiera=await actividadFinanciera(leer);
+    const clientes=await analiticaClientes(leer,ventas,f);
     if (cobrados !== valor(v.total)) advertencias.push('pagos_no_concilian_con_ventas');
-    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f, analitica, actividad_financiera,
+    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f, analitica, actividad_financiera, clientes,
       politica: { ingresos: 'fecha_emision y estado de venta; pagos aplicados, no efectivo recibido',
         devoluciones: 'fecha del desembolso, sesion que lo realiza, estado de venta original',
         costos_cohorte: 'snapshots de reservas consumidas de las ventas seleccionadas a fecha de consulta',

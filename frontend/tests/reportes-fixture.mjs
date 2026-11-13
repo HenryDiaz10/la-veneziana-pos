@@ -9,9 +9,14 @@ export function reporteFixture() {
     gastos: { total: '14.00', sin_asignacion_sesion_en_periodo: '0.00', por_clase: { operativo: '2.00', financiero: '3.00', extraordinario: '4.00', provision_impuesto: '5.00' } },
     movimientos: { ingresos: '0.00', egresos: '64.00', egresos_sin_gasto: '50.00' }, costos: { cohorte_ventas: '10.0000', calidad: {}, salidas_periodo: [] },
     estimacion: { completa: true, advertencias: [], margen_base_menos_costo: '80.0000', resultado_tras_gastos: '66.0000' },
-    politica: { ingresos: 'Fecha de emisión y estado de venta.', alcance: 'Reporte interno referencial, no cierre contable.' } }
+    politica: { ingresos: 'Fecha de emisión y estado de venta.', alcance: 'Reporte interno referencial, no cierre contable.' },clientes:clientesFixture() }
 }
 
+export function clientesFixture(){
+  const ana={id:1,nombre:'Ana de prueba',compras:2,dias:2,unidades:'4',bruto:'40.00',devuelto:'5.00',neto:'35.00',promedio_neto:'17.50',primera_compra:'2026-10-10T18:00:00Z',ultima_compra:'2026-11-02T18:00:00Z',nuevo:false}
+  const luis={id:2,nombre:'Luis de prueba',compras:1,dias:1,unidades:'3',bruto:'20.00',devuelto:'0.00',neto:'20.00',promedio_neto:'20.00',primera_compra:'2026-11-06T18:00:00Z',ultima_compra:'2026-11-06T18:00:00Z',nuevo:true}
+  return {version:1,resumen:{activos:2,nuevos:1,regresaron:1,recurrentes:1,una_compra:1,compras_identificadas:3,compras_sin_cliente:2,ingreso_neto:'55.00',ingreso_sin_cliente:'40.00',recompra_porcentaje:'50.00',identificacion_porcentaje:'60.00',compras_por_cliente:'1.50'},ranking_ingresos:[ana,luis],ranking_frecuencia:[ana,luis],ranking_unidades:[ana,luis],evolucion:[{fecha:'2026-11-01',clientes:1,compras:1},{fecha:'2026-11-02',clientes:1,compras:1},{fecha:'2026-11-06',clientes:1,compras:1}],granularidad:'dia',productos:[{nombre:'Pizza americana familiar',unidades:'4'},{nombre:'Coca-Cola 1 litro',unidades:'3'}],alcance:'Compras cobradas no anuladas. Tickets, no visitas físicas. Ingreso neto menos devoluciones; unidades brutas del historial.'}
+}
 export function analiticaFixture() {
   return {productos_vendidos:2,productos_top:[{producto_id:1,nombre:'Pizza americana familiar',unidades:'8',tickets:4},{producto_id:2,nombre:'Coca-Cola 1 litro',unidades:'3',tickets:2}],productos_baja_rotacion:[{producto_id:2,nombre:'Coca-Cola 1 litro',unidades:'3',tickets:2},{producto_id:1,nombre:'Pizza americana familiar',unidades:'8',tickets:4}],canales:[{canal:'salon',cantidad:3,total:'60.00'},{canal:'llevar',cantidad:2,total:'40.00'}],horas:Array.from({length:24},(_,hora)=>({hora,cantidad:hora===19?5:0,total:hora===19?'100.00':'0.00'})),calor:[{dia:4,hora:19,cantidad:5,total:'100.00'}],meseros:[{usuario_id:20,nombre:'Mesera de prueba',atenciones:3,mesas_distintas:2,total:'60.00'}],categorias:[{id:1,nombre:'Pizzas',unidades:'8'},{id:2,nombre:'Bebidas',unidades:'3'}],sin_ventas:{cantidad:1,productos:[{producto_id:3,nombre:'Producto sin venta de prueba',unidades:'0'}]},alcance:'Fixture de pruebas: unidades de snapshots y cuentas de salón.'}
 }

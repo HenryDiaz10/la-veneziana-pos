@@ -1,4 +1,5 @@
 import {resumenComprasGastos} from './compras-gastos.js'
+import {validarAnaliticaClientes} from './clientes-analitica.js'
 export const MEDIOS_REPORTE = { efectivo: 'Efectivo', yape: 'Yape', plin: 'Plin', tarjeta_debito: 'Tarjeta de débito', tarjeta_credito: 'Tarjeta de crédito', transferencia: 'Transferencia', puntos_vip: 'Puntos VIP', cortesia: 'Cortesía' }
 export const COLORES_REPORTE = Object.freeze(['#F59E0B', '#EF4444', '#84CC16'])
 export const CLASES_REPORTE = { operativo: 'Operativos', financiero: 'Financieros', extraordinario: 'Extraordinarios', provision_impuesto: 'Provisión de impuesto' }
@@ -23,6 +24,7 @@ export function filtrosInicialesReporte(ahora = new Date()) {
 export function validarReporte(r) {
   exigir(r?.version_algoritmo === 1 && Number.isFinite(Date.parse(r.consultado_en)))
   filtroReporte(r.filtros)
+  if(r.clientes)validarAnaliticaClientes(r.clientes)
   if(r.actividad_financiera){
     const a=r.actividad_financiera,entero=n=>Number.isSafeInteger(n)&&n>=0,importe=n=>dinero(n)&&!n.startsWith('-')
     for(const k of ['compras_por_dia','gastos_por_dia','movimientos_por_dia'])exigir(Array.isArray(a[k])&&a[k].length<=366&&new Set(a[k].map(d=>d.fecha)).size===a[k].length&&a[k].every(d=>fecha(d.fecha)&&d.fecha>=r.filtros.desde&&d.fecha<=r.filtros.hasta))
@@ -92,6 +94,18 @@ export function csvReporte(r) {
 }
 
 // Exportación operativa separada del estado de resultados financiero.
+export function csvClientes(r){
+  const c=validarAnaliticaClientes(r.clientes),s=c.resumen
+  const filas=[['LA VENEZIANA','Mis clientes'],['Consultado',r.consultado_en],...Object.entries(r.filtros),['Alcance',c.alcance],
+    ['Indicador','Valor'],...Object.entries(s),
+    ['Ranking de ingresos: máximo 20 clientes'],['Ficha','Cliente','Compras','Días con compra','Unidades brutas','Venta bruta','Devuelto','Ingreso neto','Neto por compra','Primera compra histórica','Última compra del filtro'],
+    ...c.ranking_ingresos.map(v=>[v.id,v.nombre,v.compras,v.dias,v.unidades,v.bruto,v.devuelto,v.neto,v.promedio_neto,v.primera_compra,v.ultima_compra]),
+    ['Ranking de frecuencia: máximo 10'],...c.ranking_frecuencia.map(v=>[v.id,v.nombre,v.compras]),
+    ['Ranking de unidades: máximo 10'],...c.ranking_unidades.map(v=>[v.id,v.nombre,v.unidades]),
+    ['Periodo','Clientes distintos','Compras'],...c.evolucion.map(v=>[v.fecha,v.clientes,v.compras]),
+    ['Productos favoritos: máximo 10','Unidades brutas'],...c.productos.map(v=>[v.nombre,v.unidades])]
+  return '\uFEFF'+filas.map(f=>f.map(celdaCsvReporte).join(';')).join('\r\n')
+}
 export function csvAnalitica(r) {
   const a=r.analitica
   const filas=[['LA VENEZIANA','Reportes gerenciales'],['Consultado',r.consultado_en],...Object.entries(filtroReporte(r.filtros)),['Ventas con impuesto',r.ventas.total],['Tickets',r.ventas.cantidad],['Ticket promedio',r.ventas.ticket_promedio],['Fecha','Tickets','Total'],...serieCompletaReporte(r).map(d=>[d.fecha,d.cantidad,d.total])]

@@ -51,6 +51,9 @@ Guías frecuentes: [perfiles](docs/seguridad/PERFILES_ACCESO.md),
 [pedidos y POS](docs/operacion/POS.md), [historial de ventas](docs/reportes/HISTORIAL_VENTAS.md),
 [clientes](docs/clientes/CRM.md), [reportes y resultados](docs/reportes/ANALITICA_Y_RESULTADOS.md).
 
+Reportes gerenciales incluye [Mis clientes](docs/reportes/MIS_CLIENTES.md):
+frecuencia, ingresos, consumo, fidelidad y exportación PDF/CSV.
+
 Los tickets internos admiten impresión/PDF de 58 y 80 mm por el navegador.
 La impresión física con hardware y la emisión fiscal tienen alcances distintos:
 [ticket, PDF y agente](docs/operacion/VENTA_FINAL.md#impresión-durable-y-agente).

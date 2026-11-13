@@ -69,6 +69,7 @@ historial se conserva aparte para distinguir lo vigente de lo entregado en cada 
 - [Reportes: interfaz, gráficos y exportación](reportes/REPORTES_FRONTEND.md).
 - [Análisis, compras/gastos y estado de resultados](reportes/ANALITICA_Y_RESULTADOS.md).
 - [Historial de ventas por cliente](reportes/HISTORIAL_VENTAS.md).
+- [Mis clientes: frecuencia, ingresos, consumo y exportación](reportes/MIS_CLIENTES.md).
 
 ## Historial y material externo
 
