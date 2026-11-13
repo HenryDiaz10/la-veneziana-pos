@@ -4,6 +4,11 @@ Interfaz web del sistema de la pizzería, construida con React y Vite.
 
 ## Estado actual
 
+**Reportes organizados:** resumen inicial con cuatro cifras y evolución diaria;
+ventas/atención, compras/gastos y documentos/caja en vistas propias. Resultados
+abre en su utilidad y desglose. Registro de gasto desde la cabecera en modal,
+filtros avanzados desplegables y periodo conservado entre vistas.
+
 **Administración de cajas:** Arqueo incorpora creación de terminales, asignación
 de cajero y mantenimiento, disponible con permisos administrativos. El cajero
 abre únicamente sus cajas asignadas. [Guía](../backend/CAJAS_CONFIGURACION.md).

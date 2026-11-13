@@ -57,7 +57,8 @@
     "test:kds:comandos": "node tests/kds-comandos-integracion.mjs",
     "test:kds:integracion": "node tests/kds-integracion.mjs",
     "test:reportes": "node --test tests/reportes-reglas.test.mjs",
-    "test:reportes:integracion": "node tests/reportes-integracion.mjs"
+    "test:reportes:integracion": "node tests/reportes-integracion.mjs",
+    "test:reportes:compras": "node tests/reportes-compras-integracion.mjs"
   },
   "dependencies": {
     "bcrypt": "6.0.0",

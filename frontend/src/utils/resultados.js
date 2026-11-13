@@ -1,3 +1,4 @@
+import {filasActividad,celdaCsvReporte} from './reportes.js'
 // Dinero a cuatro decimales, sin Number ni doble descuento de compras/pagos.
 const leer=s=>{const[a,b='']=s.split('.');return BigInt(a+b.padEnd(4,'0'))}
 const texto=n=>{const signo=n<0n?'-':'';n=n<0n?-n:n;return `${signo}${n/10000n}.${String(n%10000n).padStart(4,'0')}`}
@@ -13,5 +14,6 @@ export function nivelesResultado(r) {
 export function csvResultados(r) {
   const n=nivelesResultado(r)
   const filas=[['LA VENEZIANA','Estado de resultados gerencial'],['Desde',r.filtros.desde],['Hasta',r.filtros.hasta],['Moneda','PEN'],['Zona',r.filtros.zona_horaria],['Consultado',r.consultado_en],['Ventas netas registradas',r.ventas.base_registrada],['Costo histórico',r.costos.cohorte_ventas],['Utilidad bruta',n.bruta],...Object.entries(r.gastos.por_clase),['Utilidad operativa',n.operativa],['Antes de impuestos',n.antes_impuestos],['Neta tras provisión registrada',n.neta],['Advertencias',r.estimacion.advertencias.join(', ')],['Alcance','Referencial; compras pagadas no se restan nuevamente. Provisión registrada no implica validación tributaria.']]
-  return '\uFEFF'+filas.map(f=>f.map(v=>'"'+String(v??'No disponible').replaceAll('"','""')+'"').join(';')).join('\r\n')
+  filas.push(...filasActividad(r))
+  return '\uFEFF'+filas.map(f=>f.map(v=>celdaCsvReporte(v??'No disponible')).join(';')).join('\r\n')
 }

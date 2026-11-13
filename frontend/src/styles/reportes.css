@@ -1,4 +1,21 @@
 .vz-reportes { display: grid; gap: 1.3rem; max-width: 1760px; margin: auto; min-width: 0; }
+.vz-report-contenido{display:grid;gap:1.3rem;min-width:0}
+.vz-report-periodo-panel{border:1px solid var(--app-borde);border-radius:1rem;background:var(--app-superficie);padding:1rem}
+.vz-report-periodo-panel .vz-report-filtros-compactos{border:0;padding:1rem 0 0;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;background:transparent;gap:.7rem}
+.vz-report-filtros-avanzados{grid-column:1/-1;border-top:1px solid var(--app-borde);min-width:0}
+.vz-report-filtros-avanzados summary{font-size:.8rem;color:var(--app-secundario)}
+.vz-report-avanzados-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:.8rem}
+.vz-report-vistas{display:flex;gap:.4rem;padding:.4rem;border:1px solid var(--app-borde);border-radius:1rem;background:var(--app-superficie);flex-wrap:wrap}
+.vz-report-vistas button{flex:1;min-height:44px;padding:.7rem .9rem;border-radius:.65rem;font-size:.85rem;font-weight:750;color:var(--app-secundario)}
+.vz-report-vistas button[aria-pressed=true]{background:#f59e0b;color:#17120b;box-shadow:0 2px 7px #00000012}
+.vz-report-graficos.vz-report-grafico-unico{grid-template-columns:minmax(0,1fr)}
+.vz-report-accesos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.vz-report-accesos button{min-width:0;text-align:left;border:1px solid var(--app-borde);border-radius:1rem;padding:1rem;background:var(--app-superficie)}
+.vz-report-accesos span{display:block;font-size:.8rem;color:var(--app-secundario);margin-top:.4rem}
+.vz-report-ayuda{font-size:.83rem;color:var(--app-secundario);line-height:1.8}
+.vz-report-ayuda button{text-decoration:underline;font-weight:700;color:var(--app-texto)}
+@media(max-width:600px){.vz-report-vistas button{flex-basis:40%;padding:.6rem .4rem}.vz-report-avanzados-grid,.vz-report-accesos{grid-template-columns:minmax(0,1fr)}.vz-report-periodo-panel .vz-report-filtros-compactos{grid-template-columns:repeat(2,minmax(0,1fr))}.vz-report-filtros-compactos>button{grid-column:1/-1}}
+@media print{.vz-report-vistas,.vz-report-periodo-panel,.vz-report-accesos,.vz-report-ayuda{display:none!important}.vz-report-contenido{display:block}}
 .vz-report-tabs,.vz-report-periodos {display:flex;gap:.6rem;flex-wrap:wrap}
 .vz-report-tabs a {padding:.8rem 1.1rem;border:1px solid var(--app-borde);border-radius:.8rem;font-weight:700;font-size:.85rem}
 .vz-report-tabs a[aria-current=page] {background:#f59e0b;color:#17120b;border-color:#f59e0b}

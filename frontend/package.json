@@ -32,7 +32,7 @@
     "test:kds": "node --test tests/kds.test.mjs tests/kds-tiempo.test.mjs",
     "test:kds:navegador": "node tests/kds-navegador.mjs",
     "test:kds:avisos": "node tests/kds-avisos-navegador.mjs",
-    "test:reportes": "node --test tests/reportes.test.mjs tests/resultados.test.mjs",
+    "test:reportes": "node --test tests/reportes.test.mjs tests/resultados.test.mjs tests/reportes-actividad.test.mjs",
     "test:reportes:navegador": "node tests/reportes-navegador.mjs"
   },
   "dependencies": {

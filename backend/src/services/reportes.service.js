@@ -3,6 +3,7 @@ import { sequelize } from '../config/database.js';
 import { filtrosReporte, CLASES_GASTO, decimalReporte as valor, formatoReporte as formato } from './reportes-reglas.js';
 import { MEDIOS_CAJA } from './caja-calculo.js';
 import { analiticaGerencial } from './reportes-analitica.js';
+import {actividadFinanciera} from './reportes-actividad.js';
 
 export function consultarGerencial(query, padre) {
   const f = filtrosReporte(query);
@@ -79,8 +80,9 @@ export function consultarGerencial(query, padre) {
     const totalGastos = Object.values(gastosPorClase).reduce((a, x) => a + valor(x), 0n);
     const cobrados = medios.reduce((a, m) => a + valor(m.cobrado), 0n);
     const analitica=await analiticaGerencial(leer,ventas);
+    const actividad_financiera=await actividadFinanciera(leer);
     if (cobrados !== valor(v.total)) advertencias.push('pagos_no_concilian_con_ventas');
-    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f, analitica,
+    return { version_algoritmo: 1, consultado_en: new Date().toISOString(), filtros: f, analitica, actividad_financiera,
       politica: { ingresos: 'fecha_emision y estado de venta; pagos aplicados, no efectivo recibido',
         devoluciones: 'fecha del desembolso, sesion que lo realiza, estado de venta original',
         costos_cohorte: 'snapshots de reservas consumidas de las ventas seleccionadas a fecha de consulta',

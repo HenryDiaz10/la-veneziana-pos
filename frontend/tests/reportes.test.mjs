@@ -17,7 +17,7 @@ test('compras saldadas se validan y exportan; saldo parcial desconocido conserva
   assert.throws(() => validarReporte(r))
 })
 test('filtros del calendario real, Lima inicial y sesión estricta', () => {
-  const inicial = filtrosInicialesReporte(new Date('2026-11-06T03:00:00Z')); assert.equal(inicial.hasta, '2026-11-05'); assert.equal(inicial.desde, '2026-10-30')
+  const inicial = filtrosInicialesReporte(new Date('2026-11-06T03:00:00Z')); assert.equal(inicial.hasta, '2026-11-05'); assert.equal(inicial.desde, '2026-11-01')
   for (const c of [{ desde: '2026-02-30' }, { hasta: '2027-12-31' }, { sesion_id: '1 OR 1=1' }, { sesion_id: '-2' }, { zona_horaria: 'otra' }]) assert.throws(() => filtroReporte({ ...inicial, ...c }))
   assert.equal(filtroReporte({ ...inicial, sesion_id: '42' }).sesion_id, '42')
 })

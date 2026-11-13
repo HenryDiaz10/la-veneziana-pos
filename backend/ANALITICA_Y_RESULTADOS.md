@@ -1,5 +1,73 @@
 # Análisis gerencial y estado de resultados
 
+## Distribución para el administrador
+
+La vista inicial de gerencia es **Resumen**: ventas, compras, gastos y ticket
+promedio, con una evolución diaria. **Ventas y atención** reúne los nueve
+gráficos de ventas, horarios, productos y responsables. **Compras y gastos**
+agrupa pagos pendientes, importes, proveedores y clasificación de gastos.
+**Documentos y caja** contiene comprobantes, gastos paginados, movimientos y
+medios de pago. Se elimina la larga secuencia de bloques repetidos de la portada.
+
+Estado de resultados abre directamente en **Resultado del negocio**, con cuatro
+indicadores explicados y su tabla de cálculo; comparte las vistas de compras
+y documentos. La evolución diaria está en el resumen gerencial. Los importes
+pendientes no se sustituyen por cero. Los detalles de clasificación y criterios
+se despliegan cuando se necesitan.
+
+**Registrar gasto** está en la cabecera de ambas páginas, para cuentas con
+`configuracion/gestionar`. Abre un modal con el formulario existente; no se puede
+cerrar mientras se confirma una escritura o se debe reintentar un resultado
+incierto. Los filtros normales son fechas y periodos rápidos; **Más filtros**
+despliega canal, responsable, sesión y zona. Cambiar de vista conserva filtros
+y datos sin volver a consultar el reporte. CSV exporta todo el periodo;
+impresión/PDF refleja la vista abierta.
+
+La prueba de navegador valida navegación por las vistas, filtros conservados,
+resultado visible primero, gráficos, documentos y modal de gasto. Revisa ambos
+temas y anchos de 320 a 1920 píxeles, además de carga/error/ausencia de permisos,
+PNG y reglas de impresión. No cambia cálculos financieros ni registros reales.
+
+## Compras y actividad financiera visibles (13/11/2026)
+
+El mes actual es ahora el periodo inicial de ambas pantallas. El filtro anterior
+de siete días dejaba fuera el abastecimiento del 06/11 al consultar el 13/11.
+Se conserva el acceso rápido de últimos siete días para consultas específicas.
+
+Las dos páginas incorporan compras confirmadas con IGV, documentos saldados,
+pendientes y parciales, gastos registrados, devoluciones y movimientos de caja.
+Muestran cuatro gráficos adicionales: ventas/compras/gastos diarios, compras
+por proveedor, gastos por clasificación e ingresos/egresos de caja. También
+incluyen los últimos 50 documentos de compra, la lista paginada de gastos y
+exportaciones CSV con actividad. Gerencial conserva sus nueve gráficos de
+ventas; resultados conserva sus cuatro niveles de utilidad.
+
+`src/services/reportes-actividad.js` consulta cabeceras separadas por dominio y
+compone series y documentos dentro de la misma transacción del reporte.
+`frontend/src/components/reportes/ActividadFinanciera.jsx` (ruta desde CODIGO)
+comparte la presentación entre páginas; sus utilidades y CSV están en
+`frontend/src/utils/reportes.js` y `resultados.js`.
+
+Las compras son globales por fecha civil de emisión y estado actual de pago:
+los filtros de mesero, canal y estado de venta no las eliminan. Gastos y caja
+solo se limitan a sesión cuando su vínculo permite atribuirlos. Los borradores
+se notifican pero no se suman hasta confirmar. Las compensadas/anuladas no se
+presentan como compras confirmadas vigentes. Una compra no prueba un gasto
+consumido ni una fecha de pago bancaria: no se resta nuevamente de la utilidad.
+Los gastos vinculados a movimientos no deben sumarse otra vez como egresos.
+Los abonos parciales carecen de importe desglosado; el saldo se mantiene como
+desconocido cuando corresponda.
+
+Validación: `npm.cmd run test:reportes:compras` en backend crea una compra de
+dos líneas por S/118.00 (base S/100.00 + IGV S/18.00), la confirma, verifica stock,
+serie diaria, proveedor, documento, cambio de pago y ausencia de doble descuento.
+Todo vive en una transacción revertida. También pasó la integración anterior
+de reportes y la consulta real del 01 al 13/11: seis compras por S/9,954.90.
+`npm.cmd run test:reportes` en frontend incluye la nueva validación de actividad,
+CSV y periodo mensual. La prueba de navegador usa API interceptada, comprueba
+trece gráficos gerenciales/cuatro financieros, temas, estados, PNG y anchos
+320-1920. Espera el ajuste de tamaño de Chart.js antes de medir desbordamiento.
+
 Mejora de los módulos existentes, conforme a
 `DOCUMENTACION/PANTALLAS/ADMINISTRADOR/pantallas_administrador_final.md`
 y las reglas de pedidos, caja y reportes. No inicia una nueva fase de desarrollo.

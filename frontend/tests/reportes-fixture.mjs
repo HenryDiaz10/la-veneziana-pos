@@ -1,4 +1,5 @@
 import { MEDIOS_REPORTE } from '../src/utils/reportes.js'
+export function actividadFixture(){return {compras_por_dia:[{fecha:'2026-11-02',cantidad:1,total:'118.00'}],gastos_por_dia:[{fecha:'2026-11-02',total:'14.00'}],movimientos_por_dia:[],proveedores:[{proveedor_id:1,nombre:'Proveedor de prueba',cantidad:1,total:'118.00'}],compras_documentos:[{id:1,fecha:'2026-11-02',numero_factura:'TEST-COMPRA',proveedor:'Proveedor de prueba',estado_pago:'pagado_total',total:'118.00'}],borradores:{cantidad:0,total:'0.00'}}}
 export function reporteFixture() {
   return { version_algoritmo: 1, consultado_en: '2026-11-06T18:00:00Z', filtros: { desde: '2026-11-01', hasta: '2026-11-06', estado: 'emitida', moneda: 'PEN', zona_horaria: 'America/Lima', sesion_id: null },
     ventas: { cantidad: 5, total: '100.00', base_registrada: '90.00', impuesto_registrado: '10.00', ticket_promedio: '20.00' },

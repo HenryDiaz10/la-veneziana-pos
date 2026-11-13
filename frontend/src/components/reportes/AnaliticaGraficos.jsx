@@ -5,7 +5,7 @@ import BotonBase from '../ui/BotonBase.jsx'
 import {monedaReporte} from '../../utils/reportes.js'
 const paleta=['#F59E0B','#EF4444','#84CC16','#38BDF8','#A78BFA','#FB7185','#2DD4BF','#F97316','#60A5FA','#E879F9']
 const canales={salon:'Salón',llevar:'Para llevar',delivery:'Delivery'}
-function Grafico({titulo,nota,filas,moneda=false,dona=false,color=0,reporte,bloqueado}) {
+export function Grafico({titulo,nota,filas,moneda=false,dona=false,color=0,reporte,bloqueado}) {
   const ref=useRef(null),oscuro=useTemaStore(s=>s.tema)==='oscuro',tinta=oscuro?'#e2e8f0':'#334155'
   const hay=filas.some(f=>Number(f.valor)>0)
   const opciones={responsive:true,maintainAspectRatio:false,animation:false,indexAxis:dona?'x':'y',plugins:{legend:{display:dona,position:'bottom',labels:{color:tinta}},title:{display:true,color:tinta,text:[titulo,`${reporte.filtros.desde} al ${reporte.filtros.hasta}`,`${reporte.filtros.canal??'Todos los canales'} · ${reporte.filtros.estado} · ${reporte.filtros.zona_horaria} · sesión ${reporte.filtros.sesion_id??'todas'} · responsable ${reporte.filtros.mesero_id??'todos'}`]},tooltip:{callbacks:{label:c=>`${filas[c.dataIndex].nombre}: ${moneda?monedaReporte(filas[c.dataIndex].valor):filas[c.dataIndex].valor}`}}},...(!dona?{scales:{x:{beginAtZero:true,ticks:{color:tinta,precision:moneda?2:0},grid:{color:oscuro?'#ffffff12':'#00000010'}},y:{ticks:{color:tinta,callback:(_v,i)=>filas[i]?.nombre.length>28?filas[i].nombre.slice(0,28)+'…':filas[i]?.nombre},grid:{display:false}}}}:{cutout:'66%'})}

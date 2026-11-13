@@ -5,13 +5,16 @@ import {consultarCategoriasReporte} from '../../services/reportes.service.js'
 import {solicitarApi} from '../../services/api.js'
 import {CLASES_REPORTE,filtrosInicialesReporte} from '../../utils/reportes.js'
 import BotonBase from '../ui/BotonBase.jsx'
+import Modal from '../ui/Modal.jsx'
 
-export default function RegistrarGasto({uid,onGuardado}) {
+export default function RegistrarGasto({uid,onGuardado,compacto=false}) {
   const usuario=useAuthStore(s=>s.usuario),[abierto,setAbierto]=useState(false)
+  const [bloqueado,setBloqueado]=useState(false)
   if(!usuario?.permisos.some(p=>p.modulo==='configuracion'&&p.accion==='gestionar'))return null
+  if(compacto)return <><BotonBase className="bg-marca-dorado text-texto" onClick={()=>setAbierto(true)}>Registrar gasto</BotonBase>{abierto&&<Modal titulo="Registrar gasto o categoría" bloqueado={bloqueado} onCerrar={()=>setAbierto(false)}><Formulario uid={uid} onGuardado={onGuardado} onBloqueo={setBloqueado}/></Modal>}</>
   return <section className="vz-report-panel vz-no-print"><header><div><h2>Registrar gastos del periodo</h2><p>Alquiler, servicios, sueldos, intereses y provisiones. No registra pagos ni movimientos de caja.</p></div><BotonBase onClick={()=>setAbierto(v=>!v)}>{abierto?'Ocultar formulario':'Nuevo gasto / categoría'}</BotonBase></header>{abierto&&<Formulario uid={uid} onGuardado={onGuardado}/>}</section>
 }
-function Formulario({uid,onGuardado}) {
+function Formulario({uid,onGuardado,onBloqueo}) {
   const [revision,setRevision]=useState(0),[pendiente,setPendiente]=useState(false),[error,setError]=useState(''),[mensaje,setMensaje]=useState(''),[fijada,setFijada]=useState(false)
   const solicitud=useMemo(()=>({uid,revision}),[uid,revision]),categorias=useConsultaRemota(consultarCategoriasReporte,solicitud)
   const operacion=useRef(null),enCurso=useRef(false),form=useRef(null)
@@ -23,12 +26,14 @@ function Formulario({uid,onGuardado}) {
       operacion.current={ruta:categoria?'/reportes/gastos/categorias':'/reportes/gastos',cuerpo,clave:crypto.randomUUID()}
     }
     enCurso.current=true;setPendiente(true);setError('');setFijada(true)
+    onBloqueo?.(true)
     try{
       const op=operacion.current
       await solicitarApi(op.ruta,{metodo:'POST',datos:op.cuerpo,claveIdempotencia:op.clave})
       setMensaje(op.ruta.endsWith('/categorias')?'Categoría guardada; ya puedes seleccionarla.':'Gasto registrado. El reporte se actualizó; revisa que su fecha esté en el periodo aplicado.')
       operacion.current=null;setFijada(false);form.current.reset();setRevision(v=>v+1);onGuardado()
-    }catch(e){setError(e.message);if(e.estado>=400&&e.estado<500){operacion.current=null;setFijada(false)}}
+      onBloqueo?.(false)
+    }catch(e){setError(e.message);if(e.estado>=400&&e.estado<500){operacion.current=null;setFijada(false);onBloqueo?.(false)}}
     finally{enCurso.current=false;setPendiente(false)}
   }
   return <form ref={form} onSubmit={enviar} className="vz-gasto-form">

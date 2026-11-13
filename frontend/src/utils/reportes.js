@@ -17,11 +17,19 @@ export function filtroReporte(datos) {
 export function filtrosInicialesReporte(ahora = new Date()) {
   const partes = Object.fromEntries(new Intl.DateTimeFormat('en', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(ahora).map(p => [p.type, p.value]))
   const hasta = `${partes.year}-${partes.month}-${partes.day}`
-  return filtroReporte({ desde: new Date(Date.parse(hasta + 'T00:00:00Z') - 6 * 86400000).toISOString().slice(0, 10), hasta, estado: 'emitida', zona_horaria: 'America/Lima' })
+  return filtroReporte({ desde: `${partes.year}-${partes.month}-01`, hasta, estado: 'emitida', zona_horaria: 'America/Lima' })
 }
 export function validarReporte(r) {
   exigir(r?.version_algoritmo === 1 && Number.isFinite(Date.parse(r.consultado_en)))
   filtroReporte(r.filtros)
+  if(r.actividad_financiera){
+    const a=r.actividad_financiera,entero=n=>Number.isSafeInteger(n)&&n>=0,importe=n=>dinero(n)&&!n.startsWith('-')
+    for(const k of ['compras_por_dia','gastos_por_dia','movimientos_por_dia'])exigir(Array.isArray(a[k])&&a[k].length<=366&&new Set(a[k].map(d=>d.fecha)).size===a[k].length&&a[k].every(d=>fecha(d.fecha)&&d.fecha>=r.filtros.desde&&d.fecha<=r.filtros.hasta))
+    exigir(a.compras_por_dia.every(d=>entero(d.cantidad)&&importe(d.total))&&a.gastos_por_dia.every(d=>importe(d.total))&&a.movimientos_por_dia.every(d=>importe(d.ingresos)&&importe(d.egresos)))
+    exigir(Array.isArray(a.proveedores)&&a.proveedores.every(p=>entero(p.proveedor_id)&&typeof p.nombre==='string'&&entero(p.cantidad)&&importe(p.total)))
+    exigir(Array.isArray(a.compras_documentos)&&a.compras_documentos.length<=50&&a.compras_documentos.every(c=>entero(c.id)&&fecha(c.fecha)&&typeof c.numero_factura==='string'&&typeof c.proveedor==='string'&&['pendiente','pagado_parcial','pagado_total'].includes(c.estado_pago)&&importe(c.total)))
+    exigir(entero(a.borradores?.cantidad)&&importe(a.borradores.total))
+  }
   if (r.analitica) {
     const a=r.analitica,entero=n=>Number.isSafeInteger(n)&&n>=0,unidades=n=>typeof n==='string'&&/^\d{1,60}$/.test(n),texto=n=>typeof n==='string'&&n.length<=600
     exigir(entero(a.productos_vendidos)&&texto(a.alcance))
@@ -88,5 +96,17 @@ export function csvAnalitica(r) {
   const filas=[['LA VENEZIANA','Reportes gerenciales'],['Consultado',r.consultado_en],...Object.entries(filtroReporte(r.filtros)),['Ventas con impuesto',r.ventas.total],['Tickets',r.ventas.cantidad],['Ticket promedio',r.ventas.ticket_promedio],['Fecha','Tickets','Total'],...serieCompletaReporte(r).map(d=>[d.fecha,d.cantidad,d.total])]
   if(a)filas.push(['Productos vendidos distintos',a.productos_vendidos],['Productos top','Unidades','Tickets'],...a.productos_top.map(p=>[p.nombre,p.unidades,p.tickets]),['Baja rotación','Unidades','Tickets'],...a.productos_baja_rotacion.map(p=>[p.nombre,p.unidades,p.tickets]),['Productos activos sin ventas',a.sin_ventas.cantidad],...a.sin_ventas.productos.map(p=>[p.nombre,'0']),['Responsable','Atenciones de salón','Mesas distintas','Venta atribuida'],...a.meseros.map(m=>[m.nombre,m.atenciones,m.mesas_distintas,m.total]),['Canal','Tickets','Total'],...a.canales.map(c=>[c.canal,c.cantidad,c.total]),['Hora','Tickets','Total'],...a.horas.map(h=>[h.hora,h.cantidad,h.total]),['Categoría','Unidades'],...a.categorias.map(c=>[c.nombre,c.unidades]),['Día semana (lunes=0)','Hora','Tickets','Total'],...a.calor.map(c=>[c.dia,c.hora,c.cantidad,c.total]),['Alcance',a.alcance])
   filas.push(['Medio','Cobrado','Devuelto','Neto'],...r.medios.map(m=>[MEDIOS_REPORTE[m.metodo],m.cobrado,m.devuelto,m.neto]))
+  filas.push(...filasActividad(r))
   return '\uFEFF'+filas.map(f=>f.map(celdaCsvReporte).join(';')).join('\r\n')
+}
+
+// Completar días sin actividad y conservar importes como texto exacto.
+export function serieActividad(r){
+  const a=r.actividad_financiera
+  const compras=new Map((a?.compras_por_dia??[]).map(d=>[d.fecha,d.total])),gastos=new Map((a?.gastos_por_dia??[]).map(d=>[d.fecha,d.total]))
+  return serieCompletaReporte(r).map(d=>({fecha:d.fecha,ventas:d.total,compras:compras.get(d.fecha)??'0.00',gastos:gastos.get(d.fecha)??'0.00'}))
+}
+export function filasActividad(r){
+  if(!r.compras||!r.actividad_financiera)return []
+  return [['Compras confirmadas con IGV',r.compras.total],['Compras pagadas estado actual',r.compras.saldadas],['Compras pendientes sin abonos',r.compras.pendientes_sin_abonos],['Documentos con pago parcial',r.compras.total_documentos_parciales],['Saldo pendiente conocido',r.compras.saldo_pendiente??'Sin detalle de abonos'],['Gastos registrados',r.gastos.total],['Ingresos caja',r.movimientos.ingresos],['Egresos caja',r.movimientos.egresos],['Egresos sin gasto vinculado',r.movimientos.egresos_sin_gasto],['Fecha','Ventas con IGV','Compras con IGV','Gastos'],...serieActividad(r).map(d=>[d.fecha,d.ventas,d.compras,d.gastos]),['Compra','Fecha','Proveedor','Pago','Total con IGV'],...r.actividad_financiera.compras_documentos.map(c=>[c.numero_factura,c.fecha,c.proveedor,c.estado_pago,c.total]),['Criterio','Compras globales por emisión; pago según estado actual. Egresos vinculados y gastos no se suman dos veces; compras no se descuentan otra vez del resultado.']]
 }

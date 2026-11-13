@@ -57,6 +57,19 @@ aperturas exigen asignación; una caja con turno abierto no admite cambios de
 configuración. La migración 0053 conserva todos los responsables históricos.
 [Reglas, archivos y pruebas](backend/CAJAS_CONFIGURACION.md).
 
+**Compras y gastos en reportes:** ambas pantallas muestran compras confirmadas,
+pagadas/pendientes, documentos, gastos, ingresos/egresos de caja y cuatro gráficos
+de actividad adicionales. El periodo inicial es el mes actual; no oculta las
+compras del 06/11 al transcurrir siete días. Los CSV incluyen esta actividad.
+Las compras no se descuentan dos veces de la utilidad; los borradores se avisan
+y solo las compras confirmadas se suman. [Criterios y pruebas](backend/ANALITICA_Y_RESULTADOS.md).
+
+La presentación se organiza por vistas: **Resumen**, **Ventas y atención**,
+**Compras y gastos** y **Documentos y caja**. Estado de resultados abre primero
+su resultado y desglose; **Registrar gasto** permanece en la cabecera de ambas
+páginas. Fechas visibles, filtros adicionales desplegables y navegación sin
+recargar ni perder el periodo aplicado.
+
 - Fase 1: estructura inicial, repositorio Git y publicación en GitHub.
 - Fase 2: backend inicial con Express, configuración de puerto y dirección,
   registros con Pino, CORS local, manejo de errores y cierre ordenado.
