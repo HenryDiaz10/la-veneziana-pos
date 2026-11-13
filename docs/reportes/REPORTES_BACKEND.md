@@ -140,6 +140,28 @@ null. No aplica filtro de estado de venta a un gasto independiente.
 
 ## Archivos, errores y pruebas
 
+### Gastos persistentes de noviembre
+
+El 13/11/2026 se registraron diez gastos operativos solicitados por el propietario:
+agua S/ 180.00, electricidad S/ 480.00, remuneraciones parciales de cinco
+trabajadores S/ 3,550.00, internet S/ 99.90, mantenimiento S/ 120.00 y limpieza
+S/ 85.00. Total: S/ 4,514.90. Se usan descripciones simples por concepto y nombre
+del trabajador en cada remuneración.
+
+Los importes fueron generados a petición del propietario. Ese origen se conserva
+en auditoría y en `DOCUMENTACION/REGISTROS/gastos-operativos-20261113.json`, fuera
+de CODIGO; no hay comprobantes fiscales aportados ni desembolso verificado.
+Los registros se conservan y se descuentan como operativos en el estado de
+resultados. No se crean egresos de caja ni se duplica su importe con compras.
+Para verlos, seleccionar el 13/11/2026 o un periodo que lo incluya, todas las
+sesiones y actualizar el reporte. Un filtro por sesión excluye gastos sin
+movimiento vinculado y muestra la advertencia correspondiente.
+
+`backend/scripts/registrar-gastos-noviembre.mjs` inspecciona el plan por defecto;
+con `--aplicar` confirma categorías y gastos mediante los servicios transaccionales
+existentes. El lote fijo es idempotente y no se repite. Comprueba el incremento
+exacto de gastos y la disminución del resultado, manteniendo caja sin cambios.
+
 | Archivo bajo backend | Función |
 | --- | --- |
 | `src/services/reportes-reglas.js` | Validar fechas, rango, filtros y gasto; convertir/formatear agregados exactos. |

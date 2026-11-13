@@ -71,6 +71,22 @@ declaración fiscal ni cierre contable. Hereda los límites temporales de fase 3
 
 ## Accesibilidad y adaptación
 
+### Detalle de gastos en el resultado
+
+La vista **Estado de resultados → Resultado del negocio** incluye el bloque
+**Detalle de los gastos**, debajo del desglose financiero. Muestra concepto,
+categoría, clasificación, fecha, ID, movimiento vinculado, comprobante cuando
+existe e importe. Comparte periodo y sesión con el reporte; los filtros de venta
+no limitan los gastos. El mismo listado sigue en Documentos y caja.
+
+Paginación de diez registros y total de la página visible, claramente separado
+del total del periodo. Cambiar de página conserva el contenido durante la carga.
+Guardar vista en PDF incluye la página visible del detalle y se deshabilita
+mientras se cargan gastos/categorías o existe un error; no imprime datos a medio
+cargar. Los errores de categorías pueden reintentarse. La impresión compacta
+el desglose de niveles para evitar espacio excesivo y mantiene los conceptos
+legibles. No hay cambios a fórmulas ni a la provisión del impuesto a la renta.
+
 Canvas con nombre/rol accesible y equivalencia HTML exacta; no depender de color,
 mouse o imagen para leer cifras. Controles etiquetados, foco visible y botones
 de al menos 44 px. Cuatro indicadores en escritorio, adaptación a dos/uno según

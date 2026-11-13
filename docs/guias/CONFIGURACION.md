@@ -57,6 +57,16 @@ Los scripts de carga de negocio tienen sus propios modos de validación/aplicaci
 
 ## Diagnóstico rápido
 
+### Impuesto de ventas
+
+Por indicación del propietario, `FINANZAS.igv_porcentaje` está configurado en
+`18` y `precios_incluyen_impuesto` en `true`: los precios de carta son finales.
+El seeder `backend/seeders/0004-configuracion-global.js` utiliza esos valores
+para nuevas instalaciones; no sobrescribe configuraciones ya existentes.
+Los cobros conservan su tasa y desglose en el snapshot, por lo que una
+configuración posterior no recalcula ventas históricas. La carga de gastos no
+añade automáticamente IGV a remuneraciones ni infiere crédito fiscal.
+
 | Síntoma | Qué revisar |
 |---|---|
 | `EADDRINUSE` en 3000 o 5173 | Ya existe un proceso en ese puerto. Reutilizar la terminal correcta o detener el proceso identificado. |

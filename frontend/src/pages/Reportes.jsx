@@ -25,6 +25,7 @@ export default function Reportes({financiero=false}) {
 function ContenidoReportes({uid,financiero}) {
   const contenido=useRef(null),[exportando,setExportando]=useState(false),[errorPdf,setErrorPdf]=useState('')
   const [revisionGastos,setRevisionGastos]=useState(0),[vista,setVista]=useState('resumen')
+  const [detalleGastosBloqueado,setDetalleGastosBloqueado]=useState(true)
   const [aplicados,setAplicados]=useState(filtrosInicialesReporte)
   const [edicion,setEdicion]=useState(()=>({...aplicados,sesion_id:'',canal:'todos',mesero_id:''})),[errorFiltro,setErrorFiltro]=useState('')
   const solicitud=useMemo(()=>({uid,filtros:aplicados,financiero}),[uid,aplicados,financiero])
@@ -33,6 +34,7 @@ function ContenidoReportes({uid,financiero}) {
   const titulo=financiero?'Estado de resultados':'Reportes gerenciales'
   const vistas=[['resumen',financiero?'Resultado del negocio':'Resumen'],...(!financiero?[['ventas','Ventas y atención'],['clientes','Mis clientes']]:[]),['compras','Compras y gastos'],['documentos','Documentos y caja']]
   const sinDatosVista=vista==='clientes'&&!r?.clientes
+  const detalleEnVista=vista==='documentos'||(financiero&&vista==='resumen')
   async function guardarPdf(){
     setErrorPdf('');setExportando(true)
     try{await imprimirVistaReporte({contenido:contenido.current,titulo,vista:vistas.find(([id])=>id===vista)[1],reporte:r,onFinalizar:()=>setExportando(false)})}
@@ -51,7 +53,7 @@ function ContenidoReportes({uid,financiero}) {
         <RegistrarGasto compacto uid={uid} onGuardado={()=>{setRevisionGastos(v=>v+1);consulta.reintentar()}}/>
         <BotonBase onClick={consulta.reintentar} disabled={consulta.pendiente}>Actualizar reporte</BotonBase>
         <BotonBase className="border border-app-borde" disabled={bloqueado||!r||sinDatosVista} onClick={()=>descargarReporte(financiero?csvResultados(r):vista==='clientes'?csvClientes(r):csvAnalitica(r),'text/csv;charset=utf-8',`veneziana-${financiero?'resultados':vista==='clientes'?'mis-clientes':'gerencial'}-${r.filtros.desde}-${r.filtros.hasta}.csv`)}>Exportar CSV</BotonBase>
-        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||sinDatosVista||exportando} onClick={guardarPdf}>Guardar vista en PDF</BotonBase>
+        <BotonBase className="border border-app-borde" disabled={bloqueado||!r||sinDatosVista||exportando||(detalleEnVista&&detalleGastosBloqueado)} onClick={guardarPdf}>Guardar vista en PDF</BotonBase>
       </div>
     </header>
     <nav className="vz-report-tabs" aria-label="Tipo de reporte"><Link to="/reportes" aria-current={!financiero?'page':undefined}>Reportes gerenciales</Link><Link to="/estado-resultados" aria-current={financiero?'page':undefined}>Estado de resultados</Link></nav>
@@ -81,6 +83,7 @@ function ContenidoReportes({uid,financiero}) {
         {vista==='resumen'&&(financiero?<>
           {!r.estimacion.completa&&<details className="vz-report-alerta"><summary>Hay datos pendientes para calcular el resultado</summary><ul>{r.estimacion.advertencias.map(k=><li key={k}>{AVISOS_REPORTE[k]??k}</li>)}</ul></details>}
           <EstadoFinanciero reporte={r}/>
+          <GastosReporte key={`${JSON.stringify(r.filtros)}-${revisionGastos}`} filtros={r.filtros} uid={uid} titulo="Detalle de los gastos" onEstado={setDetalleGastosBloqueado}/>
           <p className="vz-report-ayuda">Para revisar pagos a proveedores y otros gastos, abre <button onClick={()=>setVista('compras')}>Compras y gastos</button>. Los documentos están en <button onClick={()=>setVista('documentos')}>Documentos y caja</button>.</p>
         </>:<>
           <div className="vz-report-kpis"><Indicador titulo="Ventas del periodo" importe={monedaReporte(r.ventas.total)} detalle={`${r.ventas.cantidad} tickets · con IGV`} tono="lima"/><Indicador titulo="Compras confirmadas" importe={monedaReporte(r.compras?.total??null)} detalle={`${r.compras?.cantidad??0} documentos · con IGV`} tono="rojo"/><Indicador titulo="Compras y otros gastos" importe={monedaReporte(resumenComprasGastos(r)?.total??null)} detalle="Compras confirmadas + otros gastos registrados" tono="azul"/><Indicador titulo="Ticket promedio" importe={monedaReporte(r.ventas.ticket_promedio)} detalle="Promedio por venta" tono="dorado"/></div>
@@ -96,7 +99,7 @@ function ContenidoReportes({uid,financiero}) {
         {vista==='compras'&&<ActividadFinanciera vista="compras" reporte={r} bloqueado={bloqueado}/>}
         {vista==='documentos'&&<>
           <ActividadFinanciera vista="documentos" reporte={r} bloqueado={bloqueado}/>
-          <GastosReporte key={`${JSON.stringify(r.filtros)}-${revisionGastos}`} filtros={r.filtros} uid={uid}/>
+          <GastosReporte key={`${JSON.stringify(r.filtros)}-${revisionGastos}`} filtros={r.filtros} uid={uid} onEstado={setDetalleGastosBloqueado}/>
           <details className="vz-report-panel"><summary>Cobros y devoluciones por medio de pago</summary><div className="vz-report-scroll"><table><caption className="sr-only">Medios de pago en soles</caption><thead><tr><th>Medio</th><th>Cobrado</th><th>Devuelto</th><th>Neto</th></tr></thead><tbody>{r.medios.map(m=><tr key={m.metodo}><th scope="row">{MEDIOS_REPORTE[m.metodo]}</th><td>{monedaReporte(m.cobrado)}</td><td>{monedaReporte(m.devuelto)}</td><td>{monedaReporte(m.neto)}</td></tr>)}</tbody></table></div></details>
         </>}
       </div>

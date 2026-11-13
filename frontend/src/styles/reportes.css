@@ -134,7 +134,9 @@
  #vz-reporte-impresion .vz-report-vacio{height:auto;min-height:50px;padding:12px}
  #vz-reporte-impresion .vz-heat-row{min-width:0;grid-template-columns:22px repeat(24,minmax(0,1fr));font-size:6pt;gap:1px}
  #vz-reporte-impresion .vz-heatmap{overflow:visible}
- #vz-reporte-impresion .vz-report-pie-pdf{font-size:8pt;color:#475569;border-top:1px solid #cbd5e1;padding-top:10px;margin-top:14px}
+ #vz-reporte-impresion .vz-resultados-tabla th,#vz-reporte-impresion .vz-resultados-tabla td{padding:.4rem}
+ #vz-reporte-impresion .vz-resultados-tabla .vz-resultado-nivel th,#vz-reporte-impresion .vz-resultados-tabla .vz-resultado-nivel td{padding:.6rem .4rem}
+ #vz-reporte-impresion .vz-report-pie-pdf{font-size:8pt;color:#475569;border-top:1px solid #cbd5e1;padding-top:6px;margin-top:6px;break-before:avoid}
  .vz-report-exportar-ayuda{display:none!important}
 }
 @media(max-width: 1200px) { .vz-report-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

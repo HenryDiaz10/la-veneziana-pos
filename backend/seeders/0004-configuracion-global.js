@@ -1,4 +1,4 @@
-// Configuración inicial definida en el SQL del proyecto.
+// Configuración inicial. IGV 18% y precios finales indicados por el propietario.
 const configuraciones = [
   {
     clave: 'EMP_INFO',
@@ -13,13 +13,13 @@ const configuraciones = [
   {
     clave: 'FINANZAS',
     valor: {
-      igv_porcentaje: null,
+      igv_porcentaje: '18',
       moneda: 'PEN',
-      precio_incluye_impuesto: true,
+      precios_incluyen_impuesto: true,
       puntos_vip_por_sol: 1
     },
     descripcion:
-      'Tasa pendiente de validación, no habilitar cobros sin configuración'
+      'IGV 18% indicado por el propietario; precios finales incluyen impuesto'
   },
   {
     clave: 'HARDWARE',

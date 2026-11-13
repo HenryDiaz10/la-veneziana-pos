@@ -13,8 +13,8 @@ await ctx.route('**/api/**',async route=>{
   const path=new URL(route.request().url()).pathname
   let body
   if(path.endsWith('/auth/session'))body={usuario:{id:1,nombre:'Administrador de pruebas',rol:{nombre:'administrador'},permisos:[{modulo:'reportes',accion:'leer'}]}}
-  else if(path.endsWith('/gastos/categorias'))body={categorias:[]}
-  else if(path.endsWith('/gastos'))body={gastos:[],paginacion:{siguiente:null}}
+  else if(path.endsWith('/gastos/categorias'))body={categorias:[{id:1,nombre:'Servicios básicos'}]}
+  else if(path.endsWith('/gastos'))body={gastos:[{id:1,categoria_id:1,descripcion:'Servicio de agua - noviembre',monto_gasto:'2.00',fecha_gasto:'2026-11-13',clasificacion:'operativo',movimiento_caja_id:null,comprobante_fiscal:'RECIBO-PRUEBA'}],paginacion:{siguiente:null}}
   else{
     body=reporteFixture();body.filtros.hasta='2026-11-13';body.analitica=analiticaFixture();body.actividad_financiera=actividadFixture()
     body.compras={cantidad:1,total:'118.00',saldadas:'118.00',pendientes_sin_abonos:'0.00',parciales:0,total_documentos_parciales:'0.00',saldo_pendiente:'0.00'}
@@ -44,6 +44,13 @@ try{
       assert.equal(await salida.locator('img').count(),elementos)
       assert.ok((await page.title()).includes(vista));assert.ok((await salida.textContent()).includes('2026-11-01 al 2026-11-13'))
       if(vista==='Resumen')assert.equal(await salida.getByRole('heading',{name:'Productos más vendidos'}).count(),0)
+      if(vista==='Resultado del negocio'){
+        assert.ok((await salida.textContent()).includes('Detalle de los gastos'))
+        assert.ok((await salida.textContent()).includes('Servicio de agua - noviembre'))
+        assert.ok((await salida.textContent()).includes('Servicios básicos'))
+        assert.ok((await salida.textContent()).includes('RECIBO-PRUEBA'))
+        assert.ok((await salida.textContent()).includes('Total de esta página:'))
+      }
       await page.emulateMedia({media:'print'})
       assert.equal(await salida.evaluate(el=>getComputedStyle(el).display),'block')
       assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme),'light','PDF siempre con papel claro')
@@ -56,6 +63,14 @@ try{
       assert.ok(!(await page.getByRole('button',{name:'Guardar vista en PDF',exact:true}).isDisabled()));impresos++
     }
   }
+  await page.goto((process.env.TEST_BASE_URL??'http://127.0.0.1:5173')+'/estado-resultados')
+  await page.getByRole('heading',{name:'Detalle de los gastos',exact:true}).waitFor()
+  await page.getByText('Servicio de agua - noviembre',{exact:true}).waitFor()
+  for(const width of [320,390,768,1366,1920]){
+    await page.setViewportSize({width,height:1000})
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Desbordamiento en detalle de gastos')
+  }
+  await page.locator('.vz-report-panel').filter({has:page.getByRole('heading',{name:'Detalle de los gastos',exact:true})}).screenshot({path:`${carpeta}/detalle-gastos.png`})
   // Reproducir las dos capturas: cero meseros/24 horas a cero, y proveedor
   // con datos junto a gastos vacíos. Verificar tamaño y alineación de tarjetas.
   sinActividad=true;await page.goto((process.env.TEST_BASE_URL??'http://127.0.0.1:5173')+'/reportes')
