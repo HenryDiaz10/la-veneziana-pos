@@ -11,6 +11,8 @@
 /* Colocamos los estilos generales en la capa base.
    Las clases de Tailwind podrán sobrescribirlos cuando corresponda. */
 @layer base {
+  /* Reservar el canal de la barra evita saltos laterales entre vistas cortas y largas. */
+  html { scrollbar-gutter: stable; }
   /* Usamos la fuente principal definida en el tema. */
   body {
     margin: 0;

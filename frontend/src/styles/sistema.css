@@ -1,6 +1,6 @@
 /* Sistema visual compartido, inspirado en la composición de las referencias. */
 @layer components {
-  .vz-shell { min-height: 100dvh; color: var(--app-texto); background: var(--app-fondo); }
+  .vz-shell { min-height: 100dvh; overflow-anchor: none; color: var(--app-texto); background: var(--app-fondo); }
   .vz-topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: stretch; min-height: 80px; background: var(--app-superficie); border-bottom: 1px solid var(--app-borde); box-shadow: 0 2px 14px rgb(15 23 42 / 3%); }
   .vz-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; width: 248px; padding: 14px 22px; background: #151a21; color: #fff; border-bottom: 3px solid #f59e0b; }
   .vz-brand img { width: 44px; height: 44px; object-fit: contain; }
@@ -15,7 +15,9 @@
   .vz-user-name { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; }
   .vz-user-role { color: var(--app-secundario); font-size: 11px; text-transform: capitalize; }
   .vz-admin-grid { display: grid; grid-template-columns: 248px minmax(0, 1fr); align-items: start; }
-  .vz-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; min-height: calc(100dvh - 80px); padding: 26px 14px 18px; background: #151a21; color: #d6dce5; }
+  /* El menú se desplaza por separado: sus enlaces no arrastran la página al recibir foco. */
+  .vz-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; padding: 26px 14px 18px; background: #151a21; color: #d6dce5; }
+  .vz-sidebar > * { flex-shrink: 0; }
   .vz-nav-caption { margin: 0 14px 12px; font-size: 10px; font-weight: 700; letter-spacing: 1.8px; color: #8e99a9; text-transform: uppercase; }
   .vz-nav-link { position: relative; display: flex; gap: 12px; min-height: 48px; align-items: center; padding: 12px 16px; border-radius: 10px; margin-bottom: 6px; color: #b7c0cd; font-size: 13px; font-weight: 550; transition: background-color .18s, color .18s; }
   .vz-nav-link:hover { background: #222a35; color: #fff; }
@@ -128,7 +130,7 @@
     .vz-brand img { width: 38px; height: 38px; }
     .vz-topbar-content { padding: 12px 18px; gap: 10px; }
     .vz-admin-grid { display: block; }
-    .vz-sidebar { display: none; position: static; min-height: 0; padding: 18px; }
+    .vz-sidebar { display: none; position: static; height: auto; overflow-y: visible; scrollbar-gutter: auto; padding: 18px; }
     .vz-sidebar.is-open { display: flex; }
     .vz-sidebar-footer { display: none; }
   }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import AppHeader from '../components/AppHeader.jsx'
 import Icono from '../components/ui/Icono.jsx'
@@ -12,6 +12,11 @@ function AdminLayout() {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const botonMenu = useRef(null)
   const location = useLocation()
+  // Empezar cada sección por su encabezado sin cambiar el scroll propio del menú.
+  // Los filtros y la paginación dentro de la misma ruta conservan su posición.
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [location.pathname])
   if (!usuario) return null
 
   // Conservar los permisos reales: el diseño no habilita nuevas secciones.

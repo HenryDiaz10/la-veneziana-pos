@@ -11,6 +11,14 @@ endpoint público ni un mecanismo de recuperación en producción.
 **Avance actual: fase 40 implementada y probada.**
 La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
+La navegación de escritorio mantiene el menú dentro de la altura disponible,
+con desplazamiento independiente que se conserva entre secciones. Cada nueva
+ruta abre su contenido desde arriba; filtros y paginación de la misma ruta
+conservan su posición. Se reserva el espacio de la barra de desplazamiento y
+se desactiva el anclaje automático en el layout para evitar saltos al cargar datos.
+`frontend/tests/navegacion-estable-navegador.mjs` recorre todos los enlaces en
+1024, 1280 y 1366 px, y comprueba el menú móvil en 320 y 390 px.
+
 Los cobros confirmados permiten ver el ticket interno y abrir el diálogo para
 imprimir o guardar PDF en 58/80 mm desde Pagos. Se imprime el snapshot de la venta,
 sin repetir el cobro ni confirmar automáticamente una impresión física.
