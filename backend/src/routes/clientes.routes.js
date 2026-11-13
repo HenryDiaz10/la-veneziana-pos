@@ -3,7 +3,7 @@ import { rateLimit } from 'express-rate-limit';
 import { autenticar } from '../middlewares/autenticar.js';
 import { exigirPermiso } from '../middlewares/exigirPermiso.js';
 import {
-  listarClientes, consultarPerfilCliente, registrarCliente, editarCliente,
+  listarClientes, listarPadronClientes, consultarPerfilCliente, registrarCliente, editarCliente,
   listarDireccionesCliente, registrarDireccionCliente, editarDireccionCliente, listarPuntosCliente
 } from '../controllers/clientes.controller.js';
 
@@ -23,6 +23,7 @@ const gestionar = exigirPermiso('clientes', 'gestionar');
 
 // El permiso de búsqueda no concede escritura sobre datos personales.
 clientesRouter.get('/', buscar, listarClientes);
+clientesRouter.get('/listado', gestionar, listarPadronClientes);
 clientesRouter.get('/:clienteId', buscar, consultarPerfilCliente);
 clientesRouter.get('/:clienteId/direcciones', buscar, listarDireccionesCliente);
 // El historial administrativo requiere gestionar, además del filtro exacto.

@@ -14,7 +14,7 @@ function validarId(id) {
 }
 
 // Consultar el catálogo operativo del POS: categorías activas y productos disponibles.
-// Protegido por el permiso operativo ventas/cobrar (no requiere catalogo/gestionar).
+// Requiere pedidos/crear o ventas/cobrar (sin administrar el catálogo).
 export async function consultarCatalogoPos({
   categoriaId = null,
   busqueda = '',
@@ -47,7 +47,7 @@ export async function consultarProductoPos(id, { signal } = {}) {
 
 // Consultar los datos de catálogo de todos los productos distintos que componen
 // el borrador activo del carrito en el POS.
-// Utiliza exclusivamente las rutas operativas protegidas por ventas/cobrar.
+// Utiliza rutas operativas protegidas por pedidos/crear o ventas/cobrar.
 // Si un producto fue desactivado o eliminado, devuelve un error descriptivo para esa línea.
 export async function consultarDatosBorradorPos({ ids }, signal) {
   if (!Array.isArray(ids)) {

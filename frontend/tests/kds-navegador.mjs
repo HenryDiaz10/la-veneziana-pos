@@ -50,7 +50,7 @@ await context.route('**/api/**', async route => {
 const tarjeta = id => page.locator(`article[aria-label$="tarea ${id}"]`)
 const actualizar = () => page.getByRole('button', { name: 'Actualizar tablero', exact: true })
 try {
-  await page.goto('http://127.0.0.1:5173/cocina')
+  await page.goto((process.env.TEST_BASE_URL ?? 'http://127.0.0.1:5173')+'/cocina')
   await tarjeta('5').waitFor(); assert.equal(await page.locator('.vz-kds-ticket').count(), 5)
   assert.equal(await page.getByRole('link', { name: 'Cocina y despacho', exact: true }).count(), 1)
   await tarjeta('1').getByText('Presa pecho, sin ají', { exact: false }).waitFor()

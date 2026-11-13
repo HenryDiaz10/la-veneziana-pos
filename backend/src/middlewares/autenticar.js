@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { permisosEfectivos } from '../security/perfiles.js';
 import { Op } from 'sequelize';
 
 import {
@@ -102,10 +103,7 @@ export async function autenticarTokenSesion(token) {
           nombre: rol.nombre
         },
 
-        permisos: rol.permisos.map(permiso => ({
-          modulo: permiso.modulo,
-          accion: permiso.accion
-        }))
+        permisos: permisosEfectivos(rol.nombre, rol.permisos)
       },
 
       sesion: {

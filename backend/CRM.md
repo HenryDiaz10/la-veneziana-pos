@@ -1,5 +1,24 @@
 # API de clientes - fase 19
 
+## Listado al abrir Clientes
+
+El administrador ve **Clientes registrados** al entrar a la pantalla: 10 por
+página, con nombre, documento, teléfono y acciones para ver perfil o editar.
+La búsqueda exacta sigue disponible; **Limpiar** restaura el listado completo
+desde su primera página. La ficha se abre usando el documento o teléfono de la
+fila, conservando la validación existente para perfiles y direcciones.
+
+El endpoint `/api/clientes/listado` solo acepta `pagina` y `limite` y requiere
+`clientes/gestionar`. Devuelve campos básicos y totales de paginación, sin
+direcciones ni historial. No amplía el alcance de `clientes/buscar`: meseros y
+cajeros siguen consultando por documento o teléfono exacto.
+
+Verificación: `node tests/clientes-listado-integracion.mjs` en backend comprueba
+listado real, paginación, campos mínimos, ficha, validaciones y rechazo de otros
+roles. `frontend/tests/clientes-listado-navegador.mjs` cubre listado inicial,
+paginación, búsqueda, limpiar, perfil, apertura del editor, reintento y anchos
+de 320 a 1366 px. Los datos de integración son temporales y se eliminan al finalizar.
+
 ## Habilitación y permisos
 
 Desde backend, `npm.cmd run crm:habilitar` crea el permiso
@@ -8,7 +27,7 @@ a sembrar ni concede permisos a otros roles. Ya se ejecutó en esta instalación
 Los seeds también incluyen esta extensión para instalaciones nuevas.
 
 `clientes/buscar` permite únicamente consultas limitadas. `clientes/gestionar`
-autoriza altas y cambios de clientes y direcciones. Cajeros y meseros conservan
+autoriza el listado administrativo paginado, altas y cambios de clientes y direcciones. Cajeros y meseros conservan
 solo búsqueda por defecto; un administrador puede asignar gestionar mediante
 la API de roles existente. Recargar la sesión del frontend para recuperar los
 permisos actuales. Todas las rutas requieren cookie de sesión; las escrituras
@@ -16,14 +35,15 @@ también requieren el origen y encabezado CSRF configurados.
 
 ## Rutas
 
-Prefijo `/api/clientes`. Las consultas GET requieren exactamente un parámetro
-`documento` o `telefono`, con coincidencia exacta. No hay listado sin filtro,
-búsqueda por nombre ni comodines. En perfil y direcciones el filtro debe
+Prefijo `/api/clientes`. Salvo el listado administrativo, las consultas GET requieren exactamente un parámetro
+`documento` o `telefono`, con coincidencia exacta. No hay búsqueda por nombre
+ni comodines. En perfil y direcciones el filtro debe
 coincidir además con el cliente de la ruta.
 
 | Método | Ruta | Resultado |
 | --- | --- | --- |
 | GET | /?documento=... o /?telefono=... | clientes y paginacion. |
+| GET | /listado?pagina=1&limite=10 | Todos los clientes por páginas; requiere clientes/gestionar. |
 | GET | /:clienteId?documento=... o ?telefono=... | cliente con actividad resumida. |
 | POST | / | Alta de perfil básico. |
 | PATCH | /:clienteId | Cambio parcial de perfil básico. |

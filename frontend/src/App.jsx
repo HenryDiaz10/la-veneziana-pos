@@ -272,6 +272,12 @@ function App() {
             </Route>
           </Route>
 
+          {/* El mesero toma pedidos sin recibir acceso a caja o cobros. */}
+          <Route element={<ProtectedRoute modulo="pedidos" accion="crear" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/tomar-pedido" element={<PuntoVenta modoPedido/>}/>
+            </Route>
+          </Route>
           {/* Acceso al POS con sesión y permiso de cobro. */}
           <Route
             element={

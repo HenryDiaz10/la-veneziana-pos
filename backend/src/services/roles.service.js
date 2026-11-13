@@ -1,4 +1,5 @@
 import { Op } from 'sequelize';
+import { permisosEfectivos } from '../security/perfiles.js';
 import { sequelize } from '../config/database.js';
 
 import {
@@ -37,7 +38,7 @@ export async function obtenerRolesConPermisos() {
       descripcion: rol.descripcion,
       esSistema: rol.is_system,
 
-      permisos: rol.permisos.map(permiso => ({
+      permisos: rol.permisos.filter(p => permisosEfectivos(rol.nombre, [p]).length > 0).map(permiso => ({
         id: permiso.id,
         modulo: permiso.modulo,
         accion: permiso.accion,

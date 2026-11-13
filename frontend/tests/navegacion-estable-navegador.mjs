@@ -17,7 +17,7 @@ const base = process.env.TEST_BASE_URL ?? 'http://localhost:5173'
 try {
   for (const [width,height] of [[1366,768],[1280,720],[1024,600]]) {
     await page.setViewportSize({width,height})
-    await page.goto(base+'/componentes')
+    await page.goto(base+'/recetas')
     const menu = page.getByRole('navigation',{name:'Navegación principal'})
     await menu.waitFor()
     await page.evaluate(()=>{window.menuOriginal=document.querySelector('.vz-sidebar')})
@@ -28,6 +28,8 @@ try {
       await page.evaluate(()=>window.scrollTo(0,300))
       await menu.locator(`a[href="${ruta}"]`).click()
       await page.waitForURL('**'+ruta)
+      // La URL puede cambiar antes del commit de React; medir la vista ya activa.
+      await menu.locator(`a[href="${ruta}"][aria-current="page"]`).waitFor()
       const posicion=await page.evaluate(()=>{
         const menu=document.querySelector('.vz-sidebar'), main=document.querySelector('.vz-main')
         return {y:scrollY,top:menu.getBoundingClientRect().top,height:menu.clientHeight,x:main.getBoundingClientRect().x,same:menu===window.menuOriginal,overflow:document.documentElement.scrollWidth>innerWidth}
@@ -42,7 +44,7 @@ try {
     // El scroll que eligió el usuario en el menú se conserva al cambiar de página.
     await page.locator('.vz-sidebar').evaluate(e=>{e.scrollTop=120})
     const scrollMenu=await page.locator('.vz-sidebar').evaluate(e=>e.scrollTop)
-    await menu.locator('a[href="/cocina"]').click()
+    await menu.locator('a[href="/catalogo"]').click()
     assert.equal(await page.locator('.vz-sidebar').evaluate(e=>e.scrollTop),scrollMenu)
   }
   for(const width of [390,320]) {

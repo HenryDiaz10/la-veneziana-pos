@@ -11,6 +11,20 @@ endpoint público ni un mecanismo de recuperación en producción.
 **Avance actual: fase 40 implementada y probada.**
 La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
+Las secciones se limitan por perfil, tanto en menú e Inicio como por URL y permisos
+efectivos del servidor: administración de negocio para el administrador, pedidos
+y mesas para el mesero, venta/cobro/caja para el cajero y KDS para el cocinero.
+[Distribución completa y controles](backend/PERFILES_ACCESO.md).
+
+En Clientes, el administrador ve directamente el listado completo paginado y
+puede buscar, abrir fichas y editar registros. Limpiar vuelve a mostrar todos;
+meseros y cajeros conservan búsqueda limitada. [Listado y permisos](backend/CRM.md#listado-al-abrir-clientes).
+
+El mesero dispone de **Tomar pedido** para elegir mesa, productos e indicaciones
+y enviar la preparación a cocina. Puede iniciar otro borrador tras registrar;
+el cajero cobra el pedido desde su propia sesión. Se conserva la separación de
+permisos y la recuperación sin duplicados. [Flujo del mesero](frontend/POS.md#el-mesero-toma-el-pedido).
+
 La navegación de escritorio mantiene el menú dentro de la altura disponible,
 con desplazamiento independiente que se conserva entre secciones. Cada nueva
 ruta abre su contenido desde arriba; filtros y paginación de la misma ruta

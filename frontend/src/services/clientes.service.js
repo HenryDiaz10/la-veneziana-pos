@@ -24,6 +24,11 @@ function consultar(ruta, { busqueda, pagina = 1 }, signal) {
 }
 
 export const buscarClientes = (solicitud, signal) => consultar('/clientes', solicitud, signal)
+// El padrón general requiere el permiso administrativo clientes/gestionar.
+export function listarClientes({ pagina = 1 }, signal) {
+  if (!Number.isSafeInteger(pagina) || pagina < 1 || pagina > 10000) throw new TypeError('Página no válida.')
+  return solicitarApi(`/clientes/listado?${new URLSearchParams({ pagina: String(pagina), limite: '10' })}`, { signal })
+}
 export const consultarPerfil = (s, signal) => consultar(`/clientes/${idValido(s.id)}`, s, signal)
 export const consultarDirecciones = (s, signal) => consultar(`/clientes/${idValido(s.id)}/direcciones`, s, signal)
 export const consultarPuntos = (s, signal) => consultar(`/clientes/${idValido(s.id)}/puntos`, s, signal)

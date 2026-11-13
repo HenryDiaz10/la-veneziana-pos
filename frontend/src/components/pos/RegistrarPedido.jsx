@@ -13,11 +13,11 @@ import Modal from '../ui/Modal.jsx'
 const cargarMesas = (_, signal) => solicitarApi('/pedidos/registro', { signal })
 const SOLICITUD = {}
 const campo = 'vz-purchase-input w-full'
-export default function RegistrarPedido({ consulta, listo, enRecibo=false }) {
+export default function RegistrarPedido({ consulta, listo, enRecibo=false, modoPedido=false, mesaInicial='' }) {
   const usuario = useAuthStore(s => s.usuario)
   const comercial = useComercial(usuario?.id)
-  const [tipo, setTipo] = useState('llevar')
-  const [mesa, setMesa] = useState('')
+  const [tipo, setTipo] = useState(modoPedido ? 'salon' : 'llevar')
+  const [mesa, setMesa] = useState(mesaInicial)
   const [notas, setNotas] = useState('')
   const [texto, setTexto] = useState('')
   const [buscar, setBuscar] = useState(null)
@@ -25,7 +25,7 @@ export default function RegistrarPedido({ consulta, listo, enRecibo=false }) {
   const [direccion, setDireccion] = useState('')
   const [pagina, setPagina] = useState(1)
   const [confirmar, setConfirmar] = useState(false)
-  const [mostrar, setMostrar] = useState(false)
+  const [mostrar, setMostrar] = useState(modoPedido)
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
   const crear = usuario?.permisos.some(p => p.modulo === 'pedidos' && p.accion === 'crear')
@@ -35,6 +35,7 @@ export default function RegistrarPedido({ consulta, listo, enRecibo=false }) {
   const solicitudDireccion = useMemo(() => cliente ? { id: cliente.id, busqueda: buscar.busqueda, pagina } : null, [cliente, buscar, pagina])
   const direcciones = useConsultaRemota(consultarDirecciones, solicitudDireccion)
   const registrados = Object.entries(comercial.vinculos)
+  const mesaDisponible = mesas.datos?.mesas.some(m => String(m.id) === mesa)
   const bloqueado = ocupado || Boolean(comercial.pendiente || comercial.error) || !listo
   async function registrar() {
     if (ocupado) return
@@ -52,27 +53,35 @@ export default function RegistrarPedido({ consulta, listo, enRecibo=false }) {
         notas_globales: notas, lineas: lineas.map(({ productoId, varianteId, modificadoresIds, cantidad, indicaciones }) => normalizarLineaCarrito({ productoId, varianteId, modificadoresIds, cantidad, indicaciones }))
       } })
       setConfirmar(false)
+      if (!usuario.permisos.some(p => p.modulo === 'ventas' && p.accion === 'cobrar')) {
+        setMesa(''); setNotas(''); setCliente(null); setBuscar(null); setDireccion('')
+        mesas.reintentar()
+      }
     } catch (e) { setError(e.message) }
     finally { setOcupado(false) }
   }
   if (!crear) return <p className="vz-panel">Necesitas permiso para registrar pedidos.</p>
   if (registrados.length) return <div className={enRecibo?"space-y-3":"vz-panel mb-5 space-y-3"} role="status"><h2 className="font-bold">Pedido registrado · pendiente de pago</h2><p className="text-sm">El borrador se conserva hasta confirmar el cobro. Usa el pedido existente para evitar duplicarlo.</p>{registrados.map(([id, v]) => <p key={id}><Link className="font-bold text-app-acento-texto underline" to={`/pagos?pedido=${id}`}>Continuar con {v.codigo || `pedido ${id}`} · Cobrar</Link></p>)}</div>
   return <div className={enRecibo?'pos-order-register space-y-4':'vz-panel mb-5 space-y-4'}>
+    {comercial.ultimoPedido && <p role="status" className="rounded-xl border border-app-borde p-3 text-sm">Pedido {comercial.ultimoPedido.codigo} enviado a cocina. Número para caja: <strong>{comercial.ultimoPedido.id}</strong>. Ya puedes tomar otro pedido; el cajero realizará el cobro.</p>}
     <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className={`font-titulo font-bold ${enRecibo?"text-sm":"text-lg"}`}>{enRecibo?"Confirmar pedido":"Confirmación del pedido"}</h2><p className="mt-1 text-xs text-app-secundario">{tipo === 'salon' ? 'En salón' : tipo === 'delivery' ? 'Delivery' : 'Para llevar'} · Borrador sin registrar</p></div><BotonBase className="border border-app-borde" aria-label="Datos y registro del pedido" aria-expanded={mostrar} aria-controls="datos-registro-pedido" onClick={() => setMostrar(v => !v)}>{enRecibo?"Datos del pedido":"Datos y registro del pedido"}</BotonBase></div>
     <div id="datos-registro-pedido" hidden={!mostrar} className="space-y-4">
-    <p className="text-sm text-app-secundario">Revisa el recibo y las indicaciones. Registrar reserva existencias y envía la preparación a la cola de cocina; todavía no cobra.</p>
     <fieldset disabled={bloqueado} className="grid gap-4 sm:grid-cols-2">
       <label>Atención<select aria-label={"Atenci\u00f3n"} className={campo} value={tipo} onChange={e => { setTipo(e.target.value); setDireccion('') }}><option value="llevar">Para llevar</option><option value="salon">En salón</option>{crm && <option value="delivery">Delivery</option>}</select></label>
       {tipo === 'salon' && <label>Mesa disponible<select aria-label="Mesa disponible" className={campo} value={mesa} onChange={e => setMesa(e.target.value)}><option value="">Selecciona mesa</option>{mesas.datos?.mesas.map(m => <option key={m.id} value={m.id}>{m.codigo_mesa}</option>)}</select><BotonBase onClick={mesas.reintentar} disabled={mesas.pendiente}>Actualizar mesas</BotonBase>{mesas.error && <span role="alert">{mesas.error}</span>}</label>}
       <label className="sm:col-span-2">Indicaciones generales<textarea className={campo} value={notas} maxLength={500} onChange={e => setNotas(e.target.value)} rows={2}/></label>
     </fieldset>
-    {crm && <div className="space-y-3"><form onSubmit={e => { e.preventDefault(); setCliente(null); setDireccion(''); setPagina(1); setBuscar({ busqueda: { telefono: texto.trim() }, pagina: 1 }) }} className="flex flex-wrap items-end gap-2"><label className="min-w-0 flex-1">Cliente por teléfono exacto (opcional)<input className={campo} value={texto} maxLength={20} onChange={e => setTexto(e.target.value)} disabled={bloqueado}/></label><BotonBase type="submit" disabled={bloqueado || clientes.pendiente}>Buscar cliente</BotonBase><BotonBase disabled={bloqueado} onClick={() => { setCliente(null); setBuscar(null); setDireccion('') }}>Sin cliente</BotonBase></form>
+    {crm && <div className="space-y-3"><form onSubmit={e => { e.preventDefault(); setCliente(null); setDireccion(''); setPagina(1); setBuscar({ busqueda: { telefono: texto.trim() }, pagina: 1 }) }} className="pos-cliente-form">
+      <label className="pos-cliente-campo"><span>Cliente por teléfono <span className="font-normal text-app-secundario">(opcional)</span></span><input type="tel" inputMode="tel" autoComplete="tel" placeholder="Ej. 954932421" className={campo} value={texto} maxLength={20} onChange={e => setTexto(e.target.value)} disabled={bloqueado}/></label>
+      <p className="text-xs text-app-secundario">Escribe el número completo para buscar al cliente.</p>
+      <div className="pos-cliente-acciones"><BotonBase className="border border-app-borde" type="submit" disabled={bloqueado || clientes.pendiente}>Buscar cliente</BotonBase><BotonBase className="border border-app-borde" disabled={bloqueado} onClick={() => { setCliente(null); setBuscar(null); setDireccion('') }}>Sin cliente</BotonBase></div>
+    </form>
       {clientes.error && <p role="alert">{clientes.error}</p>}
       {clientes.datos && <label>Cliente<select className={campo} disabled={bloqueado || clientes.pendiente} value={cliente?.id ?? ''} onChange={e => { setCliente(clientes.datos.clientes.find(c => c.id === Number(e.target.value)) ?? null); setDireccion(''); setPagina(1) }}><option value="">Selecciona cliente</option>{clientes.datos.clientes.map(c => <option key={c.id} value={c.id}>{c.nombres} {c.apellidos}</option>)}</select></label>}
       {tipo === 'delivery' && cliente && <div><label>Dirección registrada<select className={campo} disabled={bloqueado || direcciones.pendiente} value={direccion} onChange={e => setDireccion(e.target.value)}><option value="">Selecciona dirección</option>{direcciones.datos?.direcciones.map(d => <option key={d.id} value={d.id}>{d.direccion_completa}</option>)}</select></label><div className="flex gap-2"><BotonBase disabled={bloqueado || direcciones.pendiente || pagina <= 1} onClick={() => { setDireccion(''); setPagina(p => p - 1) }}>Direcciones anteriores</BotonBase><BotonBase disabled={bloqueado || direcciones.pendiente || pagina >= (direcciones.datos?.paginacion.totalPaginas ?? 1)} onClick={() => { setDireccion(''); setPagina(p => p + 1) }}>Más direcciones</BotonBase></div>{direcciones.error && <p role="alert">{direcciones.error}</p>} <p className="text-xs">El total corresponde a productos; no incluye una tarifa automática de reparto.</p></div>}
     </div>}
     </div>
-    <BotonSecundario className={enRecibo?"w-full":undefined} disabled={bloqueado || consulta.pendiente || Boolean(consulta.error || consulta.resumen?.errorTotal) || !consulta.resumen?.total || !useCartStore.getState().lineas.length || (tipo === 'salon' && !mesa) || (tipo === 'delivery' && (!cliente || !direccion))} onClick={() => { setError(''); setConfirmar(true) }}>Registrar pedido</BotonSecundario>
+    <BotonSecundario className={enRecibo?"w-full":undefined} disabled={bloqueado || consulta.pendiente || Boolean(consulta.error || consulta.resumen?.errorTotal) || !consulta.resumen?.total || !useCartStore.getState().lineas.length || (tipo === 'salon' && (!mesaDisponible || mesas.pendiente || Boolean(mesas.error))) || (tipo === 'delivery' && (!cliente || !direccion))} onClick={() => { setError(''); setConfirmar(true) }}>Registrar pedido</BotonSecundario>
     {error && !confirmar && <p role="alert" className="text-app-error">{error}</p>}
     {confirmar && <Modal titulo="Confirmar registro del pedido" bloqueado={ocupado} onCerrar={() => setConfirmar(false)}><div className="space-y-4"><p><strong>{tipo==="salon"?"En salón":tipo==="delivery"?"Delivery":"Para llevar"}</strong>{tipo==="salon"?` · Mesa ${mesas.datos?.mesas.find(m=>String(m.id)===mesa)?.codigo_mesa??mesa}`:""}</p><p>Total estimado: S/ {consulta.resumen?.total}. El servidor comprobará precios, receta y existencias.</p><p>Esta acción registra la preparación. El carrito se conserva hasta confirmar el pago.</p>{error && <p role="alert" className="text-app-error">{error}</p>}<div className="flex flex-wrap gap-3"><BotonBase disabled={ocupado} onClick={() => setConfirmar(false)}>Volver a revisar</BotonBase><BotonSecundario disabled={bloqueado} onClick={registrar}>{ocupado ? 'Registrando…' : 'Confirmar registro'}</BotonSecundario></div></div></Modal>}
   </div>

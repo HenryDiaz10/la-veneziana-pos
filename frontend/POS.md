@@ -1,5 +1,37 @@
 # Fase 27: interfaz operativa del punto de venta
 
+## El mesero toma el pedido
+
+El mesero entra a **Tomar pedido** (`/tomar-pedido`) desde Inicio o el menú.
+Requiere `pedidos/crear`; no exige ni otorga `ventas/cobrar`. También puede elegir
+una mesa disponible en Salón y usar **Tomar pedido en esta mesa**, que abre la
+carta con esa mesa preseleccionada. El servidor comprueba de nuevo su disponibilidad,
+la asigna al usuario que registra y conserva `usuario_creador_id` en el pedido.
+
+La atención por defecto es salón; permite personalizar variantes, ingredientes e
+indicaciones por producto y notas generales. Al confirmar se registran pedido,
+reservas y tareas de cocina mediante la operación idempotente existente.
+La carta operativa `/api/pos/*` admite `pedidos/crear` o `ventas/cobrar`; el catálogo
+administrativo sigue protegido por su propio permiso.
+
+Para quien no tiene permiso de cobro, `comercial.store.js` limpia únicamente las
+líneas confirmadas al registrar y guarda `ultimoPedido`. Así puede atender otro
+cliente sin esperar al cajero. Si se pierde la respuesta, el journal mantiene el
+intento para recuperarlo sin duplicar el pedido; la limpieza termina antes de
+retirar la marca pendiente. Las líneas nuevas o cambiadas no se eliminan.
+Los cajeros conservan su flujo anterior: su borrador se retira al cobrar.
+
+El aviso muestra código y número interno para caja. El cajero consulta ese número
+en Pagos y realiza el cobro con su sesión de caja. Si tiene acceso a Salón,
+el detalle de mesa con cuenta abierta ofrece **Cobrar pedido de esta mesa**.
+El mesero no ve ese acceso y las rutas de pago lo rechazan tanto en frontend
+como en backend. No se modifican los permisos del rol mesero ni se requieren migraciones.
+
+Validación: `backend/tests/pos-integracion.js` comprueba carta y detalle para el
+mesero y 403 en administración y cobro. `tests/mesero-pedido-navegador.mjs`
+comprueba mesa/notas, respuesta perdida y F5, un nuevo borrador antes del cobro,
+dos usuarios separados, cobro único del cajero, bloqueo por URL y móvil.
+
 ## Ticket después del cobro
 
 En `/pagos`, **Ver ticket / imprimir / PDF** abre el ticket de la última venta

@@ -34,7 +34,7 @@ try {
   const hash = await crearHashPassword(password);
 
   // Crear usuario cajero (tiene ventas/cobrar) y cocinero (tiene solo kds/operar)
-  for (const nombreRol of ['cajero', 'cocinero']) {
+  for (const nombreRol of ['cajero', 'cocinero', 'mesero', 'administrador']) {
     const rol = await Rol.findOne({ where: { nombre: nombreRol } });
     assert.ok(rol, `Rol ${nombreRol} debe existir`);
     const u = await Usuario.create({
@@ -166,6 +166,20 @@ try {
   // 3. Cajero en ruta administrativa: debe recibir 403 (mantiene separación de permisos)
   const rCajeroAdmin = await pedir('/productos', cookies.cajero);
   assert.equal(rCajeroAdmin.status, 403, 'Cajero no debe acceder a /api/productos administrativo');
+  // El mesero consulta la carta y personalización, sin administrar ni cobrar.
+  assert.equal((await pedir('/pos/catalogo', cookies.mesero)).status, 200);
+  assert.equal((await pedir(`/pos/productos/${prodActivo.id}`, cookies.mesero)).status, 200);
+  assert.equal((await pedir('/productos', cookies.mesero)).status, 403);
+  assert.equal((await pedir('/pedidos/42/contexto-pago', cookies.mesero)).status, 403);
+  assert.equal((await pedir('/pedidos/42/cobro', cookies.mesero, 'POST', {})).status, 403);
+  // La administración mantiene catálogo/reportes; no opera pedidos ni caja de venta.
+  assert.equal((await pedir('/pos/catalogo', cookies.administrador)).status, 403);
+  assert.equal((await pedir('/pedidos/registro', cookies.administrador)).status, 403);
+  assert.equal((await pedir('/pedidos/42/contexto-pago', cookies.administrador)).status, 403);
+  assert.equal((await pedir('/productos', cookies.administrador)).status, 200);
+  assert.equal((await pedir('/kds/tareas', cookies.administrador)).status, 403);
+  assert.equal((await pedir('/kds/tareas', cookies.mesero)).status, 403);
+  assert.equal((await pedir('/kds/tareas', cookies.cajero)).status, 403);
 
   // 4. Cajero en catálogo operativo POS: 200 OK
   const rCajeroCatalogo = await pedir('/pos/catalogo', cookies.cajero);

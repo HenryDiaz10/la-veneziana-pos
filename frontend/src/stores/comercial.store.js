@@ -79,7 +79,15 @@ async function finalizar(id, pendiente, resultado) {
     }
     if (pendiente.tipo === 'pedido.crear') {
       if (!resultado.pedido?.id) throw new Error('Respuesta sin identidad de pedido. Recupera el resultado.')
-      r.vinculos[resultado.pedido.id] = { origen: pendiente.origen, codigo: resultado.pedido.codigo_pedido }
+      const cobra = useAuthStore.getState().usuario.permisos.some(p => p.modulo === 'ventas' && p.accion === 'cobrar')
+      if (cobra) r.vinculos[resultado.pedido.id] = { origen: pendiente.origen, codigo: resultado.pedido.codigo_pedido }
+      else {
+        // El borrador del mesero queda libre al registrar. El pedido ya pertenece
+        // al servidor y el cajero cobrará desde su propia sesión, sin compartir carrito.
+        // Mantener el journal pendiente hasta limpiar permite recuperarse tras F5.
+        await limpiarConfirmadas(id, pendiente.origen ?? [])
+        r.ultimoPedido = { id: String(resultado.pedido.id), codigo: resultado.pedido.codigo_pedido }
+      }
     }
     if (pendiente.tipo === 'pedido.cobrar') {
       if (!resultado.venta?.id || resultado.pedido?.estado_cuenta !== 'pagada' || String(resultado.venta.pedido_id) !== pendiente.pedidoId) throw new Error('Respuesta de cobro incompleta. No se limpiará el carrito.')

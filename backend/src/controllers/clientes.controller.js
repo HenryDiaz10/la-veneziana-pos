@@ -1,5 +1,5 @@
 import {
-  buscarClientes, obtenerPerfilCliente, crearCliente, actualizarCliente, obtenerPuntosCliente
+  buscarClientes, obtenerPerfilCliente, crearCliente, actualizarCliente, obtenerPuntosCliente, listarClientesRegistrados
 } from '../services/clientes.service.js';
 import {
   obtenerDireccionesCliente, crearDireccionCliente, actualizarDireccionCliente
@@ -57,6 +57,15 @@ export function listarClientes(req, res, next) {
   const consulta = leerConsulta(req.query);
   if (!consulta) return responderConsultaInvalida(res);
   return responderOperacion(res, next, () => buscarClientes(consulta), 'consultado', 'clientes');
+}
+
+export function listarPadronClientes(req, res, next) {
+  const pagina = leerEntero(req.query.pagina ?? '1', 10000);
+  const limite = leerEntero(req.query.limite ?? '10', 20);
+  if (!pagina || !limite || Object.keys(req.query).some(c => !['pagina', 'limite'].includes(c))) {
+    return res.status(400).json({ mensaje: 'Revisa la paginación: página máxima 10000 y límite máximo 20.' });
+  }
+  return responderOperacion(res, next, () => listarClientesRegistrados({ pagina, limite }), 'consultado', 'clientes');
 }
 
 export function consultarPerfilCliente(req, res, next) {

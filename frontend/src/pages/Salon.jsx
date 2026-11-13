@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { puedeAccederRuta } from '../utils/accesos.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import useConsultaRemota from '../hooks/useConsultaRemota.js'
 import { consultarSalon } from '../services/salon.service.js'
@@ -16,6 +18,9 @@ export default function Salon() {
   return <Contenido key={uid} uid={uid}/>
 }
 function Contenido({ uid }) {
+  const usuario = useAuthStore(s => s.usuario)
+  const tomarPedido = puedeAccederRuta(usuario, '/tomar-pedido')
+  const cobrar = puedeAccederRuta(usuario, '/pagos')
   const configurar=useAuthStore(s=>s.usuario?.permisos.some(p=>p.modulo==='configuracion'&&p.accion==='gestionar'))
   const [formulario,setFormulario]=useState(null),[mensaje,setMensaje]=useState('')
   const solicitud = useMemo(() => ({ uid }), [uid])
@@ -53,6 +58,8 @@ function Contenido({ uid }) {
     {seleccion !== null && <Modal titulo={mesa ? `Mesa ${mesa.codigo_mesa}` : 'Mesa no disponible'} onCerrar={() => setSeleccion(null)}>
       {mesa ? <div className="space-y-5"><p className={`vz-salon-detail-state is-${mesa.estado_actual ?? 'sin_estado'}`}>{etiquetaEstado(mesa.estado_actual)}</p><dl className="vz-salon-details"><div><dt>Zona</dt><dd>{datos.zonas.find(z => z.id === mesa.zona_id)?.nombre}</dd></div><div><dt>Capacidad</dt><dd>{mesa.capacidad_sillas > 0 ? `${mesa.capacidad_sillas} sillas` : 'Sin registrar'}</dd></div><div><dt>Mesero asignado</dt><dd>{mesa.mesero_asignado_id ? `Empleado #${mesa.mesero_asignado_id}${mesa.mesero_asignado_id === uid ? ' (tú)' : ''}` : 'Sin asignar'}</dd></div><div><dt>Posición registrada (X, Y)</dt><dd>{mesa.posicion_x ?? 'sin definir'}, {mesa.posicion_y ?? 'sin definir'}</dd></div></dl><p className="text-sm text-app-secundario">Consulta el estado registrado y el responsable de esta mesa.</p></div> : <p>La mesa ya no está en la consulta actual. Actualiza para revisar el salón.</p>}
       {configurar&&mesa&&<div className="mt-5 space-y-2"><BotonBase className="bg-marca-dorado text-texto" disabled={pendiente||!['libre','inhabilitada'].includes(mesa.estado_actual)||mesa.mesero_asignado_id!==null||Boolean(mesa.pedido_abierto)} onClick={()=>{setSeleccion(null);setFormulario({tipo:'mesa',registro:mesa})}}>Editar configuración de mesa</BotonBase><p className="text-xs text-app-secundario">Puedes cambiar zona, código, sillas, ubicación o inhabilitar la mesa. Se conserva su historial.</p></div>}
+      {mesa && tomarPedido && !mesa.pedido_abierto && (mesa.estado_actual === 'libre' || (mesa.estado_actual === 'ocupada' && mesa.mesero_asignado_id === uid)) && <Link className="mt-5 inline-flex rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto" to={`/tomar-pedido?mesa=${mesa.id}`}>Tomar pedido en esta mesa</Link>}
+      {mesa?.pedido_abierto && <div className="mt-5 space-y-3"><p className="text-sm">Pedido {mesa.pedido_abierto.codigo_pedido} · Número para caja: <strong>{mesa.pedido_abierto.id}</strong></p>{cobrar && <Link className="inline-flex rounded-xl bg-marca-dorado px-4 py-3 font-bold text-texto" to={`/pagos?pedido=${mesa.pedido_abierto.id}`}>Cobrar pedido de esta mesa</Link>}</div>}
       <BotonBase onClick={() => setSeleccion(null)} className="mt-5 border border-app-borde">Cerrar detalle</BotonBase>
     </Modal>}
     {formulario&&<FormularioSalon {...formulario} zonas={datos?.zonas??[]} onCerrar={()=>setFormulario(null)} onGuardado={guardado}/>}

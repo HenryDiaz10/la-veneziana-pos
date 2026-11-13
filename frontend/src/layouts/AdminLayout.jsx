@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import AppHeader from '../components/AppHeader.jsx'
+import { obtenerAccesos } from '../utils/accesos.js'
 import Icono from '../components/ui/Icono.jsx'
 import { useAuthStore } from '../stores/auth.store.js'
 
@@ -19,26 +20,7 @@ function AdminLayout() {
   }, [location.pathname])
   if (!usuario) return null
 
-  // Conservar los permisos reales: el diseño no habilita nuevas secciones.
-  const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
-  const enlaces = [{ ruta: '/inicio', texto: 'Inicio', icono: 'inicio' }]
-  if (permite('seguridad', 'gestionar')) enlaces.push({ ruta: '/trabajadores', texto: 'Mis trabajadores', icono: 'clientes' })
-  if (permite('reportes', 'leer')) enlaces.push({ ruta: '/reportes', texto: 'Reportes gerenciales', icono: 'grafico' })
-  if (permite('reportes', 'leer')) enlaces.push({ ruta: '/estado-resultados', texto: 'Estado de resultados', icono: 'billete' })
-  if (permite('kds', 'operar')) enlaces.push({ ruta: '/cocina', texto: 'Cocina y despacho', icono: 'recetas' })
-  if (permite('mesas', 'gestionar')) enlaces.push({ ruta: '/salon', texto: 'Salón y mesas', icono: 'mesas' })
-  if (permite('ventas', 'cobrar')) enlaces.push({ ruta: '/pos', texto: 'Punto de venta', icono: 'carrito' })
-  if (permite('ventas', 'cobrar')) enlaces.push({ ruta: '/pagos', texto: 'Pagos de pedidos', icono: 'billete' })
-  if (permite('caja', 'gestionar')) enlaces.push({ ruta: '/caja', texto: 'Arqueo de caja', icono: 'billete' })
-  if (permite('catalogo', 'gestionar')) enlaces.push({ ruta: '/catalogo', texto: 'Catálogo', icono: 'catalogo' })
-  if (permite('catalogo', 'gestionar')) enlaces.push({ ruta: '/recetas', texto: 'Recetas', icono: 'recetas' })
-  if (permite('clientes', 'buscar')) enlaces.push({ ruta: '/clientes', texto: 'Clientes', icono: 'clientes' })
-  if (permite('inventario', 'gestionar')) enlaces.push({ ruta: '/inventario', texto: 'Inventario', icono: 'inventario' })
-  if (permite('inventario', 'gestionar')) enlaces.push({ ruta: '/compras', texto: 'Compras', icono: 'compras' })
-  if (permite('seguridad', 'gestionar')) {
-    enlaces.push({ ruta: '/seguridad', texto: 'Seguridad', icono: 'seguridad' })
-    if (import.meta.env.DEV) enlaces.push({ ruta: '/componentes', texto: 'Componentes', icono: 'componentes' })
-  }
+  const enlaces = obtenerAccesos(usuario)
   const titulo = enlaces.find(e => e.ruta === location.pathname)?.texto ?? 'Administración'
 
   function manejarTeclado(evento) {

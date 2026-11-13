@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom'
 
 import { useAuthStore } from '../stores/auth.store.js'
+import { puedeAccederRuta } from '../utils/accesos.js'
 
 function ProtectedRoute({ modulo, accion }) {
   const location = useLocation()
@@ -94,7 +95,7 @@ function ProtectedRoute({ modulo, accion }) {
       permiso.accion === accion
     )
 
-  if (requierePermiso && !tienePermiso) {
+  if ((requierePermiso && !tienePermiso) || !puedeAccederRuta(usuario, location.pathname)) {
     return (
       <main
         id="contenido-principal"

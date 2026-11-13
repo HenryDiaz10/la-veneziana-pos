@@ -34,6 +34,18 @@ export async function buscarClientes({ busqueda, pagina = 1, limite = 10 }) {
     paginacion: { pagina, limite, total: count, totalPaginas: Math.ceil(count / limite) } };
 }
 
+// Listado administrativo paginado. La ruta exige clientes/gestionar;
+// la búsqueda operativa conserva su filtro exacto obligatorio.
+export async function listarClientesRegistrados({ pagina = 1, limite = 10 }) {
+  if (!esPaginacionClienteValida(pagina, limite)) return { estado: 'datos_invalidos' };
+  const { count, rows } = await Cliente.findAndCountAll({
+    attributes: CAMPOS_CLIENTE, order: [['id', 'ASC']],
+    limit: limite, offset: (pagina - 1) * limite
+  });
+  return { estado: 'consultado', clientes: rows.map(serializarCliente),
+    paginacion: { pagina, limite, total: count, totalPaginas: Math.ceil(count / limite) } };
+}
+
 // Solo consulta el historial oficial; no recalcula ni modifica saldos.
 export async function obtenerPuntosCliente({ clienteId, busqueda, pagina = 1, limite = 10 }) {
   const filtro = validarBusquedaCliente(busqueda);

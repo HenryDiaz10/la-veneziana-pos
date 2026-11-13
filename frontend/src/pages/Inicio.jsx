@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { obtenerAccesos } from '../utils/accesos.js'
 import { useAuthStore } from '../stores/auth.store.js'
 import Badge from '../components/ui/Badge.jsx'
 import Icono from '../components/ui/Icono.jsx'
@@ -7,16 +8,7 @@ import TarjetaResumen from '../components/ui/TarjetaResumen.jsx'
 function Inicio() {
   const usuario = useAuthStore(state => state.usuario)
   if (!usuario) return null
-  const permite = (modulo, accion) => usuario.permisos.some(p => p.modulo === modulo && p.accion === accion)
-  const accesos = []
-  if (permite('reportes', 'leer')) accesos.push({ ruta: '/reportes', titulo: 'Reportes gerenciales', icono: 'grafico', tono: 'dorado', descripcion: 'Ventas por día, productos, canales y mesas atendidas.' }, { ruta: '/estado-resultados', titulo: 'Estado de resultados', icono: 'billete', tono: 'lima', descripcion: 'Cuatro niveles de utilidad, gastos clasificados y compras.' })
-  if (permite('inventario', 'gestionar')) accesos.push({ ruta: '/compras', titulo: 'Compras', icono: 'compras', tono: 'dorado', descripcion: 'Organiza proveedores y confirma los documentos que ingresan existencias a almacén.' })
-  if (permite('inventario', 'gestionar')) accesos.push({ ruta: '/inventario', titulo: 'Inventario', icono: 'inventario', tono: 'lima', descripcion: 'Revisa existencias, reservas, alertas y movimientos de cada insumo.' })
-  if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/recetas', titulo: 'Recetas', icono: 'recetas', tono: 'lima', descripcion: 'Define ingredientes, cantidades y rendimiento para cada plato y variante.' })
-  if (permite('clientes', 'buscar')) accesos.push({ ruta: '/clientes', titulo: 'Clientes', icono: 'clientes', tono: 'dorado', descripcion: 'Consulta sus datos de contacto, direcciones y fidelización en una sola ficha.' })
-  if (permite('catalogo', 'gestionar')) accesos.push({ ruta: '/catalogo', titulo: 'Catálogo', icono: 'catalogo', tono: 'dorado', descripcion: 'Organiza categorías, presenta tus productos y mantén sus precios al día.' })
-  if (permite('ventas', 'cobrar')) accesos.push({ ruta: '/pos', titulo: 'Punto de venta', icono: 'carrito', tono: 'lima', descripcion: 'Accede al espacio de atención y venta de la pizzería.' })
-  if (permite('seguridad', 'gestionar')) accesos.push({ ruta: '/trabajadores', titulo: 'Mis trabajadores', icono: 'clientes', tono: 'dorado', descripcion: 'Crea cuentas para el equipo y administra perfiles y accesos.' }, { ruta: '/seguridad', titulo: 'Seguridad', icono: 'seguridad', tono: 'rojo', descripcion: 'Consulta los perfiles del equipo y sus permisos de acceso.' })
+  const accesos = obtenerAccesos(usuario).filter(a => a.ruta !== '/inicio')
   return (
     <section aria-labelledby="titulo-inicio" className="vz-page">
       <div className="vz-page-header">
@@ -39,10 +31,10 @@ function Inicio() {
       </div>
       <div className="vz-section-head"><h2 className="vz-section-title">Accesos rápidos</h2><span className="text-xs text-app-secundario">Todo a un clic</span></div>
       <div className="vz-shortcuts">{accesos.map(acceso => (
-        <Link key={acceso.ruta} to={acceso.ruta} className="vz-shortcut vz-stat" data-tono={acceso.tono}>
+        <Link key={acceso.ruta} to={acceso.ruta} className="vz-shortcut vz-stat" data-tono={acceso.tono ?? 'dorado'}>
           <span className="vz-stat-icon"><Icono nombre={acceso.icono}/></span>
-          <div><h3>{acceso.titulo}</h3><p className="mt-2">{acceso.descripcion}</p></div>
-          <span className="vz-shortcut-action">Abrir {acceso.titulo.toLowerCase()}<Icono nombre="flecha"/></span>
+          <div><h3>{acceso.texto}</h3><p className="mt-2">{acceso.descripcion}</p></div>
+          <span className="vz-shortcut-action">Abrir {acceso.texto.toLowerCase()}<Icono nombre="flecha"/></span>
         </Link>
       ))}</div>
       {accesos.length === 0 && <div className="vz-panel text-sm text-app-secundario">Tu cuenta no tiene accesos a estos módulos. Consulta con administración si necesitas uno.</div>}

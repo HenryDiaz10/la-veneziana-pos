@@ -1,7 +1,7 @@
 import RegistrarPedido from '../components/pos/RegistrarPedido.jsx'
 import { useComercial } from '../stores/comercial.store.js'
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Icono from '../components/ui/Icono.jsx'
 import CatalogoPos from '../components/pos/CatalogoPos.jsx'
 import ReciboTermico from '../components/pos/ReciboTermico.jsx'
@@ -15,8 +15,10 @@ import { consultarCatalogoPos } from '../services/pos.service.js'
 import { useCartStore } from '../stores/useCartStore.js'
 import { useAuthStore } from '../stores/auth.store.js'
 
-export default function PuntoVenta() {
+export default function PuntoVenta({ modoPedido = false }) {
   const usuario = useAuthStore(s => s.usuario)
+  const [parametros] = useSearchParams()
+  const mesaInicial = modoPedido && /^[1-9]\d{0,9}$/.test(parametros.get('mesa') ?? '') ? parametros.get('mesa') : ''
   const comercial = useComercial(usuario?.id)
   const operacionBloqueada = Boolean(comercial.pendiente || comercial.error || Object.keys(comercial.vinculos).length)
   const lineas = useCartStore(s => s.lineas)
@@ -95,13 +97,13 @@ export default function PuntoVenta() {
         <div>
           <p className="vz-kicker">
             <Icono nombre="pizza" className="size-3.5" />
-            La Veneziana · Ventas y Caja
+            {modoPedido ? 'La Veneziana · Atención al cliente' : 'La Veneziana · Ventas y Caja'}
           </p>
           <h1 id="titulo-pos" className="vz-page-title">
-            Punto de venta
+            {modoPedido ? 'Tomar pedido' : 'Punto de venta'}
           </h1>
           <p className="vz-page-description">
-            Terminal operativo de pedidos. Registra y personaliza selecciones en el borrador en tiempo real.
+            {modoPedido ? 'Elige la mesa, añade lo que pide el cliente y envía el pedido a cocina. El cajero realizará el cobro.' : 'Terminal operativo de pedidos. Registra y personaliza selecciones en el borrador en tiempo real.'}
           </p>
         </div>
 
@@ -122,7 +124,7 @@ export default function PuntoVenta() {
           <span className="vz-empty-icon inline-flex animate-spin">
             <Icono nombre="actualizar" />
           </span>
-          <p className="text-sm font-semibold">Sincronizando el borrador del cajero…</p>
+          <p className="text-sm font-semibold">Sincronizando tu borrador…</p>
         </div>
       )}
 
@@ -176,7 +178,7 @@ export default function PuntoVenta() {
         {/* Panel del Recibo Térmico Financiero (Visible en escritorio o cuando la pestaña móvil es recibo) */}
         <div className={`min-w-0 ${vistaMovil === 'catalogo' ? 'hidden lg:block' : 'block'}`}>
           {listoParaOperar && <ReciboTermico key={usuario.id} consulta={consultaResumen} bloqueado={operacionBloqueada} registrado={Object.keys(comercial.vinculos).length > 0}
-            accionesRegistro={<RegistrarPedido enRecibo consulta={consultaResumen} listo={listoParaOperar}/>}/>}
+            accionesRegistro={<RegistrarPedido key={`${modoPedido}:${mesaInicial}`} modoPedido={modoPedido} mesaInicial={mesaInicial} enRecibo consulta={consultaResumen} listo={listoParaOperar}/>}/>}
         </div>
       </div>
 

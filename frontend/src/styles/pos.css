@@ -201,6 +201,11 @@
   .pos-order-register { min-width: 0; }
   .pos-order-register fieldset { min-width: 0; }
   .pos-order-register label { min-width: 0; font-size: .85rem; }
+  /* El campo ocupa el ancho del recibo; los botones no comprimen el teléfono. */
+  .pos-cliente-form { display: grid; gap: .65rem; min-width: 0; }
+  .pos-cliente-campo { display: grid; gap: .5rem; min-width: 0; }
+  .pos-cliente-acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .pos-cliente-acciones > button { flex: 1 1 8rem; min-width: 0; }
 
   /* El diálogo base controla el único desplazamiento, incluso con teclado. */
   .pos-modal-content { min-width: 0; overflow-wrap: anywhere; }

@@ -79,7 +79,7 @@ export default function ReciboTermico({ consulta, registrado = false, bloqueado 
           {registrado ? 'BORRADOR REGISTRADO' : 'BORRADOR DE PEDIDO'}
         </h2>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-app-secundario">
-          <span>Cajero: <strong>{usuario?.nombre_completo || usuario?.nombre || 'Operador'}</strong></span>
+          <span>{usuario?.permisos.some(p => p.modulo === 'ventas' && p.accion === 'cobrar') ? 'Cajero' : 'Mesero'}: <strong>{usuario?.nombre_completo || usuario?.nombre || 'Operador'}</strong></span>
           <span>•</span>
           <span>{registrado ? 'Pendiente de cobro' : 'Borrador activo'}</span>
         </div>
@@ -283,9 +283,7 @@ export default function ReciboTermico({ consulta, registrado = false, bloqueado 
             {totalDisponible ? `S/ ${resumen.total}` : pendiente ? 'Verificando…' : 'No disponible'}
           </span>
         </div>
-        <p className="text-xs text-app-secundario">
-          {registrado ? 'Pedido registrado. Continúa al cobro desde el enlace de este recibo.' : 'Borrador sin reserva de stock. Confirma el registro aquí para enviar el pedido; todavía no se realiza un cobro.'}
-        </p>
+        {registrado && <p className="text-xs text-app-secundario">Pedido registrado. Continúa al cobro desde el enlace de este recibo.</p>}
         <BotonBase className="w-full border border-app-borde" disabled={!lineas.length || !totalDisponible} onClick={() => setMostrarRevision(true)}>
           Revisar borrador
         </BotonBase>

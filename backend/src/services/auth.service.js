@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { permisosEfectivos } from '../security/perfiles.js';
 import { sequelize } from '../config/database.js';
 import { Usuario, Rol, Permiso, AuthSesion } from '../models/index.js';
 
@@ -183,11 +184,7 @@ export async function iniciarSesion(datos) {
           nombre: rol.nombre
         },
 
-        permisos: rol.permisos
-          .map(permiso => ({
-            modulo: permiso.modulo,
-            accion: permiso.accion
-          }))
+        permisos: permisosEfectivos(rol.nombre, rol.permisos)
           .sort((a, b) =>
             `${a.modulo}:${a.accion}`.localeCompare(
               `${b.modulo}:${b.accion}`
