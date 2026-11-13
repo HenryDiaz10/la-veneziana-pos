@@ -11,6 +11,11 @@ endpoint público ni un mecanismo de recuperación en producción.
 **Avance actual: fase 40 implementada y probada.**
 La siguiente etapa es la **fase 41: pruebas integrales de estrés local**.
 
+Los cobros confirmados permiten ver el ticket interno y abrir el diálogo para
+imprimir o guardar PDF en 58/80 mm desde Pagos. Se imprime el snapshot de la venta,
+sin repetir el cobro ni confirmar automáticamente una impresión física.
+[Uso y límites de la ticketera](frontend/POS.md#ticket-después-del-cobro).
+
 Mejora posterior a la fase 40: recetario completo de la carta con las porciones
 de pizza indicadas por el propietario y estimaciones para los demás sabores y
 preparaciones. Cubre 83 preparados (192 recetas entre bases y variantes), sus

@@ -1,5 +1,27 @@
 # Fase 27: interfaz operativa del punto de venta
 
+## Ticket después del cobro
+
+En `/pagos`, **Ver ticket / imprimir / PDF** abre el ticket de la última venta
+confirmada, también después de recargar. **Imprimir ticket** y **Guardar PDF**
+abren el diálogo del navegador: elegir la impresora o «Guardar como PDF».
+Admite papel de 58 y 80 mm, escala 100 % y sin encabezados/pies del navegador.
+La altura del PDF se ajusta al contenido. La configuración final de papel depende
+del controlador de la ticketera; no se envían comandos ESC/POS ni cortes automáticos.
+
+`components/pos/TicketVenta.jsx` consulta el snapshot congelado al cobrar mediante
+`GET /pedidos/impresion/:uid`, con el permiso y alcance de usuario existentes.
+Muestra líneas, variantes, modificadores, notas, base gravada, IGV, total, pagos
+y vuelto. Los textos se renderizan sin interpretar HTML. No usa el catálogo actual.
+`utils/ticket-impresion.js` aísla el documento en un iframe blanco, prepara el ancho
+y altura y limpia después del diálogo. Imprimir/cancelar/repetir no vuelve a cobrar,
+no abre el cajón ni cambia el estado del trabajo a «confirmado».
+Es un ticket interno no fiscal. El agente de simulación conserva su comportamiento.
+
+`tests/pagos-navegador.mjs` cubre consulta fallida y reintento, texto con HTML,
+vuelto, impresión/PDF de ambos anchos, tamaños de pantalla de 320 a 1366 px,
+ausencia de cobros adicionales y permisos. Genera PDF de prueba fuera del repositorio.
+
 ## Confirmar desde el borrador
 
 El registro está al pie de `ReciboTermico`, junto al total y la revisión del

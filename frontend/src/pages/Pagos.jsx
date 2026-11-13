@@ -1,4 +1,5 @@
 import AperturaCaja from '../components/pos/AperturaCaja.jsx'
+import TicketVenta from '../components/pos/TicketVenta.jsx'
 import { solicitarApi } from '../services/api.js'
 import { ejecutarComercial, reconciliarCobro, useComercial } from '../stores/comercial.store.js'
 import { useAuthStore } from '../stores/auth.store.js'
@@ -24,6 +25,7 @@ function ContenidoPagos() {
   const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState('')
   const [impresion, setImpresion] = useState(null)
+  const [ticketAbierto, setTicketAbierto] = useState(false)
   const bloqueado = ocupado || Boolean(comercial.pendiente || comercial.error)
   const [parametros] = useSearchParams()
   const inicial = parametros.getAll('pedido').length === 1 && idValido(parametros.get('pedido')) ? parametros.get('pedido') : ''
@@ -90,6 +92,8 @@ function ContenidoPagos() {
     <AperturaCaja onAbrir={actualizar}/>
     {aviso && <p role="status" className="vz-panel mb-5">{aviso}</p>}
     {comercial.ultimaVenta && <div className="vz-panel mb-5 space-y-3" role="region" aria-label="Último cobro confirmado"><h2 className="font-bold">Cobro confirmado · {comercial.ultimaVenta.codigo}</h2><p>S/ {comercial.ultimaVenta.total} · Pedido #{comercial.ultimaVenta.pedidoId}</p><p className="text-sm">Ticket interno. La venta permanece confirmada aunque la impresión esté pendiente.</p>{comercial.ultimaVenta.impresion && <><BotonBase disabled={bloqueado} onClick={consultarTicket}>Consultar impresión</BotonBase><p className="break-all text-xs">Trabajo: {comercial.ultimaVenta.impresion.job_uid}</p></>}{impresion && <p role="status">{impresion.estado === 'enviado' ? 'Formato simulado por el agente; sin confirmación de impresión física.' : impresion.estado === 'confirmado' ? 'Impresión confirmada.' : 'Impresión pendiente.'}</p>}</div>}
+    {comercial.ultimaVenta?.impresion?.job_uid && <div className="mb-6"><BotonSecundario disabled={bloqueado} onClick={() => setTicketAbierto(true)}>Ver ticket / imprimir / PDF</BotonSecundario></div>}
+    {ticketAbierto && comercial.ultimaVenta?.impresion?.job_uid && <TicketVenta key={comercial.ultimaVenta.impresion.job_uid} uid={comercial.ultimaVenta.impresion.job_uid} onCerrar={() => setTicketAbierto(false)}/>}
     <form onSubmit={buscar} className="vz-panel mb-6"><label htmlFor={campoId} className="mb-2 block text-sm font-semibold">Número interno del pedido</label><div className="flex flex-wrap gap-3"><input id={campoId} value={numero} onChange={e => setNumero(e.target.value)} inputMode="numeric" maxLength={19} autoComplete="off" className="vz-purchase-input min-w-0 flex-1" aria-invalid={Boolean(errorEntrada)} aria-describedby={errorEntrada ? `${campoId}-error` : undefined}/><BotonSecundario type="submit" disabled={pendiente || bloqueado || Boolean(checkout)}><Icono nombre="buscar"/>Consultar pedido</BotonSecundario></div>{errorEntrada && <p id={`${campoId}-error`} role="alert" className="mt-3 text-sm text-app-error">{errorEntrada}</p>}</form>
     {pendiente && <p role="status" className={datos ? 'sr-only' : 'vz-panel text-sm'}>Consultando pedido y sesión de caja…</p>}
     {error && <div role="alert" className="vz-panel space-y-3"><p className="text-sm text-app-error">{error}</p><BotonBase className="border border-app-borde" onClick={reintentar}>Reintentar consulta</BotonBase></div>}
